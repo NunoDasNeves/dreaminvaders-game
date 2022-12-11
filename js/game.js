@@ -109,8 +109,8 @@ function laneEnd(lane, team)
 
 function spawnEntity(aPos, aTeam, aUnit, aWeapon, aLane = null)
 {
-    const { slot, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState  } = gameState.entities;
-    const len = slot.length;
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState  } = gameState.entities;
+    const len = exists.length;
     let idx = gameState.freeSlot;
     if (idx == -1) {
         for (const [key, arr] of Object.entries(gameState.entities)) {
@@ -118,8 +118,7 @@ function spawnEntity(aPos, aTeam, aUnit, aWeapon, aLane = null)
         }
         idx = len;
     }
-    const teamBase = gameState.bases[aTeam];
-    slot[idx]   = idx;
+    exists[idx] = true;
     team[idx]   = aTeam;
     lane[idx]   = aLane;
     unit[idx]   = aUnit;
@@ -147,7 +146,7 @@ export function initGame()
 
     gameState = {
         entities: {
-            slot: [],
+            exists: [],
             nextFree: [],
             team: [],
             unit: [],
@@ -323,8 +322,11 @@ export function render()
         drawLane(gameState.lanes[i]);
     }
 
-    const { slot, team, unit, pos, angle, state, target } = gameState.entities;
-    for (let i = 0; i < slot.length; ++i) {
+    const { exists, team, unit, pos, angle, state, target } = gameState.entities;
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i]) {
+            continue;
+        }
         unit[i].drawFn(pos[i], angle[i], team[i])
         if (debug.drawRadii) {
             strokeCircle(pos[i], unit[i].radius, 2, 'red');
@@ -336,13 +338,27 @@ export function render()
     }
 }
 
+function forAllEntities(fn)
+{
+    const { exists } = gameState.entities;
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i]) {
+            continue;
+        }
+        fn(i);
+    }
+}
+
 function nearestUnit(i, minRange, excludeFn)
 {
-    const { slot, unit, pos } = gameState.entities;
+    const { exists, unit, pos } = gameState.entities;
     let best = null;
     let minDist = minRange;
     // TODO broad phase
-    for (let j = 0; j < slot.length; ++j) {
+    for (let j = 0; j < exists.length; ++j) {
+        if (!exists[i]) {
+            continue;
+        }
         if (excludeFn(i, j)) {
             continue;
         }
@@ -381,14 +397,17 @@ function isInAttackRange(i, j)
 
 export function update(realTimeMs, ticksMs, timeDeltaMs)
 {
-    const { slot, team, unit, pos, vel, angle, angVel, state, lane, target } = gameState.entities;
+    const { exists, team, unit, pos, vel, angle, angVel, state, lane, target } = gameState.entities;
     // move, collide
-    for (let i = 0; i < slot.length; ++i) {
+    forAllEntities((i) => {
         vecAddTo(pos[i], vel[i]);
-    }
+    });
 
     // state/AI
-    for (let i = 0; i < slot.length; ++i) {
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i]) {
+            continue;
+        }
         if (state[i] == STATE.DO_NOTHING) {
             continue;
         }
@@ -489,9 +508,12 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
         }
     }
     // TODO some way to avoid this; clear all targets in case of ordering issues:
-    for (let i = 0; i < slot.length; ++i) {
+    forAllEntities((i) => {
         target[i] = null;
-    }
+    });
 
     // reap/spawn
+    forAllEntities((i) => {
+        //TODO
+    });
 }
