@@ -23,6 +23,10 @@ const STATE = Object.freeze({
     ATTACK: 2,
 });
 
+const debug = {
+    drawRadii: true,
+}
+
 let gameState = null;
 
 const weapons = {
@@ -40,7 +44,7 @@ const weapons = {
         missChance: 0.3,
         drawFn(pos, angle, team, atkState) {
             const dir = vecFromAngle(angle);
-            drawCircle(vecAdd(pos, vecMul(dir, 10)), 4, 'black');
+            fillCircle(vecAdd(pos, vecMul(dir, 10)), 4, 'black');
         }
     }
 };
@@ -52,7 +56,9 @@ const units = {
         angSpeed: 0,
         hp: 1000,
         radius: baseRadius,
-        drawFn() {}
+        drawFn(pos, angle, team) {
+            strokeCircle(pos, baseRadius, 2, 'red');
+        }
     },
     circle: {
         weapon: weapons.elbow,
@@ -61,7 +67,7 @@ const units = {
         hp: 3,
         radius: 10,
         drawFn(pos, angle, team) {
-            drawCircle(pos, 10, teamColors[team]);
+            fillCircle(pos, 10, teamColors[team]);
         }
     },
 };
@@ -232,9 +238,20 @@ export function updateMouseClick(button)
     }
 }
 
-function drawCircle(worldPos, radius, fillStyle)
+function strokeCircle(worldPos, radius, width, strokeStyle)
 {
-    let coords = worldToCamera(worldPos.x, worldPos.y);
+    const coords = worldToCamera(worldPos.x, worldPos.y);
+    context.beginPath();
+    context.arc(coords.x, coords.y, radius / gameState.camera.scale, 0, 2 * Math.PI);
+    context.setLineDash([]);
+    context.lineWidth = width / gameState.camera.scale;
+    context.strokeStyle = strokeStyle;
+    context.stroke();
+}
+
+function fillCircle(worldPos, radius, fillStyle)
+{
+    const coords = worldToCamera(worldPos.x, worldPos.y);
     context.beginPath();
     context.arc(coords.x, coords.y, radius / gameState.camera.scale, 0, 2 * Math.PI);
     context.fillStyle = fillStyle;
@@ -303,8 +320,12 @@ export function render()
         drawLane(gameState.lanes[i]);
     }
 
+    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane, target } = gameState.entities;
     for (let i = 0; i < gameState.entities.unit.length; ++i) {
-        gameState.entities.unit[i].drawFn(gameState.entities.pos[i], gameState.entities.angle[i], gameState.entities.team[i])
+        unit[i].drawFn(pos[i], angle[i], team[i])
+        if (debug.drawRadii) {
+            strokeCircle(pos[i], unit[i].radius, 2, 'red');
+        }
     }
 }
 
@@ -315,6 +336,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
     for (let i = 0; i < slot.length; ++i) {
         vecAddTo(pos[i], vel[i]);
     }
+
     // shoot, attack
     for (let i = 0; i < slot.length; ++i) {
         const t = target[i];
