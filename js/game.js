@@ -10,7 +10,7 @@ const laneColor = "#888888";
 const laneWidth = 60;
 const baseRadius = 200;
 const baseVisualRadius = 250;
-const laneDistFromBase = baseRadius - 10;
+const laneDistFromBase = baseRadius - 5;
 const teamColors = [ "#6f6f6f", "#ff9933", "#3399ff" ];
 const TEAM = Object.freeze({
     NONE: 0,
@@ -18,13 +18,15 @@ const TEAM = Object.freeze({
     BLUE: 2,
 });
 const STATE = Object.freeze({
-    IDLE: 0,
+    DO_NOTHING: 0,
     PROCEED: 1,
-    ATTACK: 2,
+    CHASE: 2,
+    ATTACK: 3,
 });
 
 const debug = {
     drawRadii: true,
+    drawSight: true,
 }
 
 let gameState = null;
@@ -38,7 +40,7 @@ const weapons = {
         drawFn() {}
     },
     elbow: {
-        range: 3,
+        range: 5, // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
         cooldownMs: 1000,
         damage: 1,
         missChance: 0.3,
@@ -54,7 +56,8 @@ const units = {
         weapon: weapons.none,
         speed: 0,
         angSpeed: 0,
-        hp: 1000,
+        maxHp: 1000,
+        sightRadius: 0,
         radius: baseRadius,
         drawFn(pos, angle, team) {
             strokeCircle(pos, baseRadius, 2, 'red');
@@ -62,9 +65,10 @@ const units = {
     },
     circle: {
         weapon: weapons.elbow,
-        speed: 4,
+        speed: 3,
         angSpeed: 1,
-        hp: 3,
+        maxHp: 3,
+        sightRadius: laneWidth/2,
         radius: 10,
         drawFn(pos, angle, team) {
             fillCircle(pos, 10, teamColors[team]);
@@ -105,7 +109,7 @@ function laneEnd(lane, team)
 
 function spawnEntity(aPos, aTeam, aUnit, aWeapon, aLane = null)
 {
-    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane, atkState  } = gameState.entities;
+    const { slot, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState  } = gameState.entities;
     const len = slot.length;
     let idx = gameState.freeSlot;
     if (idx == -1) {
@@ -119,12 +123,11 @@ function spawnEntity(aPos, aTeam, aUnit, aWeapon, aLane = null)
     team[idx]   = aTeam;
     lane[idx]   = aLane;
     unit[idx]   = aUnit;
-    weapon[idx] = aWeapon;
+    hp[idx]     = aUnit.maxHp;
     pos[idx]    = vecClone(aPos);
     vel[idx]    = vec();
     angle[idx]  = 0;
     angVel[idx] = 0;
-    radius[idx] = aUnit.radius;
     state[idx]  = STATE.PROCEED;
     atkState[idx] = { atkTimer: 0 };
 
@@ -148,12 +151,11 @@ export function initGame()
             nextFree: [],
             team: [],
             unit: [],
-            weapon: [],
+            hp: [],
             pos: [],
             vel: [],
             angle: [],
             angVel: [],
-            radius: [],
             state: [],
             target: [],
             atkState: [],
@@ -189,11 +191,12 @@ export function initGame()
     });
 
     gameState.bases[TEAM.BLUE].unit = spawnEntity(gameState.bases[TEAM.BLUE].pos, TEAM.BLUE, units.base, weapons.none);
-    gameState.entities.state[gameState.bases[TEAM.BLUE].unit] = STATE.IDLE;
+    gameState.entities.state[gameState.bases[TEAM.BLUE].unit] = STATE.DO_NOTHING;
     gameState.bases[TEAM.ORANGE].unit = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
-    gameState.entities.state[gameState.bases[TEAM.ORANGE].unit] = STATE.IDLE;
+    gameState.entities.state[gameState.bases[TEAM.ORANGE].unit] = STATE.DO_NOTHING;
 
     spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle, units.circle.weapon);
+    spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle, units.circle.weapon);
 }
 
 // Convert camera coordinates to world coordinates with scale
@@ -320,64 +323,175 @@ export function render()
         drawLane(gameState.lanes[i]);
     }
 
-    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane, target } = gameState.entities;
-    for (let i = 0; i < gameState.entities.unit.length; ++i) {
+    const { slot, team, unit, pos, angle, state, target } = gameState.entities;
+    for (let i = 0; i < slot.length; ++i) {
         unit[i].drawFn(pos[i], angle[i], team[i])
         if (debug.drawRadii) {
             strokeCircle(pos[i], unit[i].radius, 2, 'red');
         }
+        if (debug.drawSight && unit[i].sightRadius > 0)
+        {
+            strokeCircle(pos[i], unit[i].sightRadius, 1, 'yellow');
+        }
     }
+}
+
+function nearestUnit(i, minRange, excludeFn)
+{
+    const { slot, unit, pos } = gameState.entities;
+    let best = null;
+    let minDist = minRange;
+    // TODO broad phase
+    for (let j = 0; j < slot.length; ++j) {
+        if (excludeFn(i, j)) {
+            continue;
+        }
+        const toUnit = vecSub(pos[j], pos[i]);
+        const distToUnit = vecLen(toUnit);
+        const distToUnitEdge = distToUnit - unit[j].radius;
+        if (distToUnitEdge < minDist) {
+            best = j;
+            minDist = distToUnitEdge;
+        }
+    }
+    return best;
+}
+
+function nearestEnemyInSightRadius(i)
+{
+    const { team, unit } = gameState.entities;
+    return nearestUnit(i, unit[i].sightRadius, (j, k) => team[j] == team[k]);
+}
+
+function nearestEnemyInAttackRange(i)
+{
+    const { team, unit } = gameState.entities;
+    return nearestUnit(i, unit[i].radius + unit[i].weapon.range, (j, k) => team[j] == team[k]);
+}
+
+// is unit i in range to attack unit j
+function isInAttackRange(i, j)
+{
+    const { unit, pos } = gameState.entities;
+    const toUnit = vecSub(pos[j], pos[i]);
+    const distToUnit = vecLen(toUnit);
+    const distToUnitEdge = distToUnit - unit[j].radius;
+    return distToUnitEdge < (unit[i].radius + unit[i].weapon.range);
 }
 
 export function update(realTimeMs, ticksMs, timeDeltaMs)
 {
-    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane, target } = gameState.entities;
+    const { slot, team, unit, pos, vel, angle, angVel, state, lane, target } = gameState.entities;
     // move, collide
     for (let i = 0; i < slot.length; ++i) {
         vecAddTo(pos[i], vel[i]);
     }
 
-    // shoot, attack
-    for (let i = 0; i < slot.length; ++i) {
-        const t = target[i];
-        if (t == null) {
-            continue;
-        }
-        if (slot[t] == -1) {
-            target[i] = null;
-            continue;
-        }
-    }
-
     // state/AI
     for (let i = 0; i < slot.length; ++i) {
-        if (state[i] == STATE.IDLE) {
+        if (state[i] == STATE.DO_NOTHING) {
             continue;
         }
+        const toEnemyBase = vecSub(gameState.bases[enemyTeam(team[i])].pos, pos[i]);
+        const distToEnemyBase = vecLen(toEnemyBase);
         const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
         const distToEndOfLane = vecLen(toEndOfLane);
-        const weaponRange = radius[i] + weapon[i].range;
+        const nearestAtkTarget = nearestEnemyInAttackRange(i);
+        const nearestChaseTarget = nearestEnemyInSightRadius(i);
         // change state
         switch (state[i]) {
             case STATE.PROCEED:
-                if (distToEndOfLane <= weaponRange) {
+            {
+                if (distToEnemyBase < unit[i].radius) {
+                    state[i] = STATE.DO_NOTHING;
+                    vecClear(vel[i]);
+                    break;
+                }
+                const newTarget = nearestEnemyInAttackRange(i);
+                if (newTarget != null) {
                     state[i] = STATE.ATTACK;
                     vecClear(vel[i]);
-                    target[i] = gameState.bases[enemyTeam(team[i])].unit;
+                    target[i] = newTarget;
                 }
                 break;
-            case STATE.ATTACK:
+            }
+            case STATE.CHASE:
+            {
+                // switch to attack if in range
+                if (nearestAtkTarget != null) {
+                    state[i] = STATE.ATTACK;
+                    target[i] = nearestAtkTarget;
+
+                // otherwise always chase nearest
+                } else if (nearestChaseTarget != null) {
+                    target[i] = nearestChaseTarget;
+
+                // otherwise... continue on
+                } else {
+                    state[i] = STATE.PROCEED;
+                }
                 break;
+            }
+            case STATE.ATTACK:
+            {
+                // check we can still attack the current target
+                if (target[i] != null) {
+                    if (!isInAttackRange(i,target[i])) {
+                        target[i] = null;
+                    }
+                }
+                /*
+                 * If we can't attack the current target, target[i] is null here;
+                 * Try to pick a new target, or start chasing
+                 */
+                if (target[i] == null) {
+                    if (nearestAtkTarget != null) {
+                        target[i] = nearestAtkTarget;
+                    } else if (nearestChaseTarget != null) {
+                        state[i] = STATE.CHASE;
+                        target[i] = nearestChaseTarget;
+                    } else {
+                        state[i] = STATE.PROCEED;
+                    }
+                }
+                break;
+            }
         }
         // make decisions based on state
         switch (state[i]) {
             case STATE.PROCEED:
-                const dir = vecNorm(toEndOfLane);
-                vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEndOfLane));
+            {
+                const dir = vecNorm(toEnemyBase);
+                vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEnemyBase));
+                target[i] = null;
                 break;
+            }
+            case STATE.CHASE:
+            {
+                const t = target[i];
+                const toTarget = vecSub(pos[t], pos[i]);
+                const distToTarget = vecLen(toTarget);
+                if (distToTarget > 0.0001) {
+                    const dir = vecMul(toTarget, 1/distToTarget);
+                    vel[i] = vecMul(dir, Math.min(unit[i].speed, distToTarget));
+                }
+                break;
+            }
             case STATE.ATTACK:
-                break;
+            {
+                console.assert(target[i] != null);
+
+                const t = target[i];
+
+                vecClear(vel[i]); // stand still
+            }
+            break;
         }
     }
+    // TODO some way to avoid this; clear all targets in case of ordering issues:
+    for (let i = 0; i < slot.length; ++i) {
+        target[i] = null;
+    }
+
     // reap/spawn
 }
