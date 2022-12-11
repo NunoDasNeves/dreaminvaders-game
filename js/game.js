@@ -6,55 +6,77 @@ let context = null;
 
 const backgroundColor = "#1f1f1f";
 const basefadeColor = "#101010";
-const laneColor = "#dddddd";
+const laneColor = "#888888";
 const laneWidth = 60;
 const baseRadius = 200;
 const baseVisualRadius = 250;
 const laneDistFromBase = baseRadius - 10;
-const teamColors = [ "#6f6f6f", "#ff8800", "#0088ff" ];
-const TEAM = {
+const teamColors = [ "#6f6f6f", "#ff9933", "#3399ff" ];
+const TEAM = Object.freeze({
     NONE: 0,
     ORANGE: 1,
     BLUE: 2,
-}
+});
+const STATE = Object.freeze({
+    IDLE: 0,
+    PROCEED: 1,
+    ATTACK: 2,
+});
 
 let gameState = null;
 
 const weapons = {
     elbow: {
-        // TODO
+        range: 3,
     }
 };
 
 const units = {
     circle: {
-        weapon: {},
+        weapon: weapons.elbow,
         speed: 4,
         angSpeed: 1,
+        radius: 10,
         drawFn(pos, angle, team) {
             drawCircle(pos, 10, teamColors[team]);
         }
     },
 };
 
-function laneStart(lane, team)
+function enemyTeam(team)
 {
-    const basePos = gameState.bases[team].pos;
+    return (team % 2) + 1;
+}
+
+function closestPoint(arr, pos)
+{
     let minDist = Infinity;
-    let minPoint = lane.points[0];
-    for (let i = 0; i < lane.points.length; ++i) {
-        const dist = vecLen(vecSub(lane.points[i], basePos));
+    let minPoint = arr[0];
+    for (let i = 0; i < arr.length; ++i) {
+        const dist = vecLen(vecSub(arr[i], pos));
         if (dist < minDist) {
             minDist = dist;
-            minPoint = lane.points[i]
+            minPoint = arr[i]
         }
     }
     return minPoint;
 }
 
+function laneStart(lane, team)
+{
+    const base = gameState.bases[team];
+    return closestPoint(lane.points, base.pos);
+}
+
+function laneEnd(lane, team)
+{
+    const base = gameState.bases[enemyTeam(team)];
+    return closestPoint(lane.points, base.pos);
+}
+
 function spawnEntityInLane(aLane, aTeam, aUnit, aWeapon)
 {
-    const { slot, team, unit, weapon, pos, vel, angle, angVel, state, lane } = gameState.entities;
+    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane  } = gameState.entities;
     const len = slot.length;
     let idx = gameState.freeSlot;
     if (idx == -1) {
@@ -73,7 +95,8 @@ function spawnEntityInLane(aLane, aTeam, aUnit, aWeapon)
     vel[idx]    = vec();
     angle[idx]  = 0;
     angVel[idx] = 0;
-    state[idx]  = {};
+    radius[idx] = aUnit.radius;
+    state[idx]  = STATE.PROCEED;
 }
 
 export function initGame()
@@ -91,6 +114,7 @@ export function initGame()
             vel: [],
             angle: [],
             angVel: [],
+            radius: [],
             state: [],
             lane: [],
         },
@@ -122,7 +146,7 @@ export function initGame()
             vecAdd(gameState.bases[TEAM.BLUE].pos, vecMul(orangeToBlue, -laneDistFromBase)),
         ]
     });
-    spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle, weapons.elbow)
+    spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle, units.circle.weapon);
 }
 
 // Convert camera coordinates to world coordinates with scale
@@ -245,5 +269,40 @@ export function render()
 
 export function update(realTimeMs, ticksMs, timeDeltaMs)
 {
-
+    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane } = gameState.entities;
+    // move, collide
+    for (let i = 0; i < slot.length; ++i) {
+        pos[i] = vecAdd(pos[i], vel[i]);
+    }
+    // shoot, attack
+    // state/AI
+    for (let i = 0; i < slot.length; ++i) {
+        const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
+        const distToEndOfLane = vecLen(toEndOfLane);
+        // change state
+        switch (state[i]) {
+            case STATE.IDLE:
+                break;
+            case STATE.PROCEED:
+                if (distToEndOfLane <= weapon[i].range) {
+                    state[i] = STATE.ATTACK;
+                    vel[i] = vec();
+                }
+                break;
+            case STATE.ATTACK:
+                break;
+        }
+        // do state stuff
+        switch (state[i]) {
+            case STATE.IDLE:
+                break;
+            case STATE.PROCEED:
+                const dir = vecNorm(toEndOfLane);
+                vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEndOfLane));
+                break;
+            case STATE.ATTACK:
+                break;
+        }
+    }
+    // reap/spawn
 }
