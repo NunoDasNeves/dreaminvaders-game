@@ -26,16 +26,39 @@ const STATE = Object.freeze({
 let gameState = null;
 
 const weapons = {
+    none: {
+        range: 0,
+        cooldownMs: Infinity,
+        damage: 0,
+        missChance: 1,
+        drawFn() {}
+    },
     elbow: {
         range: 3,
+        cooldownMs: 1000,
+        damage: 1,
+        missChance: 0.3,
+        drawFn(pos, angle, team, atkState) {
+            const dir = vecFromAngle(angle);
+            drawCircle(vecAdd(pos, vecMul(dir, 10)), 4, 'black');
+        }
     }
 };
 
 const units = {
+    base: {
+        weapon: weapons.none,
+        speed: 0,
+        angSpeed: 0,
+        hp: 1000,
+        radius: baseRadius,
+        drawFn() {}
+    },
     circle: {
         weapon: weapons.elbow,
         speed: 4,
         angSpeed: 1,
+        hp: 3,
         radius: 10,
         drawFn(pos, angle, team) {
             drawCircle(pos, 10, teamColors[team]);
@@ -74,9 +97,9 @@ function laneEnd(lane, team)
     return closestPoint(lane.points, base.pos);
 }
 
-function spawnEntityInLane(aLane, aTeam, aUnit, aWeapon)
+function spawnEntity(aPos, aTeam, aUnit, aWeapon, aLane = null)
 {
-    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane  } = gameState.entities;
+    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane, atkState  } = gameState.entities;
     const len = slot.length;
     let idx = gameState.freeSlot;
     if (idx == -1) {
@@ -91,12 +114,21 @@ function spawnEntityInLane(aLane, aTeam, aUnit, aWeapon)
     lane[idx]   = aLane;
     unit[idx]   = aUnit;
     weapon[idx] = aWeapon;
-    pos[idx]    = laneStart(aLane, aTeam);
+    pos[idx]    = vecClone(aPos);
     vel[idx]    = vec();
     angle[idx]  = 0;
     angVel[idx] = 0;
     radius[idx] = aUnit.radius;
     state[idx]  = STATE.PROCEED;
+    atkState[idx] = { atkTimer: 0 };
+
+    return idx;
+}
+
+function spawnEntityInLane(aLane, aTeam, aUnit, aWeapon)
+{
+    const pos = laneStart(aLane, aTeam);
+    return spawnEntity(pos, aTeam, aUnit, aWeapon, aLane);
 }
 
 export function initGame()
@@ -107,6 +139,7 @@ export function initGame()
     gameState = {
         entities: {
             slot: [],
+            nextFree: [],
             team: [],
             unit: [],
             weapon: [],
@@ -116,12 +149,14 @@ export function initGame()
             angVel: [],
             radius: [],
             state: [],
+            target: [],
+            atkState: [],
             lane: [],
         },
         freeSlot: -1,
         bases: {
-            [TEAM.ORANGE]: { pos: { x: -600, y: -400 } },
-            [TEAM.BLUE]: { pos: { x: 600, y: 400 } },
+            [TEAM.ORANGE]: { pos: { x: -600, y: -400 }, unit: -1 },
+            [TEAM.BLUE]: { pos: { x: 600, y: 400 }, unit: -1 },
         },
         lanes: [],
         camera: {
@@ -146,6 +181,12 @@ export function initGame()
             vecAdd(gameState.bases[TEAM.BLUE].pos, vecMul(orangeToBlue, -laneDistFromBase)),
         ]
     });
+
+    gameState.bases[TEAM.BLUE].unit = spawnEntity(gameState.bases[TEAM.BLUE].pos, TEAM.BLUE, units.base, weapons.none);
+    gameState.entities.state[gameState.bases[TEAM.BLUE].unit] = STATE.IDLE;
+    gameState.bases[TEAM.ORANGE].unit = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
+    gameState.entities.state[gameState.bases[TEAM.ORANGE].unit] = STATE.IDLE;
+
     spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle, units.circle.weapon);
 }
 
@@ -269,33 +310,45 @@ export function render()
 
 export function update(realTimeMs, ticksMs, timeDeltaMs)
 {
-    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane } = gameState.entities;
+    const { slot, team, unit, weapon, pos, vel, angle, angVel, radius, state, lane, target } = gameState.entities;
     // move, collide
     for (let i = 0; i < slot.length; ++i) {
-        pos[i] = vecAdd(pos[i], vel[i]);
+        vecAddTo(pos[i], vel[i]);
     }
     // shoot, attack
+    for (let i = 0; i < slot.length; ++i) {
+        const t = target[i];
+        if (t == null) {
+            continue;
+        }
+        if (slot[t] == -1) {
+            target[i] = null;
+            continue;
+        }
+    }
+
     // state/AI
     for (let i = 0; i < slot.length; ++i) {
+        if (state[i] == STATE.IDLE) {
+            continue;
+        }
         const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
         const distToEndOfLane = vecLen(toEndOfLane);
+        const weaponRange = radius[i] + weapon[i].range;
         // change state
         switch (state[i]) {
-            case STATE.IDLE:
-                break;
             case STATE.PROCEED:
-                if (distToEndOfLane <= weapon[i].range) {
+                if (distToEndOfLane <= weaponRange) {
                     state[i] = STATE.ATTACK;
-                    vel[i] = vec();
+                    vecClear(vel[i]);
+                    target[i] = gameState.bases[enemyTeam(team[i])].unit;
                 }
                 break;
             case STATE.ATTACK:
                 break;
         }
-        // do state stuff
+        // make decisions based on state
         switch (state[i]) {
-            case STATE.IDLE:
-                break;
             case STATE.PROCEED:
                 const dir = vecNorm(toEndOfLane);
                 vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEndOfLane));

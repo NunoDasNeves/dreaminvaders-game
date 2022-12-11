@@ -4,6 +4,12 @@ export function vecAdd(v1, v2)
     return { x: v1.x + v2.x, y: v1.y + v2.y };
 }
 
+export function vecAddTo(v1, v2)
+{
+    v1.x += v2.x;
+    v1.y += v2.y;
+}
+
 export function vecSub(v1, v2)
 {
     return { x: v1.x - v2.x, y: v1.y - v2.y };
@@ -34,7 +40,27 @@ export function vecClone(v)
     return { x: v.x, y: v.y };
 }
 
+export function vecClear(v)
+{
+    v.x = 0;
+    v.y = 0;
+}
+
 export function vec(x = 0, y = 0)
 {
     return { x, y };
+}
+
+export function vecToAngle(v)
+{
+    const n = vecNorm(v);
+    return Math.atan2(n.y, n.x);
+}
+
+export function vecFromAngle(a)
+{
+    return {
+        x: Math.cos(a),
+        y: Math.sin(a)
+    }
 }
