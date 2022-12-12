@@ -8,6 +8,7 @@ export function vecAddTo(v1, v2)
 {
     v1.x += v2.x;
     v1.y += v2.y;
+    return v1;
 }
 
 export function vecSub(v1, v2)
@@ -15,9 +16,23 @@ export function vecSub(v1, v2)
     return { x: v1.x - v2.x, y: v1.y - v2.y };
 }
 
+export function vecSubFrom(v1, v2)
+{
+    v1.x -= v2.x;
+    v1.y -= v2.y;
+    return v1;
+}
+
 export function vecMul(v, f)
 {
     return { x: v.x * f, y: v.y * f };
+}
+
+export function vecMulBy(v, f)
+{
+    v.x *= f;
+    v.y *= f;
+    return v;
 }
 
 export function vecLen(v)

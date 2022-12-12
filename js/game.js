@@ -107,45 +107,71 @@ function closestPoint(arr, pos)
 function laneStart(lane, team)
 {
     const base = gameState.bases[team];
-    return closestPoint(lane.points, base.pos);
+    return vecClone(closestPoint(lane.points, base.pos));
 }
 
 function laneEnd(lane, team)
 {
     const base = gameState.bases[enemyTeam(team)];
-    return closestPoint(lane.points, base.pos);
+    return vecClone(closestPoint(lane.points, base.pos));
 }
 
-function spawnEntity(aPos, aTeam, aUnit, aWeapon, aLane = null)
+function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState  } = gameState.entities;
+    const { exists, nextFree, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState  } = gameState.entities;
     const len = exists.length;
-    let idx = gameState.freeSlot;
-    if (idx == -1) {
+    if (gameState.freeSlot == -1) {
         for (const [key, arr] of Object.entries(gameState.entities)) {
             arr.push(null);
         }
-        idx = len;
+        nextFree[len] = -1;
+        gameState.freeSlot = len;
     }
-    exists[idx] = true;
-    team[idx]   = aTeam;
-    lane[idx]   = aLane;
-    unit[idx]   = aUnit;
-    hp[idx]     = aUnit.maxHp;
-    pos[idx]    = vecClone(aPos);
-    vel[idx]    = vec();
-    angle[idx]  = 0;
-    angVel[idx] = 0;
-    state[idx]  = STATE.PROCEED;
-    atkState[idx] = { timer: 0, state: ATKSTATE.NONE };
+    let idx = gameState.freeSlot;
+    gameState.freeSlot = nextFree[idx];
+
+    exists[idx]     = true;
+    nextFree[idx]   = -1;
+    team[idx]       = aTeam;
+    lane[idx]       = aLane;
+    unit[idx]       = aUnit;
+    hp[idx]         = aUnit.maxHp;
+    pos[idx]        = vecClone(aPos);
+    vel[idx]        = vec();
+    angle[idx]      = 0;
+    angVel[idx]     = 0;
+    state[idx]      = STATE.PROCEED;
+    atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
 
     return idx;
 }
 
-function spawnEntityInLane(aLane, aTeam, aUnit, aWeapon)
+function spawnEntityInLane(aLane, aTeam, aUnit)
 {
     const pos = laneStart(aLane, aTeam);
-    return spawnEntity(pos, aTeam, aUnit, aWeapon, aLane);
+    const randVec = vecMulBy(vec(Math.random(), Math.random()), laneWidth/2);
+    vecAddTo(pos, randVec);
+    return spawnEntity(pos, aTeam, aUnit, aLane);
+}
+
+function makeInput(oldInput = null)
+{
+    const input = {
+            mousePos: vec(),
+            mouseLeft: false,
+            mouseMiddle: false,
+            mouseRight: false,
+            keyQ: false,
+            keyW: false
+        };
+    if (oldInput != null) {
+        for (const [key, val] of Object.entries(oldInput)) {
+            input[key] = val;
+        }
+        //overwrite vec with a copy...
+        input.mousePos = vecClone(oldInput.mousePos);
+    }
+    return input;
 }
 
 export function initGame()
@@ -181,14 +207,8 @@ export function initGame()
             scale: 1, // scale +++ means zoom out
             easeFactor: 0.1
         },
-        input: {
-            mousePos: { x: 0, y: 0 },
-            mouseLeft: false,
-            mouseMiddle: false,
-            mouseRight: false,
-            keyR: false,
-            keySpace: false
-        },
+        input: makeInput(),
+        lastInput: makeInput(),
     };
     const orangeToBlue = vecNorm(vecSub(gameState.bases[TEAM.BLUE].pos, gameState.bases[TEAM.ORANGE].pos));
     gameState.lanes.push({
@@ -203,8 +223,8 @@ export function initGame()
     gameState.bases[TEAM.ORANGE].unit = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
     gameState.entities.state[gameState.bases[TEAM.ORANGE].unit] = STATE.DO_NOTHING;
 
-    spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle, units.circle.weapon);
-    spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle, units.circle.weapon);
+    spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle);
+    spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
 }
 
 // Convert camera coordinates to world coordinates with scale
@@ -221,8 +241,11 @@ export function worldToCamera(x, y) {
 
 export function updateKey(key, pressed)
 {
-    if (key == 'r') {
-        gameState.input.keyR = pressed;
+    if (key == 'q') {
+        gameState.input.keyQ = pressed;
+    }
+    if (key == 'w') {
+        gameState.input.keyW = pressed;
     }
 }
 
@@ -571,15 +594,23 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             break;
         }
     }
-    // TODO some way to avoid this; clear all targets in case of ordering issues:
-    forAllEntities((i) => {
-        //target[i] = null;
-    });
 
     // reap/spawn
     forAllEntities((i) => {
         if (hp[i] <= 0) {
             exists[i] = false;
+            // add to free list
+            gameState.entities.nextFree[i] = gameState.freeSlot;
+            gameState.freeSlot = i;
         }
     });
+
+    if (gameState.input.keyQ && !gameState.lastInput.keyQ) {
+        spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle);
+    }
+    if (gameState.input.keyW && !gameState.lastInput.keyW) {
+        spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
+    }
+
+    gameState.lastInput = makeInput(gameState.input);
 }
