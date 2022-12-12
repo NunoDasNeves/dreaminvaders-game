@@ -449,7 +449,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
                 atkState[i].state = ATKSTATE.RECOVER;
                 atkState[i].timer = newTime + unit[i].weapon.recoverMs;
                 // hit!
-                if (canAttackTarget(i)) {
+                if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
                     hp[target[i]] -= unit[i].weapon.damage;
                 }
                 break;
@@ -578,6 +578,8 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
 
     // reap/spawn
     forAllEntities((i) => {
-        //TODO
+        if (hp[i] <= 0) {
+            exists[i] = false;
+        }
     });
 }
