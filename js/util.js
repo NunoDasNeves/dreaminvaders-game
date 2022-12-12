@@ -84,3 +84,8 @@ export function vecFromAngle(a)
         y: Math.sin(a)
     }
 }
+
+export function getDist(p1, p2)
+{
+    return vecLen(vecSub(p1, p2));
+}

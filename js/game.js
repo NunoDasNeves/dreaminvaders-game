@@ -68,6 +68,7 @@ const units = {
         maxHp: 1000,
         sightRadius: 0,
         radius: baseRadius,
+        collides: false,
         drawFn(pos, angle, team) {
             strokeCircle(pos, baseRadius, 2, 'red');
         }
@@ -79,6 +80,7 @@ const units = {
         maxHp: 3,
         sightRadius: laneWidth/2,
         radius: 10,
+        collides: true,
         drawFn(pos, angle, team) {
             fillCircle(pos, 10, teamColors[team]);
         }
@@ -118,7 +120,7 @@ function laneEnd(lane, team)
 
 function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, nextFree, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState  } = gameState.entities;
+    const { exists, nextFree, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState, physState  } = gameState.entities;
     const len = exists.length;
     if (gameState.freeSlot == -1) {
         for (const [key, arr] of Object.entries(gameState.entities)) {
@@ -142,6 +144,7 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     angVel[idx]     = 0;
     state[idx]      = STATE.PROCEED;
     atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
+    physState[idx]  = { colliding: false };
 
     return idx;
 }
@@ -192,8 +195,9 @@ export function initGame()
             angVel: [],
             state: [],
             target: [],
-            atkState: [],
             lane: [],
+            atkState: [],
+            physState: [],
         },
         freeSlot: -1,
         bases: {
@@ -354,13 +358,13 @@ export function render()
         drawLane(gameState.lanes[i]);
     }
 
-    const { exists, team, unit, pos, angle, state, target } = gameState.entities;
+    const { exists, team, unit, pos, angle, physState } = gameState.entities;
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
             continue;
         }
         unit[i].drawFn(pos[i], angle[i], team[i])
-        if (debug.drawRadii) {
+        if (debug.drawRadii && physState[i].colliding) {
             strokeCircle(pos[i], unit[i].radius, 2, 'red');
         }
         if (debug.drawSight && unit[i].sightRadius > 0)
@@ -440,12 +444,36 @@ function canAttackTarget(i)
     return isInAttackRange(i,t);
 }
 
+function getCollidingWith(i)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    const colls = [];
+    if (!unit[i].collides) {
+        return colls;
+    }
+    forAllEntities((j) => {
+        if (j == i || !unit[j].collides) {
+            return;
+        }
+        const dist = getDist(pos[i], pos[j]);
+        if (dist < unit[i].radius + unit[j].radius) {
+            colls.push(j);
+        }
+    });
+    return colls;
+}
+
 export function update(realTimeMs, ticksMs, timeDeltaMs)
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState } = gameState.entities;
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     // move, collide
     forAllEntities((i) => {
         vecAddTo(pos[i], vel[i]);
+        if (getCollidingWith(i).length == 0) {
+            physState[i].colliding = false;
+        } else {
+            physState[i].colliding = true;
+        }
     });
 
     forAllEntities((i) => {
@@ -596,6 +624,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
     }
 
     // reap/spawn
+    // TODO bug - an entity who is referenced by another (e.g. by target) could die (exists = false), then another could spawn in the same spot (setting exists = true)
     forAllEntities((i) => {
         if (hp[i] <= 0) {
             exists[i] = false;
