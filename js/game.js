@@ -23,6 +23,12 @@ const STATE = Object.freeze({
     CHASE: 2,
     ATTACK: 3,
 });
+const ATKSTATE = Object.freeze({
+    NONE: 0,
+    AIM: 1,
+    SWING: 2,
+    RECOVER: 3,
+});
 
 const debug = {
     drawRadii: true,
@@ -34,14 +40,17 @@ let gameState = null;
 const weapons = {
     none: {
         range: 0,
+        aimMs: Infinity,
         cooldownMs: Infinity,
         damage: 0,
         missChance: 1,
         drawFn() {}
     },
     elbow: {
-        range: 5, // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
-        cooldownMs: 1000,
+        range: 5,        // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
+        aimMs: 300,      // time from deciding to attack until starting attack
+        swingMs: 200,    // time from starting attack til attack hits
+        recoverMs: 400,  // time after attack hits til can attack again
         damage: 1,
         missChance: 0.3,
         drawFn(pos, angle, team, atkState) {
@@ -128,7 +137,7 @@ function spawnEntity(aPos, aTeam, aUnit, aWeapon, aLane = null)
     angle[idx]  = 0;
     angVel[idx] = 0;
     state[idx]  = STATE.PROCEED;
-    atkState[idx] = { atkTimer: 0 };
+    atkState[idx] = { timer: 0, state: ATKSTATE.NONE };
 
     return idx;
 }
@@ -395,12 +404,63 @@ function isInAttackRange(i, j)
     return distToUnitEdge < (unit[i].radius + unit[i].weapon.range);
 }
 
+function canAttackTarget(i)
+{
+    const { exists, target } = gameState.entities;
+    const t = target[i];
+    if (t == null) {
+        return false;
+    }
+    if (!exists[t]) {
+        return false
+    }
+    return isInAttackRange(i,t);
+}
+
 export function update(realTimeMs, ticksMs, timeDeltaMs)
 {
-    const { exists, team, unit, pos, vel, angle, angVel, state, lane, target } = gameState.entities;
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState } = gameState.entities;
     // move, collide
     forAllEntities((i) => {
         vecAddTo(pos[i], vel[i]);
+    });
+
+    forAllEntities((i) => {
+        const newTime = atkState[i].timer - timeDeltaMs;
+        if (newTime > 0) {
+            atkState[i].timer = newTime;
+            return;
+        }
+        // timer has expired
+        switch (atkState[i].state) {
+            case ATKSTATE.NONE:
+            {
+                atkState[i].timer = 0;
+                break;
+            }
+            case ATKSTATE.AIM:
+            {
+                atkState[i].state = ATKSTATE.SWING;
+                atkState[i].timer = newTime + unit[i].weapon.swingMs; // there may be remaining negative time; remove that from the timer by adding here
+                break;
+            }
+            case ATKSTATE.SWING:
+            {
+                atkState[i].state = ATKSTATE.RECOVER;
+                atkState[i].timer = newTime + unit[i].weapon.recoverMs;
+                // hit!
+                if (canAttackTarget(i)) {
+                    hp[target[i]] -= unit[i].weapon.damage;
+                }
+                break;
+            }
+            case ATKSTATE.RECOVER:
+            {
+                atkState[i].state = ATKSTATE.AIM;
+                atkState[i].timer = newTime + unit[i].weapon.aimMs;
+                break;
+            }
+        }
     });
 
     // state/AI
@@ -426,11 +486,12 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
                     vecClear(vel[i]);
                     break;
                 }
-                const newTarget = nearestEnemyInAttackRange(i);
-                if (newTarget != null) {
+                if (nearestAtkTarget != null) {
                     state[i] = STATE.ATTACK;
-                    vecClear(vel[i]);
-                    target[i] = newTarget;
+                    target[i] = nearestAtkTarget;
+                } else if (nearestChaseTarget != null) {
+                    state[i] = STATE.CHASE;
+                    target[i] = nearestChaseTarget;
                 }
                 break;
             }
@@ -440,6 +501,8 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
                 if (nearestAtkTarget != null) {
                     state[i] = STATE.ATTACK;
                     target[i] = nearestAtkTarget;
+                    atkState[i].atkTimer = unit[i].weapon.AIM;
+                    atkState[i].state = ATKSTATE.AIM;
 
                 // otherwise always chase nearest
                 } else if (nearestChaseTarget != null) {
@@ -454,10 +517,8 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             case STATE.ATTACK:
             {
                 // check we can still attack the current target
-                if (target[i] != null) {
-                    if (!isInAttackRange(i,target[i])) {
-                        target[i] = null;
-                    }
+                if (!canAttackTarget(i,target[i])) {
+                    target[i] = null;
                 }
                 /*
                  * If we can't attack the current target, target[i] is null here;
@@ -466,9 +527,13 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
                 if (target[i] == null) {
                     if (nearestAtkTarget != null) {
                         target[i] = nearestAtkTarget;
+                        atkState[i].atkTimer = unit[i].weapon.AIM;
+                        atkState[i].state = ATKSTATE.AIM;
+
                     } else if (nearestChaseTarget != null) {
                         state[i] = STATE.CHASE;
                         target[i] = nearestChaseTarget;
+
                     } else {
                         state[i] = STATE.PROCEED;
                     }
@@ -499,9 +564,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             case STATE.ATTACK:
             {
                 console.assert(target[i] != null);
-
                 const t = target[i];
-
                 vecClear(vel[i]); // stand still
             }
             break;
@@ -509,7 +572,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
     }
     // TODO some way to avoid this; clear all targets in case of ordering issues:
     forAllEntities((i) => {
-        target[i] = null;
+        //target[i] = null;
     });
 
     // reap/spawn
