@@ -365,7 +365,7 @@ function nearestUnit(i, minRange, excludeFn)
     let minDist = minRange;
     // TODO broad phase
     for (let j = 0; j < exists.length; ++j) {
-        if (!exists[i]) {
+        if (!exists[j]) {
             continue;
         }
         if (excludeFn(i, j)) {
@@ -501,7 +501,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
                 if (nearestAtkTarget != null) {
                     state[i] = STATE.ATTACK;
                     target[i] = nearestAtkTarget;
-                    atkState[i].atkTimer = unit[i].weapon.AIM;
+                    atkState[i].timer = unit[i].weapon.aimMs;
                     atkState[i].state = ATKSTATE.AIM;
 
                 // otherwise always chase nearest
@@ -517,7 +517,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             case STATE.ATTACK:
             {
                 // check we can still attack the current target
-                if (!canAttackTarget(i,target[i])) {
+                if (!canAttackTarget(i)) {
                     target[i] = null;
                 }
                 /*
@@ -527,7 +527,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
                 if (target[i] == null) {
                     if (nearestAtkTarget != null) {
                         target[i] = nearestAtkTarget;
-                        atkState[i].atkTimer = unit[i].weapon.AIM;
+                        atkState[i].timer = unit[i].weapon.aimMs;
                         atkState[i].state = ATKSTATE.AIM;
 
                     } else if (nearestChaseTarget != null) {
@@ -548,6 +548,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
                 const dir = vecNorm(toEnemyBase);
                 vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEnemyBase));
                 target[i] = null;
+                atkState[i].state = ATKSTATE.NONE;
                 break;
             }
             case STATE.CHASE:
