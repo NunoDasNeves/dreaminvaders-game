@@ -121,6 +121,12 @@ function laneEnd(lane, team)
 function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
     const { exists, nextFree, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState, physState  } = gameState.entities;
+
+    if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
+        console.warn("Can't spawn entity there");
+        return -1;
+    }
+
     const len = exists.length;
     if (gameState.freeSlot == -1) {
         for (const [key, arr] of Object.entries(gameState.entities)) {
@@ -442,6 +448,23 @@ function canAttackTarget(i)
         return false
     }
     return isInAttackRange(i,t);
+}
+
+function getCollidingWithCircle(aPos, aRadius)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    const colls = [];
+    forAllEntities((j) => {
+        if (!unit[j].collides) {
+            return;
+        }
+        const dist = getDist(aPos, pos[j]);
+        if (dist < aRadius + unit[j].radius) {
+            colls.push(j);
+        }
+    });
+    return colls;
+
 }
 
 function getCollidingWith(i)
