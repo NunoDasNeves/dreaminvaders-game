@@ -251,9 +251,6 @@ export function initGame()
 
     gameState.bases[TEAM.BLUE].unit = spawnEntity(gameState.bases[TEAM.BLUE].pos, TEAM.BLUE, units.base, weapons.none);
     gameState.bases[TEAM.ORANGE].unit = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
-
-    spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle);
-    spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
 }
 
 // Convert camera coordinates to world coordinates with scale
