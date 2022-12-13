@@ -89,6 +89,13 @@ export function vec(x = 0, y = 0)
     return { x, y };
 }
 
+export function vecNegate(v)
+{
+    v.x = -v.x;
+    v.y = -v.y;
+    return v;
+}
+
 export function vecDot(v1, v2)
 {
     return v1.x * v2.x + v1.y * v2.y;

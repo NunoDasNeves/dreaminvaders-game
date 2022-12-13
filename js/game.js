@@ -32,7 +32,8 @@ const ATKSTATE = Object.freeze({
 
 const debug = {
     drawRadii: true,
-    drawSight: false,
+    drawSight: true,
+    drawCapsule: true,
 }
 
 let gameState = null;
@@ -166,7 +167,7 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     state[idx]      = unit[idx].defaultState;
     atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
     physState[idx]  = { colliding: false };
-    boidState[idx]  = { targetPos: null };
+    boidState[idx]  = { targetPos: null, avoiding: false };
 
     return idx;
 }
@@ -264,6 +265,9 @@ export function worldToCamera(x, y) {
     return {x: (x - gameState.camera.x) / gameState.camera.scale + canvas.width / 2,
             y: (y - gameState.camera.y) / gameState.camera.scale + canvas.height / 2};
 }
+export function worldVecToCamera(v) {
+    return worldToCamera(v.x, v.y);
+}
 
 export function updateKey(key, pressed)
 {
@@ -311,6 +315,39 @@ function fillCircle(worldPos, radius, fillStyle)
     context.arc(coords.x, coords.y, radius / gameState.camera.scale, 0, 2 * Math.PI);
     context.fillStyle = fillStyle;
     context.fill();
+}
+
+function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
+{
+    const worldLineLen = length - radius;
+    const dir = vecFromAngle(angle);
+    const line = vecMul(dir, worldLineLen);
+    const worldEnd = vecAdd(worldPos, line);
+    const endCoords = worldToCamera(worldEnd.x, worldEnd.y); // where the circle center will be
+    const originCoords = worldToCamera(worldPos.x, worldPos.y); // start of the line
+    vecRotateBy(dir, Math.PI/2); // get the direction where we'll offset to get the side lines of the capsule
+    const offset = vecMul(dir, radius);
+    const left = vecAdd(worldPos, offset);
+    vecNegate(offset);
+    const right = vecAdd(worldPos, offset);
+    const leftOrigCoords = worldVecToCamera(left);
+    const rightOrigCoords = worldVecToCamera(right);
+    vecAddTo(left, line);
+    vecAddTo(right, line);
+    const leftEndCoords = worldVecToCamera(left);
+    const rightEndCoords = worldVecToCamera(right);
+
+    context.setLineDash([]);
+    context.lineWidth = width / gameState.camera.scale;
+    context.strokeStyle = strokeStyle;
+
+    context.beginPath();
+    context.moveTo(leftOrigCoords.x, leftOrigCoords.y);
+    context.lineTo(leftEndCoords.x, leftEndCoords.y);
+    context.moveTo(rightOrigCoords.x, rightOrigCoords.y);
+    context.lineTo(rightEndCoords.x, rightEndCoords.y);
+    context.arc(endCoords.x, endCoords.y, radius / gameState.camera.scale, angle - Math.PI/2, angle + Math.PI/2);
+    context.stroke();
 }
 
 function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
@@ -404,7 +441,7 @@ export function render()
         drawLane(gameState.lanes[i]);
     }
 
-    const { exists, team, unit, pos, angle, physState } = gameState.entities;
+    const { exists, team, unit, pos, angle, physState, boidState } = gameState.entities;
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
             continue;
@@ -416,6 +453,10 @@ export function render()
         if (debug.drawSight && unit[i].sightRadius > 0)
         {
             strokeCircle(pos[i], unit[i].sightRadius, 1, 'yellow');
+        }
+        if (unit[i] == units.boid && debug.drawCapsule) // && unit[i].avoiding)
+        {
+            strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, angle[i], 1, boidState[i].avoiding ? '#00ff00' : 'green');
         }
     }
 }
@@ -558,8 +599,8 @@ function updateBoidState()
             }, [pos[i], 0])[0];
         }
         const toTargetPos = vecSub(bState.targetPos, pos[i]);
-        const dir = vecNorm(toTargetPos);
-        const goalForce = vecMul(dir, unit[i].speed);
+        const targetDir = vecNorm(toTargetPos);
+        const goalForce = vecMul(targetDir, unit[i].speed);
         const finalForce = goalForce;
         // 'collision' - separation force
         const separationForce = vec();
@@ -590,6 +631,7 @@ function updateBoidState()
         // avoidance
         const avoidanceForce = vec();
         let avoidanceCount = 0;
+        bState.avoiding = false;
         for (let j = 0; j < exists.length; ++j) {
             if (!exists[j]) {
                 continue;
@@ -600,7 +642,37 @@ function updateBoidState()
             if (i == j) {
                 continue;
             }
-
+            const toBoid = vecSub(pos[j], pos[i]);
+            const len = vecLen(toBoid);
+            // TODO don't try to avoid target[i]; we wanna go straight towards it
+            // can see it
+            if (len > unit[i].sightRadius) {
+                continue;
+            }
+            // it's in front
+            if (vecDot(goalForce, toBoid) < 0) {
+                continue;
+            }
+            // half capsule check - capsule has unit[i].radius
+            const lineLen = unit[i].sightRadius - unit[i].radius;
+            const lineDir = vecNorm(targetDir);
+            // project toBoid onto line forward
+            const distAlongLine = vecDot(toBoid, lineDir);
+            if (distAlongLine > lineLen) {
+                // its in the capsule end
+                const endOfLine = vecMul(lineDir, lineLen);
+                if (utils.getDist(endOfLine, toBoid) > unit[i].radius + unit[j].radius) {
+                    continue;
+                }
+            } else {
+                // its in the line part, not the end part
+                const closestPointOnLine = vecMul(lineDir, distAlongLine);
+                if (getDist(closestPointOnLine, toBoid) > unit[i].radius + unit[j].radius) {
+                    continue;
+                }
+            }
+            // okay we're in the capsule
+            bState.avoiding = true;
         }
         if (avoidanceCount > 0) {
             vecMulBy(avoidanceForce, 1/avoidanceCount);
