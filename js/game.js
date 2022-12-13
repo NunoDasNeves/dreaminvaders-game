@@ -321,11 +321,11 @@ function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
     const coords = worldToCamera(worldPos.x, worldPos.y);
     const scaledBase = base / gameState.camera.scale;
     const scaledHeight = height / gameState.camera.scale;
-    // point up?
+    // points right - so angle == 0
     const triPoints = [
-        vec(scaledBase/2, scaledHeight/2), // bottom right
-        vec(0, -scaledHeight/2),            // top middle
-        vec(-scaledBase/2, scaledHeight/2)
+        vec(-scaledHeight/2, -scaledBase/2),
+        vec(scaledHeight/2, 0),
+        vec(-scaledHeight/2, scaledBase/2),
     ];
 
     // rotate to angle
@@ -739,7 +739,7 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             physState[i].colliding = true;
         }
         if (vecLen(vel[i]) > minVelocity) {
-            angle[i] = vecToAngle(vel[i]) + Math.PI/2;
+            angle[i] = vecToAngle(vel[i]);
         }
     });
 
