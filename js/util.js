@@ -55,10 +55,18 @@ export function vecClone(v)
     return { x: v.x, y: v.y };
 }
 
+export function vecCopyTo(v1, v2)
+{
+    v1.x = v2.x;
+    v1.y = v2.y;
+    return v1;
+}
+
 export function vecClear(v)
 {
     v.x = 0;
     v.y = 0;
+    return v;
 }
 
 export function vec(x = 0, y = 0)

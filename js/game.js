@@ -454,15 +454,18 @@ function getCollidingWithCircle(aPos, aRadius)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     const colls = [];
-    forAllEntities((j) => {
+    for (let j = 0; j < exists.length; ++j) {
+        if (!exists[j]) {
+            continue;
+        }
         if (!unit[j].collides) {
-            return;
+            continue;
         }
         const dist = getDist(aPos, pos[j]);
         if (dist < aRadius + unit[j].radius) {
             colls.push(j);
         }
-    });
+    }
     return colls;
 
 }
@@ -474,15 +477,18 @@ function getCollidingWith(i)
     if (!unit[i].collides) {
         return colls;
     }
-    forAllEntities((j) => {
+    for (let j = 0; j < exists.length; ++j) {
+        if (!exists[j]) {
+            continue;
+        }
         if (j == i || !unit[j].collides) {
-            return;
+            continue;
         }
         const dist = getDist(pos[i], pos[j]);
         if (dist < unit[i].radius + unit[j].radius) {
             colls.push(j);
         }
-    });
+    }
     return colls;
 }
 
