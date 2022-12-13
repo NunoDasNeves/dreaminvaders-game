@@ -69,6 +69,7 @@ const units = {
         sightRadius: 0,
         radius: baseRadius,
         collides: false,
+        defaultState: STATE.DO_NOTHING,
         drawFn(pos, angle, team) {
             strokeCircle(pos, baseRadius, 2, 'red');
         }
@@ -81,6 +82,7 @@ const units = {
         sightRadius: laneWidth/2,
         radius: 10,
         collides: true,
+        defaultState: STATE.PROCEED,
         drawFn(pos, angle, team) {
             fillCircle(pos, 10, teamColors[team]);
         }
@@ -93,6 +95,7 @@ const units = {
         sightRadius: laneWidth,
         radius:10,
         collides: true,
+        defaultState: STATE.DO_NOTHING,
         drawFn(pos, angle, team) {
             fillEquilateralTriangle(pos, angle, 10, 15, teamColors[team]);
         }
@@ -160,10 +163,10 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     vel[idx]        = vec();
     angle[idx]      = 0;
     angVel[idx]     = 0;
-    state[idx]      = STATE.PROCEED;
+    state[idx]      = unit[idx].defaultState;
     atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
     physState[idx]  = { colliding: false };
-    boidState[idx]  = {};
+    boidState[idx]  = { targetPos: null };
 
     return idx;
 }
@@ -247,9 +250,7 @@ export function initGame()
     });
 
     gameState.bases[TEAM.BLUE].unit = spawnEntity(gameState.bases[TEAM.BLUE].pos, TEAM.BLUE, units.base, weapons.none);
-    gameState.entities.state[gameState.bases[TEAM.BLUE].unit] = STATE.DO_NOTHING;
     gameState.bases[TEAM.ORANGE].unit = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
-    gameState.entities.state[gameState.bases[TEAM.ORANGE].unit] = STATE.DO_NOTHING;
 
     spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle);
     spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
@@ -536,61 +537,39 @@ function getCollidingWith(i)
 
 const minVelocity = 0.5;
 
-export function update(realTimeMs, ticksMs, timeDeltaMs)
+function updateBoidState()
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
+    const basePositions = [gameState.bases[TEAM.BLUE].pos, gameState.bases[TEAM.ORANGE].pos];
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i]) {
+            continue;
+        }
+        if (unit[i] != units.boid) {
+            continue;
+        }
+        const bState = boidState[i];
+        if (bState.targetPos != null) {
+            if (utils.getDist(pos[i], bState.targetPos) < (baseRadius + 5)) {
+                bState.targetPos = null;
+            }
+        }
+        if (bState.targetPos == null) {
+            bState.targetPos = basePositions.reduce((acc, v) => {
+                const d = getDist(v, pos[i]);
+                return d > acc[1] ? [v, d] : acc;
+            }, [pos[i], 0])[0];
+        }
+        const toTargetPos = vecSub(bState.targetPos, pos[i]);
+        const dir = vecNorm(toTargetPos);
+        vecCopyTo(vel[i], vecMul(dir, unit[i].speed));
+    }
+}
+
+function updateUnitState()
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
-    // move, collide
-    forAllEntities((i) => {
-        vecAddTo(pos[i], vel[i]);
-        if (getCollidingWith(i).length == 0) {
-            physState[i].colliding = false;
-        } else {
-            physState[i].colliding = true;
-        }
-        if (vecLen(vel[i]) > minVelocity) {
-            angle[i] = vecToAngle(vel[i]) + Math.PI/2;
-        }
-    });
 
-    forAllEntities((i) => {
-        const newTime = atkState[i].timer - timeDeltaMs;
-        if (newTime > 0) {
-            atkState[i].timer = newTime;
-            return;
-        }
-        // timer has expired
-        switch (atkState[i].state) {
-            case ATKSTATE.NONE:
-            {
-                atkState[i].timer = 0;
-                break;
-            }
-            case ATKSTATE.AIM:
-            {
-                atkState[i].state = ATKSTATE.SWING;
-                atkState[i].timer = newTime + unit[i].weapon.swingMs; // there may be remaining negative time; remove that from the timer by adding here
-                break;
-            }
-            case ATKSTATE.SWING:
-            {
-                atkState[i].state = ATKSTATE.RECOVER;
-                atkState[i].timer = newTime + unit[i].weapon.recoverMs;
-                // hit!
-                if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
-                    hp[target[i]] -= unit[i].weapon.damage;
-                }
-                break;
-            }
-            case ATKSTATE.RECOVER:
-            {
-                atkState[i].state = ATKSTATE.AIM;
-                atkState[i].timer = newTime + unit[i].weapon.aimMs;
-                break;
-            }
-        }
-    });
-
-    // state/AI
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
             continue;
@@ -698,6 +677,65 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             break;
         }
     }
+}
+
+export function update(realTimeMs, ticksMs, timeDeltaMs)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    // move, collide
+    forAllEntities((i) => {
+        vecAddTo(pos[i], vel[i]);
+        if (getCollidingWith(i).length == 0) {
+            physState[i].colliding = false;
+        } else {
+            physState[i].colliding = true;
+        }
+        if (vecLen(vel[i]) > minVelocity) {
+            angle[i] = vecToAngle(vel[i]) + Math.PI/2;
+        }
+    });
+
+    forAllEntities((i) => {
+        const newTime = atkState[i].timer - timeDeltaMs;
+        if (newTime > 0) {
+            atkState[i].timer = newTime;
+            return;
+        }
+        // timer has expired
+        switch (atkState[i].state) {
+            case ATKSTATE.NONE:
+            {
+                atkState[i].timer = 0;
+                break;
+            }
+            case ATKSTATE.AIM:
+            {
+                atkState[i].state = ATKSTATE.SWING;
+                atkState[i].timer = newTime + unit[i].weapon.swingMs; // there may be remaining negative time; remove that from the timer by adding here
+                break;
+            }
+            case ATKSTATE.SWING:
+            {
+                atkState[i].state = ATKSTATE.RECOVER;
+                atkState[i].timer = newTime + unit[i].weapon.recoverMs;
+                // hit!
+                if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
+                    hp[target[i]] -= unit[i].weapon.damage;
+                }
+                break;
+            }
+            case ATKSTATE.RECOVER:
+            {
+                atkState[i].state = ATKSTATE.AIM;
+                atkState[i].timer = newTime + unit[i].weapon.aimMs;
+                break;
+            }
+        }
+    });
+
+    // state/AI
+    updateUnitState();
+    updateBoidState();
 
     // reap/spawn
     // TODO bug - an entity who is referenced by another (e.g. by target) could die (exists = false), then another could spawn in the same spot (setting exists = true)
@@ -717,11 +755,11 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
         spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
     }
     if (gameState.input.keyMap['e'] && !gameState.lastInput.keyMap['e']) {
-        const randPos = vecMulBy(vecRand(), 500);
+        const randPos = vecMulBy(vecRand(), Math.random()*500);
         spawnEntity(randPos, TEAM.BLUE, units.boid);
     }
     if (gameState.input.keyMap['r'] && !gameState.lastInput.keyMap['r']) {
-        const randPos = vecMulBy(vecRand(), 500);
+        const randPos = vecMulBy(vecRand(), Math.random()*500);
         spawnEntity(randPos, TEAM.ORANGE, units.boid);
     }
 
