@@ -50,6 +50,21 @@ export function vecNorm(v)
     return { x: v.x/len, y: v.y/len }
 }
 
+export function vecNormalize(v)
+{
+    const len = vecLen(v);
+    if ( len < 0.0001 ) {
+        console.error("Tried to divide by 0");
+        v.x = 0;
+        v.y = 0;
+    } else {
+        v.x /= len;
+        v.y /= len;
+    }
+
+    return v;
+}
+
 export function vecClone(v)
 {
     return { x: v.x, y: v.y };
