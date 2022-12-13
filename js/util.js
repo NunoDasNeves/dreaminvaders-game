@@ -81,8 +81,7 @@ export function vecDot(v1, v2)
 
 export function vecToAngle(v)
 {
-    const n = vecNorm(v);
-    return Math.atan2(n.y, n.x);
+    return Math.atan2(v.y, v.x);
 }
 
 export function vecFromAngle(a)
@@ -91,6 +90,15 @@ export function vecFromAngle(a)
         x: Math.cos(a),
         y: Math.sin(a)
     }
+}
+
+export function vecRotateBy(v, a)
+{
+    const x = v.x*Math.cos(a) - v.y*Math.sin(a);
+    const y = v.x*Math.sin(a) + v.y*Math.cos(a);
+    v.x = x;
+    v.y = y;
+    return v;
 }
 
 export function vecRand()

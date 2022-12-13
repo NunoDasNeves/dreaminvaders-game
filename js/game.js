@@ -328,7 +328,7 @@ function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
     ];
 
     // rotate to angle
-    //TODO
+    triPoints.forEach((v) => vecRotateBy(v, angle));
 
     // move to coords
     triPoints.forEach((v) => vecAddTo(v, coords));
@@ -534,6 +534,8 @@ function getCollidingWith(i)
     return colls;
 }
 
+const minVelocity = 0.5;
+
 export function update(realTimeMs, ticksMs, timeDeltaMs)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
@@ -544,6 +546,9 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             physState[i].colliding = false;
         } else {
             physState[i].colliding = true;
+        }
+        if (vecLen(vel[i]) > minVelocity) {
+            angle[i] = vecToAngle(vel[i]) + Math.PI/2;
         }
     });
 
