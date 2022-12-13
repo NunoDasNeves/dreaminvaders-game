@@ -32,7 +32,7 @@ const ATKSTATE = Object.freeze({
 
 const debug = {
     drawRadii: true,
-    drawSight: true,
+    drawSight: false,
 }
 
 let gameState = null;
@@ -89,7 +89,7 @@ const units = {
     },
     boid: {
         weapon: weapons.none,
-        speed: 3,
+        speed: 1,
         angspeed: 0.5,
         maxHp: 1,
         sightRadius: laneWidth,
@@ -562,7 +562,55 @@ function updateBoidState()
         }
         const toTargetPos = vecSub(bState.targetPos, pos[i]);
         const dir = vecNorm(toTargetPos);
-        vecCopyTo(vel[i], vecMul(dir, unit[i].speed));
+        const goalForce = vecMul(dir, unit[i].speed);
+        const finalForce = goalForce;
+        // 'collision' - separation force
+        const separationForce = vec();
+        let separationCount = 0;
+        for (let j = 0; j < exists.length; ++j) {
+            if (!exists[j]) {
+                continue;
+            }
+            if (unit[j] != units.boid) {
+                continue;
+            }
+            if (i == j) {
+                continue;
+            }
+            const separationRadius = unit[i].radius + unit[j].radius;
+            const dist = getDist(pos[i], pos[j]);
+            if (dist > separationRadius) {
+                continue;
+            }
+            const dir = vecMul(vecSub(pos[i], pos[j]), 1/dist);
+            const force = vecMul(dir, separationRadius - dist);
+            vecAddTo(separationForce, force);
+            separationCount++;
+        }
+        if (separationCount > 0) {
+            vecMulBy(separationForce, 1/separationCount);
+        }
+        // avoidance
+        const avoidanceForce = vec();
+        let avoidanceCount = 0;
+        for (let j = 0; j < exists.length; ++j) {
+            if (!exists[j]) {
+                continue;
+            }
+            if (unit[j] != units.boid) {
+                continue;
+            }
+            if (i == j) {
+                continue;
+            }
+
+        }
+        if (avoidanceCount > 0) {
+            vecMulBy(avoidanceForce, 1/avoidanceCount);
+        }
+        vecAddTo(goalForce, separationForce);
+        vecAddTo(goalForce, avoidanceForce);
+        vecCopyTo(vel[i], finalForce);
     }
 }
 
