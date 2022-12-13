@@ -85,6 +85,18 @@ const units = {
             fillCircle(pos, 10, teamColors[team]);
         }
     },
+    boid: {
+        weapon: weapons.none,
+        speed: 3,
+        angspeed: 0.5,
+        maxHp: 1,
+        sightRadius: laneWidth,
+        radius:10,
+        collides: true,
+        drawFn(pos, angle, team) {
+            fillEquilateralTriangle(pos, angle, 10, 15, teamColors[team]);
+        }
+    }
 };
 
 function enemyTeam(team)
@@ -120,7 +132,7 @@ function laneEnd(lane, team)
 
 function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, nextFree, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState, physState  } = gameState.entities;
+    const { exists, nextFree, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState, physState, boidState  } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -151,6 +163,7 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     state[idx]      = STATE.PROCEED;
     atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
     physState[idx]  = { colliding: false };
+    boidState[idx]  = {};
 
     return idx;
 }
@@ -158,7 +171,7 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 function spawnEntityInLane(aLane, aTeam, aUnit)
 {
     const pos = laneStart(aLane, aTeam);
-    const randVec = vecMulBy(vec(Math.random(), Math.random()), laneWidth/2);
+    const randVec = vecMulBy(vecRand(), laneWidth/2);
     vecAddTo(pos, randVec);
     return spawnEntity(pos, aTeam, aUnit, aLane);
 }
@@ -170,15 +183,19 @@ function makeInput(oldInput = null)
             mouseLeft: false,
             mouseMiddle: false,
             mouseRight: false,
-            keyQ: false,
-            keyW: false
+            keyMap: {},
         };
     if (oldInput != null) {
         for (const [key, val] of Object.entries(oldInput)) {
             input[key] = val;
         }
-        //overwrite vec with a copy...
+        // overwrite vec with a copy
         input.mousePos = vecClone(oldInput.mousePos);
+        // overwrite keymap with copy
+        input.keyMap = {};
+        for (const [key, val] of Object.entries(oldInput.keyMap)) {
+            input.keyMap[key] = val;
+        }
     }
     return input;
 }
@@ -204,6 +221,7 @@ export function initGame()
             lane: [],
             atkState: [],
             physState: [],
+            boidState: [],
         },
         freeSlot: -1,
         bases: {
@@ -251,12 +269,7 @@ export function worldToCamera(x, y) {
 
 export function updateKey(key, pressed)
 {
-    if (key == 'q') {
-        gameState.input.keyQ = pressed;
-    }
-    if (key == 'w') {
-        gameState.input.keyW = pressed;
-    }
+    gameState.input.keyMap[key] = pressed;
 }
 
 export function updateMousePos(event)
@@ -300,6 +313,35 @@ function fillCircle(worldPos, radius, fillStyle)
     context.arc(coords.x, coords.y, radius / gameState.camera.scale, 0, 2 * Math.PI);
     context.fillStyle = fillStyle;
     context.fill();
+}
+
+function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
+{
+    const coords = worldToCamera(worldPos.x, worldPos.y);
+    const scaledBase = base / gameState.camera.scale;
+    const scaledHeight = height / gameState.camera.scale;
+    // point up?
+    const triPoints = [
+        vec(scaledBase/2, scaledHeight/2), // bottom right
+        vec(0, -scaledHeight/2),            // top middle
+        vec(-scaledBase/2, scaledHeight/2)
+    ];
+
+    // rotate to angle
+    //TODO
+
+    // move to coords
+    triPoints.forEach((v) => vecAddTo(v, coords));
+
+    context.beginPath();
+    context.moveTo(triPoints[2].x, triPoints[2].y);
+    for (let i = 0; i < triPoints.length; ++i) {
+        context.lineTo(triPoints[i].x, triPoints[i].y);
+    }
+
+    context.fillStyle = fillStyle;
+    context.fill();
+
 }
 
 function drawRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
@@ -553,8 +595,8 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
         }
         const toEnemyBase = vecSub(gameState.bases[enemyTeam(team[i])].pos, pos[i]);
         const distToEnemyBase = vecLen(toEnemyBase);
-        const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
-        const distToEndOfLane = vecLen(toEndOfLane);
+        //const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
+        //const distToEndOfLane = vecLen(toEndOfLane);
         const nearestAtkTarget = nearestEnemyInAttackRange(i);
         const nearestChaseTarget = nearestEnemyInSightRadius(i);
         // change state
@@ -663,11 +705,19 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
         }
     });
 
-    if (gameState.input.keyQ && !gameState.lastInput.keyQ) {
+    if (gameState.input.keyMap['q'] && !gameState.lastInput.keyMap['q']) {
         spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle);
     }
-    if (gameState.input.keyW && !gameState.lastInput.keyW) {
+    if (gameState.input.keyMap['w'] && !gameState.lastInput.keyMap['w']) {
         spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
+    }
+    if (gameState.input.keyMap['e'] && !gameState.lastInput.keyMap['e']) {
+        const randPos = vecMulBy(vecRand(), 500);
+        spawnEntity(randPos, TEAM.BLUE, units.boid);
+    }
+    if (gameState.input.keyMap['r'] && !gameState.lastInput.keyMap['r']) {
+        const randPos = vecMulBy(vecRand(), 500);
+        spawnEntity(randPos, TEAM.ORANGE, units.boid);
     }
 
     gameState.lastInput = makeInput(gameState.input);

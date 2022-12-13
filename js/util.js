@@ -93,6 +93,12 @@ export function vecFromAngle(a)
     }
 }
 
+export function vecRand()
+{
+    const v = vec(Math.random()-0.5, Math.random()-0.5);
+    return vecNorm(v);
+}
+
 export function getDist(p1, p2)
 {
     return vecLen(vecSub(p1, p2));
