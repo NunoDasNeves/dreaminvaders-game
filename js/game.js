@@ -32,8 +32,9 @@ const ATKSTATE = Object.freeze({
 
 const debug = {
     drawRadii: true,
-    drawSight: true,
+    drawSight: false,
     drawCapsule: true,
+    drawForces: true,
 }
 
 let gameState = null;
@@ -494,10 +495,21 @@ export function render()
         {
             strokeCircle(pos[i], unit[i].sightRadius, 1, 'yellow');
         }
-        if (unit[i] == units.boid && debug.drawCapsule) // && unit[i].avoiding)
+        if (unit[i] == units.boid)
         {
-            strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, angle[i], 1, boidState[i].avoiding ? '#00ff00' : 'green');
+            if (debug.drawCapsule) // && unit[i].avoiding)
+            {
+                strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, angle[i], 1, boidState[i].avoiding ? '#00ff00' : 'green');
+            }
+            if (debug.drawForces)
+            {
+                if (boidState[i].avoiding) {
+                    drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].avoidanceForce, 20)), 1, 'red');
+                }
+                drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].seekForce, 20)), 1, 'white');
+            }
         }
+
     }
 }
 
