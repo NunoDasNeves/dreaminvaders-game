@@ -167,7 +167,12 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     state[idx]      = unit[idx].defaultState;
     atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
     physState[idx]  = { colliding: false };
-    boidState[idx]  = { targetPos: null, avoiding: false };
+    boidState[idx]  = {
+        targetPos: null,
+        avoiding: false,
+        avoidanceForce: vec(),
+        seekForce: vec()
+    };
 
     return idx;
 }
@@ -610,6 +615,107 @@ function getCollidingWith(i)
 
 const minVelocity = 0.5;
 
+function getAvoidanceForce(i, seekForce)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
+    const bState = boidState[i];
+    const avoidanceForce = vec();
+    let avoidanceCount = 0;
+    bState.avoiding = false;
+    for (let j = 0; j < exists.length; ++j) {
+        if (!exists[j]) {
+            continue;
+        }
+        if (unit[j] != units.boid) {
+            continue;
+        }
+        if (i == j) {
+            continue;
+        }
+        const toBoid = vecSub(pos[j], pos[i]);
+        const len = vecLen(toBoid);
+        // TODO don't try to avoid target[i]; we wanna go straight towards it
+        // can see it
+        if (len > unit[i].sightRadius) {
+            continue;
+        }
+        // it's in front
+        if (vecDot(seekForce, toBoid) < 0) {
+            continue;
+        }
+        // half capsule check - capsule has unit[i].radius
+        const lineLen = unit[i].sightRadius - unit[i].radius;
+        const lineDir = vecNorm(seekForce);
+        // project toBoid onto line forward
+        const distAlongLine = vecDot(toBoid, lineDir);
+        if (distAlongLine > lineLen) {
+            // its in the capsule end
+            const endOfLine = vecMul(lineDir, lineLen);
+            if (getDist(endOfLine, toBoid) > unit[i].radius + unit[j].radius) {
+                continue;
+            }
+        } else {
+            // its in the line part, not the end part
+            const closestPointOnLine = vecMulBy(lineDir, distAlongLine);
+            if (getDist(closestPointOnLine, toBoid) > unit[i].radius + unit[j].radius) {
+                continue;
+            }
+        }
+        // okay we're in the capsule
+        bState.avoiding = true;
+        // get the direction
+        const avoidForce = vecTangentRight(lineDir);
+        const rightOrLeft = vecScalarCross(toBoid, lineDir);
+        vecMulBy(avoidForce, rightOrLeft > 0 ? -1 : 1);
+        // TODO its the same as closestPoint on line, meh
+        const linePointClosestToBoid = vecMul(lineDir, distAlongLine);
+        // force is inversely proportional to forward dist (further away = avoid less)
+        vecMulBy(avoidForce, 1/distAlongLine);
+        // and proportional to side dist (center of obstacle is further, so it's bigger) - not sure if this is always true
+        //vecMulBy(avoidForce, 1/distAlongLine);
+        //
+        vecAddTo(avoidanceForce, avoidForce);
+    }
+    if (avoidanceCount > 0) {
+        vecMulBy(avoidanceForce, 1/avoidanceCount);
+    }
+    bState.avoidanceForce = avoidanceForce;
+    return vecMulBy(avoidanceForce, unit[i].speed);
+}
+
+function getSeparationForce(i)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
+    const bState = boidState[i];
+    const separationForce = vec();
+    let separationCount = 0;
+    for (let j = 0; j < exists.length; ++j) {
+        if (!exists[j]) {
+            continue;
+        }
+        if (unit[j] != units.boid) {
+            continue;
+        }
+        if (i == j) {
+            continue;
+        }
+        const separationRadius = unit[i].radius + unit[j].radius;
+        const dist = getDist(pos[i], pos[j]);
+        if (dist > separationRadius) {
+            continue;
+        }
+        const dir = vecMul(vecSub(pos[i], pos[j]), 1/dist);
+        const force = vecMul(dir, separationRadius - dist);
+        vecAddTo(separationForce, force);
+        separationCount++;
+    }
+    if (separationCount > 0) {
+        vecMulBy(separationForce, 1/separationCount);
+    }
+
+    return separationForce;
+}
+
 function updateBoidState()
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
@@ -635,86 +741,18 @@ function updateBoidState()
         }
         const toTargetPos = vecSub(bState.targetPos, pos[i]);
         const targetDir = vecNorm(toTargetPos);
-        const goalForce = vecMul(targetDir, unit[i].speed);
-        const finalForce = goalForce;
+        const seekForce = vecMul(targetDir, unit[i].speed);
+        bState.seekForce = seekForce;
+        const finalForce = vecClone(seekForce);
         // 'collision' - separation force
-        const separationForce = vec();
-        let separationCount = 0;
-        for (let j = 0; j < exists.length; ++j) {
-            if (!exists[j]) {
-                continue;
-            }
-            if (unit[j] != units.boid) {
-                continue;
-            }
-            if (i == j) {
-                continue;
-            }
-            const separationRadius = unit[i].radius + unit[j].radius;
-            const dist = getDist(pos[i], pos[j]);
-            if (dist > separationRadius) {
-                continue;
-            }
-            const dir = vecMul(vecSub(pos[i], pos[j]), 1/dist);
-            const force = vecMul(dir, separationRadius - dist);
-            vecAddTo(separationForce, force);
-            separationCount++;
-        }
-        if (separationCount > 0) {
-            vecMulBy(separationForce, 1/separationCount);
-        }
-        // avoidance
-        const avoidanceForce = vec();
-        let avoidanceCount = 0;
-        bState.avoiding = false;
-        for (let j = 0; j < exists.length; ++j) {
-            if (!exists[j]) {
-                continue;
-            }
-            if (unit[j] != units.boid) {
-                continue;
-            }
-            if (i == j) {
-                continue;
-            }
-            const toBoid = vecSub(pos[j], pos[i]);
-            const len = vecLen(toBoid);
-            // TODO don't try to avoid target[i]; we wanna go straight towards it
-            // can see it
-            if (len > unit[i].sightRadius) {
-                continue;
-            }
-            // it's in front
-            if (vecDot(goalForce, toBoid) < 0) {
-                continue;
-            }
-            // half capsule check - capsule has unit[i].radius
-            const lineLen = unit[i].sightRadius - unit[i].radius;
-            const lineDir = vecNorm(targetDir);
-            // project toBoid onto line forward
-            const distAlongLine = vecDot(toBoid, lineDir);
-            if (distAlongLine > lineLen) {
-                // its in the capsule end
-                const endOfLine = vecMul(lineDir, lineLen);
-                if (utils.getDist(endOfLine, toBoid) > unit[i].radius + unit[j].radius) {
-                    continue;
-                }
-            } else {
-                // its in the line part, not the end part
-                const closestPointOnLine = vecMul(lineDir, distAlongLine);
-                if (getDist(closestPointOnLine, toBoid) > unit[i].radius + unit[j].radius) {
-                    continue;
-                }
-            }
-            // okay we're in the capsule
-            bState.avoiding = true;
-        }
-        if (avoidanceCount > 0) {
-            vecMulBy(avoidanceForce, 1/avoidanceCount);
-        }
-        vecAddTo(goalForce, separationForce);
-        vecAddTo(goalForce, avoidanceForce);
+        const separationForce = getSeparationForce(i);
+        const avoidanceForce = getAvoidanceForce(i, seekForce);
+
+        vecAddTo(finalForce, avoidanceForce);
+        vecSetMag(finalForce, unit[i].speed);
         vecCopyTo(vel[i], finalForce);
+        // stop em hitting
+        vecAddTo(finalForce, separationForce);
     }
 }
 
