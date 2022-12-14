@@ -65,6 +65,19 @@ export function vecNormalize(v)
     return v;
 }
 
+export function vecTangentRight(v)
+{
+    return {
+        x: v.y,
+        y: -v.x
+    };
+}
+
+export function vecSetMag(v, mag)
+{
+    return vecMulBy(vecNormalize(v), mag);
+}
+
 export function vecClone(v)
 {
     return { x: v.x, y: v.y };
@@ -99,6 +112,11 @@ export function vecNegate(v)
 export function vecDot(v1, v2)
 {
     return v1.x * v2.x + v1.y * v2.y;
+}
+
+export function vecScalarCross(v1, v2)
+{
+    return v1.x * v2.y - v1.y * v2.x;
 }
 
 export function vecToAngle(v)
