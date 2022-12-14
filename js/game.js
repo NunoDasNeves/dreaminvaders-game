@@ -407,6 +407,41 @@ function drawBase(team, base)
     context.fill();
 }
 
+function drawArrow(start, end, width, strokeStyle)
+{
+    const startCoords = worldVecToCamera(start);
+    const endCoords = worldVecToCamera(end);
+    // arrow as a vector in screen space
+    const arrowDir = utils.vecSub(endCoords, startCoords);
+    const arrowLen = vecLen(arrowDir);
+    const barbX = arrowLen*7/8;
+    const barby = arrowLen/8;
+    // arrow points to rotate
+    const arrowPoints = [
+        vec(),              // start
+        vec(arrowLen, 0),   // end
+        vec(barbX, barby),  // right
+        vec(barbX, -barby), // left
+    ];
+    const arrowAngle = vecToAngle(arrowDir);
+    arrowPoints.forEach(v => vecRotateBy(v, arrowAngle));
+    arrowPoints.forEach(v => vecAddTo(v, startCoords));
+
+    context.strokeStyle = strokeStyle;
+    context.setLineDash([]);
+    context.lineWidth = width / gameState.camera.scale;
+
+    context.beginPath();
+    // shaft
+    context.moveTo(arrowPoints[0].x, arrowPoints[0].y);
+    context.lineTo(arrowPoints[1].x, arrowPoints[1].y);
+    // barbs
+    context.moveTo(arrowPoints[2].x, arrowPoints[2].y);
+    context.lineTo(arrowPoints[1].x, arrowPoints[1].y);
+    context.lineTo(arrowPoints[3].x, arrowPoints[3].y);
+    context.stroke();
+}
+
 function drawLane(lane)
 {
     context.beginPath();
