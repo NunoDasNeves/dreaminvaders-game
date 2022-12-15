@@ -104,6 +104,14 @@ export function vecMulBy(v, f)
     return v;
 }
 
+export function vecFloor(v)
+{
+
+    v.x = Math.floor(v.x);
+    v.y = Math.floor(v.y);
+    return v;
+}
+
 export function vecNormalize(v)
 {
     const len = vecLen(v);
