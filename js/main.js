@@ -45,6 +45,12 @@ function initEvents()
         Game.updateMouseClick(event.button);
     });
 
+
+    document.addEventListener('wheel', function (event) {
+        // TODO this is just a random scaling value, it might not work everywhere
+        Game.updateMouseWheel(event.deltaY * 0.001);
+    });
+
     document.addEventListener('keydown', function (event) {
         Game.updateKey(event.key, true);
     });

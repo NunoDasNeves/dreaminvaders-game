@@ -413,7 +413,7 @@ function drawBase(team, base)
 {
     const teamColor = teamColors[team];
     const coords = worldToCamera(base.pos.x, base.pos.y);
-    var gradient = context.createRadialGradient(coords.x, coords.y, baseRadius - 50, coords.x, coords.y, baseVisualRadius);
+    var gradient = context.createRadialGradient(coords.x, coords.y, (baseRadius - 50) / gameState.camera.scale, coords.x, coords.y, baseVisualRadius / gameState.camera.scale);
     gradient.addColorStop(0, teamColor);
     gradient.addColorStop(1, basefadeColor);
 
@@ -992,6 +992,7 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         const randPos = vecMulBy(vecRand(), Math.random()*500);
         spawnEntity(randPos, TEAM.ORANGE, units.boid);
     }
+    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScroll, 0.25, 5);
 
     if (!gameState.debugPause || keyPressed('.')) {
         updateGame(timeDeltaMs);
