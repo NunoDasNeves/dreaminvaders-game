@@ -247,6 +247,7 @@ export function initGame()
         },
         input: makeInput(),
         lastInput: makeInput(),
+        debugPause: false,
     };
     const orangeToBlue = vecNorm(vecSub(gameState.bases[TEAM.BLUE].pos, gameState.bases[TEAM.ORANGE].pos));
     gameState.lanes.push({
@@ -881,7 +882,12 @@ function updateUnitState()
     }
 }
 
-export function update(realTimeMs, ticksMs, timeDeltaMs)
+function keyPressed(k)
+{
+    return gameState.input.keyMap[k] && !gameState.lastInput.keyMap[k];
+}
+
+function updateGame(timeDeltaMs)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     // move, collide
@@ -949,20 +955,37 @@ export function update(realTimeMs, ticksMs, timeDeltaMs)
             gameState.freeSlot = i;
         }
     });
+}
 
-    if (gameState.input.keyMap['q'] && !gameState.lastInput.keyMap['q']) {
+export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
+{
+    // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
+    if (keyPressed('p')) {
+        gameState.debugPause = !gameState.debugPause;
+    }
+    if (gameState.debugPause) {
+        // frame advance
+        if (!keyPressed('.')) {
+        }
+    }
+
+    if (keyPressed('q')) {
         spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle);
     }
-    if (gameState.input.keyMap['w'] && !gameState.lastInput.keyMap['w']) {
+    if (keyPressed('w')) {
         spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
     }
-    if (gameState.input.keyMap['e'] && !gameState.lastInput.keyMap['e']) {
+    if (keyPressed('e')) {
         const randPos = vecMulBy(vecRand(), Math.random()*500);
         spawnEntity(randPos, TEAM.BLUE, units.boid);
     }
-    if (gameState.input.keyMap['r'] && !gameState.lastInput.keyMap['r']) {
+    if (keyPressed('r')) {
         const randPos = vecMulBy(vecRand(), Math.random()*500);
         spawnEntity(randPos, TEAM.ORANGE, units.boid);
+    }
+
+    if (!gameState.debugPause || keyPressed('.')) {
+        updateGame(timeDeltaMs);
     }
 
     gameState.lastInput = makeInput(gameState.input);
