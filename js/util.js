@@ -78,6 +78,17 @@ export function vecSetMag(v, mag)
     return vecMulBy(vecNormalize(v), mag);
 }
 
+export function vecClampMag(v, min, max)
+{
+    const len = vecLen(v);
+    if (len < 0.0001) {
+        console.error("Tried to divide by 0");
+        return vecClear(v);
+    }
+    const clampedLen = clamp(len, min, max);
+    return vecMulBy(v, clampedLen/len);
+}
+
 export function vecClone(v)
 {
     return { x: v.x, y: v.y };
