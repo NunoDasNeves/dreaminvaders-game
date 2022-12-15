@@ -37,14 +37,13 @@ function initEvents()
 
     document.addEventListener('mousedown', function (event) {
         Game.updateMousePos(event);
-        Game.updateMouseClick(event.button);
+        Game.updateMouseClick(event.button, true);
     });
 
     document.addEventListener('mouseup', function (event) {
         Game.updateMousePos(event);
-        Game.updateMouseClick(event.button);
+        Game.updateMouseClick(event.button, false);
     });
-
 
     document.addEventListener('wheel', function (event) {
         // TODO this is just a random scaling value, it might not work everywhere

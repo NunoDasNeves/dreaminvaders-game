@@ -190,10 +190,11 @@ function makeInput()
 {
     return {
             mousePos: vec(),
+            mouseScreenPos: vec(),
+            mouseScrollDelta: 0,
             mouseLeft: false,
             mouseMiddle: false,
             mouseRight: false,
-            mouseScroll: 0,
             keyMap: {},
         };
 }
@@ -203,12 +204,13 @@ function updateGameInput()
     const input = gameState.input;
     const lastInput = gameState.lastInput;
 
-    lastInput.mousePos = vecClone(input.mousePos);
+    vecCopyTo(lastInput.mousePos, input.mousePos);
+    vecCopyTo(lastInput.mouseScreenPos, input.mouseScreenPos);
+    lastInput.mouseScrollDelta = input.mouseScrollDelta;
+    input.mouseScrollDelta = 0;
     lastInput.mouseLeft = input.mouseLeft;
     lastInput.mouseMiddle = input.mouseMiddle;
     lastInput.mouseRight = input.mouseRight;
-    lastInput.mouseScroll = input.mouseScroll;
-    input.mouseScroll = 0; // its a delta value so reset it
     for (const [key, val] of Object.entries(input.keyMap)) {
         lastInput.keyMap[key] = val;
     }
@@ -244,8 +246,7 @@ export function initGame()
         },
         lanes: [],
         camera: {
-            x: 0,
-            y: 0,
+            pos: vec(),
             scale: 1, // scale +++ means zoom out
             easeFactor: 0.1
         },
@@ -267,16 +268,20 @@ export function initGame()
 
 // Convert camera coordinates to world coordinates with scale
 export function cameraToWorld(x, y) {
-    return {x: (x - canvas.width / 2) * gameState.camera.scale + gameState.camera.x,
-            y: (y - canvas.height / 2) * gameState.camera.scale + gameState.camera.y};
+    return {x: (x - canvas.width / 2) * gameState.camera.scale + gameState.camera.pos.x,
+            y: (y - canvas.height / 2) * gameState.camera.scale + gameState.camera.pos.y};
+}
+function cameraVecToWorld(v)
+{
+    return cameraToWorld(v.x, v.y);
 }
 
 // Convert world coordinates to camera coordinates with scale
 export function worldToCamera(x, y) {
-    return {x: (x - gameState.camera.x) / gameState.camera.scale + canvas.width / 2,
-            y: (y - gameState.camera.y) / gameState.camera.scale + canvas.height / 2};
+    return {x: (x - gameState.camera.pos.x) / gameState.camera.scale + canvas.width / 2,
+            y: (y - gameState.camera.pos.y) / gameState.camera.scale + canvas.height / 2};
 }
-export function worldVecToCamera(v) {
+function worldVecToCamera(v) {
     return worldToCamera(v.x, v.y);
 }
 
@@ -288,29 +293,32 @@ export function updateKey(key, pressed)
 export function updateMousePos(event)
 {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left
-    const y = event.clientY - rect.top
-    gameState.input.mousePos = cameraToWorld(x, y);
+    const v = vec(
+        event.clientX - rect.left,
+        event.clientY - rect.top
+    );
+    gameState.input.mouseScreenPos = v;
+    gameState.input.mousePos = cameraVecToWorld(v);
 }
 
-export function updateMouseClick(button)
+export function updateMouseClick(button, pressed)
 {
     switch (button) {
         case 0:
-            gameState.input.mouseLeft = true;
+            gameState.input.mouseLeft = pressed;
             break;
         case 1:
-            gameState.input.mouseMiddle = true;
+            gameState.input.mouseMiddle = pressed;
             break;
         case 2:
-            gameState.input.mouseRight = true;
+            gameState.input.mouseRight = pressed;
             break;
     }
 }
 
 export function updateMouseWheel(y)
 {
-    gameState.input.mouseScroll = y;
+    gameState.input.mouseScrollDelta = y;
 }
 
 function strokeCircle(worldPos, radius, width, strokeStyle)
@@ -992,7 +1000,14 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         const randPos = vecMulBy(vecRand(), Math.random()*500);
         spawnEntity(randPos, TEAM.ORANGE, units.boid);
     }
-    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScroll, 0.25, 5);
+    // camera controls
+    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScrollDelta, 0.1, 5);
+    if (gameState.input.mouseMiddle) {
+        const delta = vecMul(vecSub(gameState.input.mouseScreenPos, gameState.lastInput.mouseScreenPos), gameState.camera.scale);
+        if (vecLen(delta)) {
+            vecSubFrom(gameState.camera.pos, delta);
+        }
+    }
 
     if (!gameState.debugPause || keyPressed('.')) {
         updateGame(timeDeltaMs);
