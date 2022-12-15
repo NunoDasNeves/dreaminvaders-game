@@ -186,28 +186,32 @@ function spawnEntityInLane(aLane, aTeam, aUnit)
     return spawnEntity(pos, aTeam, aUnit, aLane);
 }
 
-function makeInput(oldInput = null)
+function makeInput()
 {
-    const input = {
+    return {
             mousePos: vec(),
             mouseLeft: false,
             mouseMiddle: false,
             mouseRight: false,
+            mouseScroll: 0,
             keyMap: {},
         };
-    if (oldInput != null) {
-        for (const [key, val] of Object.entries(oldInput)) {
-            input[key] = val;
-        }
-        // overwrite vec with a copy
-        input.mousePos = vecClone(oldInput.mousePos);
-        // overwrite keymap with copy
-        input.keyMap = {};
-        for (const [key, val] of Object.entries(oldInput.keyMap)) {
-            input.keyMap[key] = val;
-        }
+}
+
+function updateGameInput()
+{
+    const input = gameState.input;
+    const lastInput = gameState.lastInput;
+
+    lastInput.mousePos = vecClone(input.mousePos);
+    lastInput.mouseLeft = input.mouseLeft;
+    lastInput.mouseMiddle = input.mouseMiddle;
+    lastInput.mouseRight = input.mouseRight;
+    lastInput.mouseScroll = input.mouseScroll;
+    input.mouseScroll = 0; // its a delta value so reset it
+    for (const [key, val] of Object.entries(input.keyMap)) {
+        lastInput.keyMap[key] = val;
     }
-    return input;
 }
 
 export function initGame()
@@ -302,6 +306,11 @@ export function updateMouseClick(button)
             gameState.input.mouseRight = true;
             break;
     }
+}
+
+export function updateMouseWheel(y)
+{
+    gameState.input.mouseScroll = y;
 }
 
 function strokeCircle(worldPos, radius, width, strokeStyle)
@@ -988,5 +997,5 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         updateGame(timeDeltaMs);
     }
 
-    gameState.lastInput = makeInput(gameState.input);
+    updateGameInput();
 }
