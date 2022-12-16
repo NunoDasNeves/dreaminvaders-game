@@ -9,11 +9,21 @@ export function clamp(x, min, max)
     return x;
 }
 
+export function almostZero(x)
+{
+    return Math.abs(x) < 0.0001;
+}
+
 /*
  * ##############
  * 2d Vectors
  * ##############
  */
+
+export function vecAlmostZero(v)
+{
+    return Math.abs(v.x) < 0.0001 || Math.abs(v.y) < 0.0001;
+}
 
 // Functions that return a new vector object
 
@@ -45,7 +55,7 @@ export function vecMul(v, f)
 export function vecNorm(v)
 {
     const len = vecLen(v);
-    if ( len < 0.0001 ) {
+    if ( almostZero(len) ) {
         console.error("Tried to divide by 0");
         return { x: 0, y: 0 };
     }
@@ -115,7 +125,7 @@ export function vecFloor(v)
 export function vecNormalize(v)
 {
     const len = vecLen(v);
-    if ( len < 0.0001 ) {
+    if ( almostZero(len) ) {
         console.error("Tried to divide by 0");
         v.x = 0;
         v.y = 0;
@@ -135,7 +145,7 @@ export function vecSetMag(v, mag)
 export function vecClampMag(v, min, max)
 {
     const len = vecLen(v);
-    if (len < 0.0001) {
+    if ( almostZero(len) ) {
         console.error("Tried to divide by 0");
         return vecClear(v);
     }

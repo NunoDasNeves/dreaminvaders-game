@@ -910,7 +910,7 @@ function updateUnitState()
                 const t = target[i];
                 const toTarget = vecSub(pos[t], pos[i]);
                 const distToTarget = vecLen(toTarget);
-                if (distToTarget > 0.0001) {
+                if ( !almostZero(distToTarget) ) {
                     const dir = vecMul(toTarget, 1/distToTarget);
                     vel[i] = vecMul(dir, Math.min(unit[i].speed, distToTarget));
                 }
@@ -955,7 +955,7 @@ function updatePhysicsState()
         const dir = vecSub(pos[j],pos[i]);
         const len = vecLen(dir);
         const correction = (unit[i].radius + unit[j].radius - len) / 2;
-        if (len < 0.001) {
+        if ( almostZero(len) ) {
             dir = vec(1,0);
         } else {
             vecMulBy(dir, 1/len);
