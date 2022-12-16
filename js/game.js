@@ -508,8 +508,8 @@ export function render()
             continue;
         }
         unit[i].drawFn(pos[i], angle[i], team[i])
-        if (debug.drawRadii && physState[i].colliding) {
-            strokeCircle(pos[i], unit[i].radius, 2, 'red');
+        if (debug.drawRadii) {
+            strokeCircle(pos[i], unit[i].radius, 1, physState[i].colliding ? 'red' : '#880000');
         }
         if (debug.drawSight && unit[i].sightRadius > 0)
         {
