@@ -43,7 +43,8 @@ const weapons = {
     none: {
         range: 0,
         aimMs: Infinity,
-        cooldownMs: Infinity,
+        swingMs: Infinity,
+        recoverMs: Infinity,
         damage: 0,
         missChance: 1,
         drawFn() {}
