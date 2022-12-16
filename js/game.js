@@ -4,6 +4,7 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 let canvas = null;
 let context = null;
 
+const minUnitVelocity = 0.5;
 const backgroundColor = "#1f1f1f";
 const basefadeColor = "#101010";
 const laneColor = "#888888";
@@ -644,7 +645,33 @@ function getCollidingWith(i)
     return colls;
 }
 
-const minVelocity = 0.5;
+function updateAllCollidingPairs(pairs)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    pairs.length = 0;
+
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i]) {
+            continue;
+        }
+        if (!unit[i].collides) {
+            continue;
+        }
+        for (let j = i + 1; j < exists.length; ++j) {
+            if (!exists[j]) {
+                continue;
+            }
+            if (j == i || !unit[j].collides) {
+                continue;
+            }
+            const dist = getDist(pos[i], pos[j]);
+            if (dist < unit[i].radius + unit[j].radius) {
+                pairs.push([i, j]);
+            }
+        }
+    }
+    return pairs;
+}
 
 function getAvoidanceForce(i, seekForce)
 {
@@ -905,22 +932,57 @@ function keyPressed(k)
     return gameState.input.keyMap[k] && !gameState.lastInput.keyMap[k];
 }
 
-function updateGame(timeDeltaMs)
+function updatePhysicsState()
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+
+    // very simple collisions, just reset position
+    const pairs = [];
     // move, collide
-    forAllEntities((i) => {
-        vecAddTo(pos[i], vel[i]);
-        if (getCollidingWith(i).length == 0) {
-            physState[i].colliding = false;
-        } else {
-            physState[i].colliding = true;
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i]) {
+            continue;
         }
-        if (vecLen(vel[i]) > minVelocity) {
+        physState[i].colliding = false;
+        vecAddTo(pos[i], vel[i]);
+    };
+
+    updateAllCollidingPairs(pairs);
+    for (let k = 0; k < pairs.length; ++k) {
+        const [i, j] = pairs[k];
+        physState[i].colliding = true;
+        physState[j].colliding = true;
+        const dir = vecSub(pos[j],pos[i]);
+        const len = vecLen(dir);
+        const correction = (unit[i].radius + unit[j].radius - len) / 2;
+        if (len < 0.001) {
+            dir = vec(1,0);
+        } else {
+            vecMulBy(dir, 1/len);
+        }
+        const dirNeg = vecMul(dir, -1);
+        const corrPos = vecMul(dir, correction);
+        const corrNeg = vecMul(dirNeg, correction);
+
+        vecAddTo(pos[i], corrNeg);
+        vecAddTo(pos[j], corrPos);
+    }
+
+    // rotate to face vel
+    forAllEntities((i) => {
+        if (vecLen(vel[i]) > minUnitVelocity) {
             angle[i] = vecToAngle(vel[i]);
         }
     });
+}
 
+function updateGame(timeDeltaMs)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+
+    updatePhysicsState();
+
+    // attack state
     forAllEntities((i) => {
         const newTime = atkState[i].timer - timeDeltaMs;
         if (newTime > 0) {
