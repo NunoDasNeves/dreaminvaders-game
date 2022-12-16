@@ -993,12 +993,10 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
     }
     if (keyPressed('e')) {
-        const randPos = vecMulBy(vecRand(), Math.random()*500);
-        spawnEntity(randPos, TEAM.BLUE, units.boid);
+        spawnEntity(gameState.input.mousePos, TEAM.BLUE, units.boid);
     }
     if (keyPressed('r')) {
-        const randPos = vecMulBy(vecRand(), Math.random()*500);
-        spawnEntity(randPos, TEAM.ORANGE, units.boid);
+        spawnEntity(gameState.input.mousePos, TEAM.ORANGE, units.boid);
     }
     // camera controls
     gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScrollDelta, 0.1, 5);
