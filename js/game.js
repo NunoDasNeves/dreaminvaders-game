@@ -173,6 +173,7 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     boidState[idx]  = {
         targetPos: null,
         avoiding: false,
+        avoidDir: 0,
         avoidanceForce: vec(),
         seekForce: vec()
     };
@@ -519,7 +520,7 @@ export function render()
         {
             if (debug.drawCapsule) // && unit[i].avoiding)
             {
-                strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, angle[i], 1, boidState[i].avoiding ? '#00ff00' : 'green');
+                strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, vecToAngle(boidState[i].seekForce), 1, boidState[i].avoiding ? '#00ff00' : 'green');
             }
             if (debug.drawForces)
             {
@@ -673,20 +674,23 @@ function updateAllCollidingPairs(pairs)
     return pairs;
 }
 
-function getAvoidanceForce(i)
+function getAvoidanceForce(i, seekForce)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
     const bState = boidState[i];
-    bState.avoiding = false;
+
     vecClear(bState.avoidanceForce);
     if (vecAlmostZero(vel[i])) {
+        bState.avoidDir = 0;
+        bState.avoiding = false;
         return bState.avoidanceForce;
     }
+    const goingDir = seekForce;
     // find closest thing to avoid
     let minAvoid = -1; // boid to avoid
     let minDist = Infinity; // dist to edge of boid to avoid
     let minToBoid = vec(); // vector to boid to avoid
-    const lineDir = vecNorm(vel[i]);
+    const lineDir = vecNorm(goingDir);
     // the capsule that is our avoidance 'sight'
     const capsuleLen = unit[i].sightRadius;
     //  the line in the center of the capsule, from our center to the center of the circle on the end
@@ -710,7 +714,7 @@ function getAvoidanceForce(i)
             continue;
         }
         // it's in front
-        if (vecDot(vel[i], toBoid) < 0) {
+        if (vecDot(lineDir, toBoid) < 0) {
             continue;
         }
         // half capsule check - capsule has unit[i].radius
@@ -729,22 +733,28 @@ function getAvoidanceForce(i)
                 continue;
             }
         }
-        // okay we're in the capsule, time to avoid
-        bState.avoiding = true;
         if (len < minDist) {
             minAvoid = j;
             minDist = len;
             minToBoid = toBoid;
         }
     }
+    // time to avoid
     if (minAvoid != -1) {
+        bState.avoiding = true;
         // get the direction
         const avoidForce = vecTangentRight(lineDir);
-        const rightOrLeft = vecScalarCross(minToBoid, lineDir);
-        vecMulBy(avoidForce, rightOrLeft > 0 ? -1 : 1);
+        // use old avoid direction so we don't pingpong frame-to-frame
+        if (bState.avoidDir == 0) {
+            bState.avoidDir = vecScalarCross(minToBoid, lineDir) > 0 ? -1 : 1;
+        }
+        vecMulBy(avoidForce, bState.avoidDir);
         // force is inversely proportional to forward dist (further away = avoid less)
         vecMulBy(avoidForce, 1 - minDist/capsuleLen);
         vecCopyTo(bState.avoidanceForce, avoidForce);
+    } else {
+        bState.avoiding = false;
+        bState.avoidDir = 0;
     }
     return vecMulBy(bState.avoidanceForce, unit[i].speed);
 }
@@ -810,7 +820,7 @@ function updateBoidState()
         const seekForce = vecMul(targetDir, unit[i].speed);
         bState.seekForce = seekForce;
         const finalForce = vecClone(seekForce);
-        const avoidanceForce = getAvoidanceForce(i);
+        const avoidanceForce = getAvoidanceForce(i, seekForce);
 
         vecAddTo(finalForce, avoidanceForce);
         vecSetMag(finalForce, unit[i].speed);
