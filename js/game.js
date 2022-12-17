@@ -1,18 +1,11 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
+import { params } from "./data.js"
+
 let canvas = null;
 let context = null;
 
-const minUnitVelocity = 0.5;
-const backgroundColor = "#1f1f1f";
-const basefadeColor = "#101010";
-const laneColor = "#888888";
-const laneWidth = 60;
-const baseRadius = 200;
-const baseVisualRadius = 250;
-const laneDistFromBase = baseRadius - 5;
-const teamColors = [ "#6f6f6f", "#ff9933", "#3399ff" ];
 const TEAM = Object.freeze({
     NONE: 0,
     ORANGE: 1,
@@ -31,14 +24,14 @@ const ATKSTATE = Object.freeze({
     RECOVER: 3,
 });
 
+let gameState = null;
+
 const debug = {
     drawRadii: true,
     drawSight: false,
     drawCapsule: true,
     drawForces: true,
 }
-
-let gameState = null;
 
 const weapons = {
     none: {
@@ -71,11 +64,11 @@ const units = {
         angSpeed: 0,
         maxHp: 1000,
         sightRadius: 0,
-        radius: baseRadius,
+        radius: params.baseRadius,
         collides: false,
         defaultState: STATE.DO_NOTHING,
         drawFn(pos, angle, team) {
-            strokeCircle(pos, baseRadius, 2, 'red');
+            strokeCircle(pos, params.baseRadius, 2, 'red');
         }
     },
     circle: {
@@ -83,12 +76,12 @@ const units = {
         speed: 3,
         angSpeed: 1,
         maxHp: 3,
-        sightRadius: laneWidth/2,
+        sightRadius: params.laneWidth/2,
         radius: 10,
         collides: true,
         defaultState: STATE.PROCEED,
         drawFn(pos, angle, team) {
-            fillCircle(pos, 10, teamColors[team]);
+            fillCircle(pos, 10, params.teamColors[team]);
         }
     },
     boid: {
@@ -96,12 +89,12 @@ const units = {
         speed: 1,
         angspeed: 0.5,
         maxHp: 1,
-        sightRadius: laneWidth,
+        sightRadius: params.laneWidth,
         radius:10,
         collides: true,
         defaultState: STATE.DO_NOTHING,
         drawFn(pos, angle, team) {
-            fillEquilateralTriangle(pos, angle, 10, 15, teamColors[team]);
+            fillEquilateralTriangle(pos, angle, 10, 15, params.teamColors[team]);
         }
     }
 };
@@ -220,7 +213,7 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 function spawnEntityInLane(aLane, aTeam, aUnit)
 {
     const pos = laneStart(aLane, aTeam);
-    const randVec = vecMulBy(vecRand(), laneWidth/2);
+    const randVec = vecMulBy(vecRand(), params.laneWidth/2);
     vecAddTo(pos, randVec);
     return spawnEntity(pos, aTeam, aUnit, aLane);
 }
@@ -299,8 +292,8 @@ export function initGame()
     const orangeToBlue = vecNorm(vecSub(gameState.bases[TEAM.BLUE].pos, gameState.bases[TEAM.ORANGE].pos));
     gameState.lanes.push({
         points: [
-            vecAdd(gameState.bases[TEAM.ORANGE].pos, vecMul(orangeToBlue, laneDistFromBase)),
-            vecAdd(gameState.bases[TEAM.BLUE].pos, vecMul(orangeToBlue, -laneDistFromBase)),
+            vecAdd(gameState.bases[TEAM.ORANGE].pos, vecMul(orangeToBlue, params.laneDistFromBase)),
+            vecAdd(gameState.bases[TEAM.BLUE].pos, vecMul(orangeToBlue, -params.laneDistFromBase)),
         ]
     });
 
@@ -461,15 +454,15 @@ function drawRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
 
 function drawBase(team, base)
 {
-    const teamColor = teamColors[team];
+    const teamColor = params.teamColors[team];
     const coords = worldToCamera(base.pos.x, base.pos.y);
-    var gradient = context.createRadialGradient(coords.x, coords.y, (baseRadius - 50) / gameState.camera.scale, coords.x, coords.y, baseVisualRadius / gameState.camera.scale);
+    var gradient = context.createRadialGradient(coords.x, coords.y, (params.baseRadius - 50) / gameState.camera.scale, coords.x, coords.y, params.baseVisualRadius / gameState.camera.scale);
     gradient.addColorStop(0, teamColor);
-    gradient.addColorStop(1, basefadeColor);
+    gradient.addColorStop(1, params.baseFadeColor);
 
     context.fillStyle = gradient;
     context.beginPath();
-    context.arc(coords.x, coords.y, baseVisualRadius / gameState.camera.scale, 0, 2 * Math.PI);
+    context.arc(coords.x, coords.y, params.baseVisualRadius / gameState.camera.scale, 0, 2 * Math.PI);
     context.fill();
 }
 
@@ -517,10 +510,10 @@ function drawLane(lane)
     for (let i = 1; i < lane.points.length; ++i) {
         coords = worldToCamera(lane.points[i].x, lane.points[i].y);
         context.lineTo(coords.x, coords.y);
-        context.strokeStyle = laneColor;
+        context.strokeStyle = params.laneColor;
         // Clear line dash
         context.setLineDash([]);
-        context.lineWidth = laneWidth / gameState.camera.scale;
+        context.lineWidth = params.laneWidth / gameState.camera.scale;
         context.stroke();
     }
 }
@@ -531,7 +524,7 @@ export function render()
     canvas.height = window.innerHeight;
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    context.fillStyle = backgroundColor;
+    context.fillStyle = params.backgroundColor;
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     for (const [team, base] of Object.entries(gameState.bases)) {
@@ -841,7 +834,7 @@ function updateBoidState()
         }
         const bState = boidState[i];
         if (bState.targetPos != null) {
-            if (utils.getDist(pos[i], bState.targetPos) < (baseRadius + 5)) {
+            if (utils.getDist(pos[i], bState.targetPos) < (params.baseRadius + 5)) {
                 bState.targetPos = null;
             }
         }
@@ -1021,7 +1014,7 @@ function updatePhysicsState()
 
     // rotate to face vel
     forAllEntities((i) => {
-        if (vecLen(vel[i]) > minUnitVelocity) {
+        if (vecLen(vel[i]) > params.minUnitVelocity) {
             angle[i] = vecToAngle(vel[i]);
         }
     });
