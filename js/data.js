@@ -3,11 +3,12 @@
  */
 
 export const debug = {
-    drawRadii: true,
+    drawState: false,
+    drawRadii: false,
     drawSight: false,
+    drawAngle: false,
     drawCapsule: true,
     drawForces: true,
-    drawAngle: true,
     drawSwing: true,
 }
 
@@ -22,6 +23,8 @@ export const params = Object.freeze(
             baseRadius: 200,
             baseVisualRadius: 250,
             teamColors: [ "#6f6f6f", "#ff9933", "#3399ff" ], // first one is 'no team'
+            hpBarTimeMs: 2000,
+            hitFadeTimeMs: 300,
         }
         obj.laneDistFromBase = obj.baseRadius - 5;
         return obj;
@@ -85,7 +88,7 @@ export const units = Object.freeze({
         speed: 3,
         angSpeed: 1,
         maxHp: 3,
-        sightRadius: params.laneWidth/2,
+        sightRadius: params.laneWidth*0.75,
         radius: 10,
         collides: true,
         defaultState: STATE.PROCEED,

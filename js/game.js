@@ -447,13 +447,34 @@ function updatePhysicsState()
     });
 }
 
-function updateGame(timeDeltaMs)
+function hitEntity(i, damage)
+{
+    const { unit, hp, hitState } = gameState.entities;
+    hp[i] -= damage;
+    hitState[i].hitTimer = params.hitFadeTimeMs;
+    hitState[i].hpBarTimer = params.hpBarTimeMs;
+}
+
+function updateHitState(timeDeltaMs)
+{
+    const { exists, team, unit, hp, hitState } = gameState.entities;
+    forAllEntities((i) => {
+        hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
+        hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
+        // reap
+        if (hp[i] <= 0) {
+            exists[i] = false;
+            // add to free list
+            gameState.entities.nextFree[i] = gameState.freeSlot;
+            gameState.freeSlot = i;
+        }
+    });
+}
+
+function updateAtkState(timeDeltaMs)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
 
-    updatePhysicsState();
-
-    // attack state
     forAllEntities((i) => {
         const newTime = atkState[i].timer - timeDeltaMs;
         if (newTime > 0) {
@@ -481,7 +502,7 @@ function updateGame(timeDeltaMs)
                 if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
                     const t = target[i].getIndex();
                     console.assert(t != INVALID_ENTITY_INDEX);
-                    hp[t] -= unit[i].weapon.damage;
+                    hitEntity(i, unit[i].weapon.damage);
                 }
                 break;
             }
@@ -493,21 +514,17 @@ function updateGame(timeDeltaMs)
             }
         }
     });
+}
 
-    // state/AI
+function updateGame(timeDeltaMs)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+
+    updatePhysicsState();
+    updateAtkState(timeDeltaMs);
     updateUnitState();
     updateBoidState();
-
-    // reap/spawn
-    // TODO bug - an entity who is referenced by another (e.g. by target) could die (exists = false), then another could spawn in the same spot (setting exists = true)
-    forAllEntities((i) => {
-        if (hp[i] <= 0) {
-            exists[i] = false;
-            // add to free list
-            gameState.entities.nextFree[i] = gameState.freeSlot;
-            gameState.freeSlot = i;
-        }
-    });
+    updateHitState(timeDeltaMs);
 }
 
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)

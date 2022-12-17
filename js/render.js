@@ -35,7 +35,7 @@ function drawTriangleUnit(pos, angle, team, unit)
 
 function drawUnit(i)
 {
-    const { team, unit, pos, vel, angle, target, atkState, physState, boidState } = gameState.entities;
+    const { team, unit, pos, vel, angle, target, hp, state, atkState, physState, boidState, hitState } = gameState.entities;
     // draw basic shape
     switch (unit[i].draw.shape) {
         case "circle":
@@ -46,7 +46,13 @@ function drawUnit(i)
             break;
         default:
             console.error("invalid unit.draw");
-            break;
+            return;
+    }
+    // bloood
+    if (hitState[i].hitTimer > 0) {
+        const f = clamp(hitState[i].hitTimer / params.hitFadeTimeMs, 0, 1);
+        const fill = `rgba(255, 0, 0, ${f})`
+        fillCircle(pos[i], unit[i].radius, fill);
     }
     // don't draw debug stuff for base
     if (unit[i] == units.base) {
@@ -63,6 +69,11 @@ function drawUnit(i)
     if (debug.drawAngle) {
         const arrowLine = vecMulBy(utils.vecFromAngle(angle[i]), 10);
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, 'white');
+    }
+    if (debug.drawState) {
+        const color = state[i] == STATE.PROCEED ? 'blue' : state[i] == STATE.CHASE ? 'yellow' : 'red';
+        const off = vecMulBy(vecFromAngle(angle[i]), -unit[i].radius*0.75);
+        fillCircle(vecAdd(pos[i], off), unit[i].radius/3, color);
     }
     if (unit[i] == units.boid)
     {
@@ -87,12 +98,31 @@ function drawUnit(i)
             if (atkState[i].state == ATKSTATE.SWING) {
                 f = clamp(1 - atkState[i].timer / unit[i].weapon.swingMs, 0, 1);
             }
-            const off = vecMul(dir, unit[i].radius/1.5 + f*3);
-            const offTangent = vecMul(tangent, unit[i].radius/3);
+            const off = vecMul(dir, unit[i].radius*0.75 + f*3);
+            const offTangent = vecMul(tangent, unit[i].radius*0.5);
             vecAddTo(off, offTangent);
             const finalPos = vecAdd(pos[i], off);
             fillEquilateralTriangle(finalPos, vecToAngle(dir), 5, 8, '#441111');
         }
+    }
+}
+
+function drawHpBar(i)
+{
+    const { team, unit, pos, vel, angle, target, hp, atkState, physState, boidState, hitState } = gameState.entities;
+    // hp bar
+    if (hitState[i].hpBarTimer > 0) {
+        const hpBarWidth = unit[i].maxHp * 10;
+        const hpBarHeight = 3;
+        const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
+        const hpPos = vecAdd(pos[i], hpOff);
+        const hpPercent = hp[i]/unit[i].maxHp;
+        const filledWidth = hpPercent * hpBarWidth;
+        const emptyWidth = (1 - hpPercent) * hpBarWidth;
+        const emptyPos = vecAdd(hpPos, vec(filledWidth, 0))
+        const hpAlpha = clamp(hitState[i].hpBarTimer / (params.hpBarTimeMs*0.5), 0, 1); // fade after half the time expired
+        fillRectangle(hpPos, filledWidth, hpBarHeight, `rgba(0,255,0,${hpAlpha})`);
+        fillRectangle(emptyPos, emptyWidth, hpBarHeight, `rgba(255,0,0,${hpAlpha})`);
     }
 }
 
@@ -178,7 +208,7 @@ function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
 
 }
 
-function drawRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
+function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
     let coords = worldToCamera(worldPos.x, worldPos.y);
     const scaledWidth = width / gameState.camera.scale;
     const scaledHeight = height / gameState.camera.scale;
@@ -288,6 +318,12 @@ export function draw()
             continue;
         }
         drawUnit(i);
+    }
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i]) {
+            continue;
+        }
+        drawHpBar(i);
     }
 }
 
