@@ -139,7 +139,7 @@ function laneEnd(lane, team)
 
 function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, nextFree, team, unit, hp, pos, vel, angle, angVel, state, lane, atkState, physState, boidState  } = gameState.entities;
+    const { exists, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, atkState, physState, boidState  } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -165,6 +165,7 @@ function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     hp[idx]         = aUnit.maxHp;
     pos[idx]        = vecClone(aPos);
     vel[idx]        = vec();
+    accel[idx]      = vec();
     angle[idx]      = 0;
     angVel[idx]     = 0;
     state[idx]      = unit[idx].defaultState;
@@ -233,6 +234,7 @@ export function initGame()
             hp: [],
             pos: [],
             vel: [],
+            accel: [],
             angle: [],
             angVel: [],
             state: [],
