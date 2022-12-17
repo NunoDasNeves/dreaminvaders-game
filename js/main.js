@@ -1,4 +1,5 @@
 import * as Game from "./game.js";
+import * as State from "./state.js";
 
 window.onload = start;
 
@@ -32,37 +33,37 @@ function gameLoop(timeElapsed)
 function initEvents()
 {
     document.addEventListener('mousemove', function (event) {
-        Game.updateMousePos(event);
+        State.updateMousePos(event, Game.canvas.getBoundingClientRect());
     });
 
     document.addEventListener('mousedown', function (event) {
-        Game.updateMousePos(event);
-        Game.updateMouseClick(event.button, true);
+        State.updateMousePos(event, Game.canvas.getBoundingClientRect());
+        State.updateMouseClick(event.button, true);
     });
 
     document.addEventListener('mouseup', function (event) {
-        Game.updateMousePos(event);
-        Game.updateMouseClick(event.button, false);
+        State.updateMousePos(event, Game.canvas.getBoundingClientRect());
+        State.updateMouseClick(event.button, false);
     });
 
     document.addEventListener('wheel', function (event) {
         // TODO this is just a random scaling value, it might not work everywhere
-        Game.updateMouseWheel(event.deltaY * 0.001);
+        State.updateMouseWheel(event.deltaY * 0.001);
     });
 
     document.addEventListener('keydown', function (event) {
-        Game.updateKey(event.key, true);
+        State.updateKey(event.key, true);
     });
 
     // Key up event
     document.addEventListener('keyup', function (event) {
-        Game.updateKey(event.key, false);
+        State.updateKey(event.key, false);
     });
 }
 
 function start()
 {
-    Game.initGame();
+    Game.init();
     initEvents();
 
     window.requestAnimationFrame(gameLoop);
