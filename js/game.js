@@ -41,7 +41,6 @@ const weapons = {
         recoverMs: Infinity,
         damage: 0,
         missChance: 1,
-        drawFn() {}
     },
     elbow: {
         range: 5,        // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
@@ -50,10 +49,6 @@ const weapons = {
         recoverMs: 400,  // time after attack hits til can attack again
         damage: 1,
         missChance: 0.3,
-        drawFn(pos, angle, team, atkState) {
-            const dir = vecFromAngle(angle);
-            fillCircle(vecAdd(pos, vecMul(dir, 10)), 4, 'black');
-        }
     }
 };
 
@@ -67,9 +62,7 @@ const units = {
         radius: params.baseRadius,
         collides: false,
         defaultState: STATE.DO_NOTHING,
-        drawFn(pos, angle, team) {
-            strokeCircle(pos, params.baseRadius, 2, 'red');
-        }
+        drawFn: drawBaseUnit,
     },
     circle: {
         weapon: weapons.elbow,
@@ -80,9 +73,7 @@ const units = {
         radius: 10,
         collides: true,
         defaultState: STATE.PROCEED,
-        drawFn(pos, angle, team) {
-            fillCircle(pos, 10, params.teamColors[team]);
-        }
+        drawFn: drawCircleUnit,
     },
     boid: {
         weapon: weapons.none,
@@ -93,9 +84,7 @@ const units = {
         radius:10,
         collides: true,
         defaultState: STATE.DO_NOTHING,
-        drawFn(pos, angle, team) {
-            fillEquilateralTriangle(pos, angle, 10, 15, params.teamColors[team]);
-        }
+        drawFn: drawBoidUnit,
     }
 };
 
@@ -250,8 +239,7 @@ function updateGameInput()
 
 export function initGame()
 {
-    canvas = document.getElementById("gamecanvas");
-    context = canvas.getContext("2d");
+    renderInit();
 
     gameState = {
         entities: {
@@ -518,6 +506,18 @@ function drawLane(lane)
     }
 }
 
+function drawBoidUnit(pos, angle, team) {
+    fillEquilateralTriangle(pos, angle, 10, 15, params.teamColors[team]);
+}
+
+function drawBaseUnit(pos, angle, team) {
+    strokeCircle(pos, params.baseRadius, 2, 'red');
+}
+
+function drawCircleUnit(pos, angle, team) {
+    fillCircle(pos, 10, params.teamColors[team]);
+}
+
 export function render()
 {
     canvas.width  = window.innerWidth;
@@ -564,6 +564,12 @@ export function render()
         }
 
     }
+}
+
+function renderInit()
+{
+    canvas = document.getElementById("gamecanvas");
+    context = canvas.getContext("2d");
 }
 
 function forAllEntities(fn)
