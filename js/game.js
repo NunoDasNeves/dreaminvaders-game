@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params } from "./data.js"
+import { params, STATE, weapons, units } from "./data.js"
 
 let canvas = null;
 let context = null;
@@ -10,12 +10,6 @@ const TEAM = Object.freeze({
     NONE: 0,
     ORANGE: 1,
     BLUE: 2,
-});
-const STATE = Object.freeze({
-    DO_NOTHING: 0,
-    PROCEED: 1,
-    CHASE: 2,
-    ATTACK: 3,
 });
 const ATKSTATE = Object.freeze({
     NONE: 0,
@@ -32,25 +26,6 @@ const debug = {
     drawCapsule: true,
     drawForces: true,
 }
-
-const weapons = {
-    none: {
-        range: 0,
-        aimMs: Infinity,
-        swingMs: Infinity,
-        recoverMs: Infinity,
-        damage: 0,
-        missChance: 1,
-    },
-    elbow: {
-        range: 5,        // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
-        aimMs: 300,      // time from deciding to attack until starting attack
-        swingMs: 200,    // time from starting attack til attack hits
-        recoverMs: 400,  // time after attack hits til can attack again
-        damage: 1,
-        missChance: 0.3,
-    }
-};
 
 function drawCircleUnit(pos, angle, team, unit)
 {
@@ -93,51 +68,6 @@ function drawUnit(pos, angle, team, unit)
             break;
     }
 }
-
-const units = {
-    base: {
-        weapon: weapons.none,
-        speed: 0,
-        angSpeed: 0,
-        maxHp: 1000,
-        sightRadius: 0,
-        radius: params.baseRadius,
-        collides: false,
-        defaultState: STATE.DO_NOTHING,
-        draw: {
-            shape: "circle",
-            strokeColor: "red",
-        }
-    },
-    circle: {
-        weapon: weapons.elbow,
-        speed: 3,
-        angSpeed: 1,
-        maxHp: 3,
-        sightRadius: params.laneWidth/2,
-        radius: 10,
-        collides: true,
-        defaultState: STATE.PROCEED,
-        draw: {
-            shape: "circle",
-            fillColor: "TEAM",
-        }
-    },
-    boid: {
-        weapon: weapons.none,
-        speed: 1,
-        angspeed: 0.5,
-        maxHp: 1,
-        sightRadius: params.laneWidth,
-        radius:10,
-        collides: true,
-        defaultState: STATE.DO_NOTHING,
-        draw: {
-            shape: "triangle",
-            fillColor: "TEAM",
-        }
-    }
-};
 
 function enemyTeam(team)
 {
