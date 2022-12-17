@@ -7,6 +7,8 @@ export const debug = {
     drawSight: false,
     drawCapsule: true,
     drawForces: true,
+    drawAngle: true,
+    drawSwing: true,
 }
 
 export const params = Object.freeze(

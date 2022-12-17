@@ -33,18 +33,66 @@ function drawTriangleUnit(pos, angle, team, unit)
     fillEquilateralTriangle(pos, angle, unit.radius, unit.radius * 1.5, color);
 }
 
-function drawUnit(pos, angle, team, unit)
+function drawUnit(i)
 {
-    switch (unit.draw.shape) {
+    const { team, unit, pos, vel, angle, target, atkState, physState, boidState } = gameState.entities;
+    // draw basic shape
+    switch (unit[i].draw.shape) {
         case "circle":
-            drawCircleUnit(pos, angle, team, unit);
+            drawCircleUnit(pos[i], angle[i], team[i], unit[i]);
             break;
         case "triangle":
-            drawTriangleUnit(pos, angle, team, unit);
+            drawTriangleUnit(pos[i], angle[i], team[i], unit[i]);
             break;
         default:
             console.error("invalid unit.draw");
             break;
+    }
+    // don't draw debug stuff for base
+    if (unit[i] == units.base) {
+        return;
+    }
+    // all this stuff is debug only, later we wanna draw sprites
+    if (debug.drawRadii) {
+        strokeCircle(pos[i], unit[i].radius, 1, physState[i].colliding ? 'red' : '#880000');
+    }
+    if (debug.drawSight && unit[i].sightRadius > 0)
+    {
+        strokeCircle(pos[i], unit[i].sightRadius, 1, 'yellow');
+    }
+    if (debug.drawAngle) {
+        const arrowLine = vecMulBy(utils.vecFromAngle(angle[i]), 10);
+        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, 'white');
+    }
+    if (unit[i] == units.boid)
+    {
+        if (debug.drawCapsule) // && unit[i].avoiding)
+        {
+            strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, vecToAngle(boidState[i].seekForce), 1, boidState[i].avoiding ? '#00ff00' : 'green');
+        }
+        if (debug.drawForces)
+        {
+            if (boidState[i].avoiding) {
+                drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].avoidanceForce, 20)), 1, 'red');
+            }
+            drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].seekForce, 20)), 1, 'white');
+        }
+    }
+    if (debug.drawSwing) {
+        const t = target[i].getIndex();
+        if (unit[i].weapon != weapons.none && atkState[i].state != ATKSTATE.NONE && t != INVALID_ENTITY_INDEX) {
+            const dir = vecNormalize(vecSub(pos[t], pos[i]));
+            const tangent = vecTangentRight(dir);
+            let f = 0;
+            if (atkState[i].state == ATKSTATE.SWING) {
+                f = clamp(1 - atkState[i].timer / unit[i].weapon.swingMs, 0, 1);
+            }
+            const off = vecMul(dir, unit[i].radius/1.5 + f*3);
+            const offTangent = vecMul(tangent, unit[i].radius/3);
+            vecAddTo(off, offTangent);
+            const finalPos = vecAdd(pos[i], off);
+            fillEquilateralTriangle(finalPos, vecToAngle(dir), 5, 8, '#441111');
+        }
     }
 }
 
@@ -239,29 +287,7 @@ export function draw()
         if (!exists[i]) {
             continue;
         }
-        drawUnit(pos[i], angle[i], team[i], unit[i]);
-        if (debug.drawRadii) {
-            strokeCircle(pos[i], unit[i].radius, 1, physState[i].colliding ? 'red' : '#880000');
-        }
-        if (debug.drawSight && unit[i].sightRadius > 0)
-        {
-            strokeCircle(pos[i], unit[i].sightRadius, 1, 'yellow');
-        }
-        if (unit[i] == units.boid)
-        {
-            if (debug.drawCapsule) // && unit[i].avoiding)
-            {
-                strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, vecToAngle(boidState[i].seekForce), 1, boidState[i].avoiding ? '#00ff00' : 'green');
-            }
-            if (debug.drawForces)
-            {
-                if (boidState[i].avoiding) {
-                    drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].avoidanceForce, 20)), 1, 'red');
-                }
-                drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].seekForce, 20)), 1, 'white');
-            }
-        }
-
+        drawUnit(i);
     }
 }
 
