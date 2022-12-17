@@ -1,31 +1,10 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, STATE, weapons, units } from "./data.js"
+import { debug, params, STATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
 
 let canvas = null;
 let context = null;
-
-const TEAM = Object.freeze({
-    NONE: 0,
-    ORANGE: 1,
-    BLUE: 2,
-});
-const ATKSTATE = Object.freeze({
-    NONE: 0,
-    AIM: 1,
-    SWING: 2,
-    RECOVER: 3,
-});
-
-let gameState = null;
-
-const debug = {
-    drawRadii: true,
-    drawSight: false,
-    drawCapsule: true,
-    drawForces: true,
-}
 
 function drawCircleUnit(pos, angle, team, unit)
 {
@@ -68,6 +47,8 @@ function drawUnit(pos, angle, team, unit)
             break;
     }
 }
+
+let gameState = null;
 
 function enemyTeam(team)
 {

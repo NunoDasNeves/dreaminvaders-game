@@ -1,6 +1,13 @@
 /*
  * Parameters n such
  */
+export const debug = {
+    drawRadii: true,
+    drawSight: false,
+    drawCapsule: true,
+    drawForces: true,
+}
+
 export const params = Object.freeze(
     function() {
         const obj = {
@@ -23,6 +30,17 @@ export const STATE = Object.freeze({
     PROCEED: 1,
     CHASE: 2,
     ATTACK: 3,
+});
+export const TEAM = Object.freeze({
+    NONE: 0,
+    ORANGE: 1,
+    BLUE: 2,
+});
+export const ATKSTATE = Object.freeze({
+    NONE: 0,
+    AIM: 1,
+    SWING: 2,
+    RECOVER: 3,
 });
 
 export const weapons = Object.freeze({
