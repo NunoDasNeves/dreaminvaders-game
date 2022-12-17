@@ -1,6 +1,6 @@
 ## TODO
+- split stuff into modules; render, update, data/gamestate
 - table boids stuff for now, basic collision is ok!
-- unit ID (or something) to check against when referencing other units (e.g. target), so we don't have problems reusing entity slots
 - show little stabby/triangle weapon on attack aim/swing/recover
 - health bars
     - appear when hit, fade after a second or so
@@ -20,6 +20,7 @@
 - better steering/avoidance?
 
 ## Done
+- unit ID (or something) to check against when referencing other units (e.g. target), so we don't have problems reusing entity slots
 - basic avoidance
 - SIMPLE collision
 - fail to spawn if not enough room
