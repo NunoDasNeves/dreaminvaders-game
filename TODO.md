@@ -1,7 +1,4 @@
 ## TODO
-- split stuff into modules; render, update, data/gamestate
-- table boids stuff for now, basic collision is ok!
-- show little stabby/triangle weapon on attack aim/swing/recover
 - health bars
     - appear when hit, fade after a second or so
 - dying by falling off bridge (?)
@@ -15,11 +12,17 @@
     - units need to follow the lane properly without falling off
 - Make the layout look more like the concept art
 - unit acceleration instead of instant velocity change
-- deal with avoidance conflict (they avoid the same way)
 - better collision? pushing...impulse?
 - better steering/avoidance?
+    - deal with avoidance conflict (they avoid the same way)?
+    - use velocity to determine how far ahead to look
+        - use other boids velocity to determine where they'll be
+    - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- show little stabby/triangle weapon on attack aim/swing/recover
+- table boids stuff for now, basic collision is ok!
+- split stuff into modules; render, update, (static) data, (game) state
 - unit ID (or something) to check against when referencing other units (e.g. target), so we don't have problems reusing entity slots
 - basic avoidance
 - SIMPLE collision
