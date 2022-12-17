@@ -137,29 +137,64 @@ function laneEnd(lane, team)
     return vecClone(closestPoint(lane.points, base.pos));
 }
 
+/*
+ * Reference to an entity that is allowed to persist across more than one frame
+ * You gotta check isValid before using it
+ * TODO enforce it better; i.e. use a getter that return null if it's not valid anymore
+ */
+const INVALID_ENTITY_INDEX = -1;
+class EntityRef {
+    constructor(index) {
+        this.index = index;
+        if (index >= 0 && index < gameState.entities.exists.length) {
+            this.id = gameState.entities.id[index];
+        } else {
+            this.index = INVALID_ENTITY_INDEX;
+        }
+    }
+    invalidate() {
+        this.index = INVALID_ENTITY_INDEX;
+    }
+    isValid() {
+        if (this.index < 0) {
+            return false;
+        }
+        return gameState.entities.exists[this.index] && (gameState.entities.id[this.index] == this.id);
+    }
+    getIndex() {
+        if (this.isValid()) {
+            return this.index;
+        }
+        return INVALID_ENTITY_INDEX;
+    }
+}
+
 function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, atkState, physState, boidState  } = gameState.entities;
+    const { exists, id, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, target, lane, atkState, physState, boidState  } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
-        return -1;
+        return INVALID_ENTITY_INDEX;
     }
 
     const len = exists.length;
-    if (gameState.freeSlot == -1) {
+    if (gameState.freeSlot == INVALID_ENTITY_INDEX) {
         for (const [key, arr] of Object.entries(gameState.entities)) {
             arr.push(null);
         }
-        nextFree[len] = -1;
+        nextFree[len] = INVALID_ENTITY_INDEX;
         gameState.freeSlot = len;
     }
     let idx = gameState.freeSlot;
     gameState.freeSlot = nextFree[idx];
 
     exists[idx]     = true;
-    nextFree[idx]   = -1;
+    id[idx]         = gameState.nextId;
+    gameState.nextId++;
+    nextFree[idx]   = INVALID_ENTITY_INDEX;
     team[idx]       = aTeam;
+    target[idx]     = new EntityRef(INVALID_ENTITY_INDEX);
     lane[idx]       = aLane;
     unit[idx]       = aUnit;
     hp[idx]         = aUnit.maxHp;
@@ -228,6 +263,7 @@ export function initGame()
     gameState = {
         entities: {
             exists: [],
+            id: [],
             nextFree: [],
             team: [],
             unit: [],
@@ -244,10 +280,11 @@ export function initGame()
             physState: [],
             boidState: [],
         },
-        freeSlot: -1,
+        freeSlot: INVALID_ENTITY_INDEX,
+        nextId: 0n, // bigint
         bases: {
-            [TEAM.ORANGE]: { pos: { x: -600, y: -400 }, unit: -1 },
-            [TEAM.BLUE]: { pos: { x: 600, y: 400 }, unit: -1 },
+            [TEAM.ORANGE]: { pos: { x: -600, y: -400 }, idx: INVALID_ENTITY_INDEX },
+            [TEAM.BLUE]: { pos: { x: 600, y: 400 }, idx: INVALID_ENTITY_INDEX },
         },
         lanes: [],
         camera: {
@@ -267,8 +304,8 @@ export function initGame()
         ]
     });
 
-    gameState.bases[TEAM.BLUE].unit = spawnEntity(gameState.bases[TEAM.BLUE].pos, TEAM.BLUE, units.base, weapons.none);
-    gameState.bases[TEAM.ORANGE].unit = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
+    gameState.bases[TEAM.BLUE].idx = spawnEntity(gameState.bases[TEAM.BLUE].pos, TEAM.BLUE, units.base, weapons.none);
+    gameState.bases[TEAM.ORANGE].idx = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
 }
 
 // Convert camera coordinates to world coordinates with scale
@@ -550,7 +587,7 @@ function forAllEntities(fn)
 function nearestUnit(i, minRange, excludeFn)
 {
     const { exists, unit, pos } = gameState.entities;
-    let best = null;
+    let best = INVALID_ENTITY_INDEX;
     let minDist = minRange;
     // TODO broad phase
     for (let j = 0; j < exists.length; ++j) {
@@ -568,7 +605,7 @@ function nearestUnit(i, minRange, excludeFn)
             minDist = distToUnitEdge;
         }
     }
-    return best;
+    return new EntityRef(best);
 }
 
 function nearestEnemyInSightRadius(i)
@@ -596,14 +633,11 @@ function isInAttackRange(i, j)
 function canAttackTarget(i)
 {
     const { exists, target } = gameState.entities;
-    const t = target[i];
-    if (t == null) {
-        return false;
-    }
-    if (!exists[t]) {
+    const targetRef = target[i];
+    if (!targetRef.isValid()) {
         return false
     }
-    return isInAttackRange(i,t);
+    return isInAttackRange(i, targetRef.getIndex());
 }
 
 function getCollidingWithCircle(aPos, aRadius)
@@ -856,10 +890,10 @@ function updateUnitState()
                     vecClear(vel[i]);
                     break;
                 }
-                if (nearestAtkTarget != null) {
+                if (nearestAtkTarget.isValid()) {
                     state[i] = STATE.ATTACK;
                     target[i] = nearestAtkTarget;
-                } else if (nearestChaseTarget != null) {
+                } else if (nearestChaseTarget.isValid()) {
                     state[i] = STATE.CHASE;
                     target[i] = nearestChaseTarget;
                 }
@@ -868,14 +902,14 @@ function updateUnitState()
             case STATE.CHASE:
             {
                 // switch to attack if in range
-                if (nearestAtkTarget != null) {
+                if (nearestAtkTarget.isValid()) {
                     state[i] = STATE.ATTACK;
                     target[i] = nearestAtkTarget;
                     atkState[i].timer = unit[i].weapon.aimMs;
                     atkState[i].state = ATKSTATE.AIM;
 
                 // otherwise always chase nearest
-                } else if (nearestChaseTarget != null) {
+                } else if (nearestChaseTarget.isValid()) {
                     target[i] = nearestChaseTarget;
 
                 // otherwise... continue on
@@ -888,19 +922,19 @@ function updateUnitState()
             {
                 // check we can still attack the current target
                 if (!canAttackTarget(i)) {
-                    target[i] = null;
+                    target[i].invalidate();
                 }
                 /*
-                 * If we can't attack the current target, target[i] is null here;
+                 * If we can't attack the current target, target[i] is invalid;
                  * Try to pick a new target, or start chasing
                  */
-                if (target[i] == null) {
-                    if (nearestAtkTarget != null) {
+                if (!target[i].isValid()) {
+                    if (nearestAtkTarget.isValid()) {
                         target[i] = nearestAtkTarget;
                         atkState[i].timer = unit[i].weapon.aimMs;
                         atkState[i].state = ATKSTATE.AIM;
 
-                    } else if (nearestChaseTarget != null) {
+                    } else if (nearestChaseTarget.isValid()) {
                         state[i] = STATE.CHASE;
                         target[i] = nearestChaseTarget;
 
@@ -917,13 +951,14 @@ function updateUnitState()
             {
                 const dir = vecNorm(toEnemyBase);
                 vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEnemyBase));
-                target[i] = null;
+                target[i].invalidate();
                 atkState[i].state = ATKSTATE.NONE;
                 break;
             }
             case STATE.CHASE:
             {
-                const t = target[i];
+                const t = target[i].getIndex();
+                console.assert(t != INVALID_ENTITY_INDEX);
                 const toTarget = vecSub(pos[t], pos[i]);
                 const distToTarget = vecLen(toTarget);
                 if ( !almostZero(distToTarget) ) {
@@ -934,8 +969,8 @@ function updateUnitState()
             }
             case STATE.ATTACK:
             {
-                console.assert(target[i] != null);
-                const t = target[i];
+                const t = target[i].getIndex();
+                console.assert(t != INVALID_ENTITY_INDEX);
                 vecClear(vel[i]); // stand still
             }
             break;
@@ -1024,7 +1059,9 @@ function updateGame(timeDeltaMs)
                 atkState[i].timer = newTime + unit[i].weapon.recoverMs;
                 // hit!
                 if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
-                    hp[target[i]] -= unit[i].weapon.damage;
+                    const t = target[i].getIndex();
+                    console.assert(t != INVALID_ENTITY_INDEX);
+                    hp[t] -= unit[i].weapon.damage;
                 }
                 break;
             }
