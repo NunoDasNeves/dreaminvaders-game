@@ -52,6 +52,48 @@ const weapons = {
     }
 };
 
+function drawCircleUnit(pos, angle, team, unit)
+{
+    if (unit.draw.strokeColor) {
+        let color = unit.draw.strokeColor;
+        if (color == "TEAM") {
+            color = params.teamColors[team];
+        }
+        strokeCircle(pos, unit.radius, 2, color);
+    }
+    if (unit.draw.fillColor) {
+        let color = unit.draw.fillColor;
+        if (color == "TEAM") {
+            color = params.teamColors[team];
+        }
+        fillCircle(pos, unit.radius, color);
+    }
+}
+
+function drawTriangleUnit(pos, angle, team, unit)
+{
+    let color = unit.draw.fillColor;
+    if (color == "TEAM") {
+        color = params.teamColors[team];
+    }
+    fillEquilateralTriangle(pos, angle, unit.radius, unit.radius * 1.5, color);
+}
+
+function drawUnit(pos, angle, team, unit)
+{
+    switch (unit.draw.shape) {
+        case "circle":
+            drawCircleUnit(pos, angle, team, unit);
+            break;
+        case "triangle":
+            drawTriangleUnit(pos, angle, team, unit);
+            break;
+        default:
+            console.error("invalid unit.draw");
+            break;
+    }
+}
+
 const units = {
     base: {
         weapon: weapons.none,
@@ -62,7 +104,10 @@ const units = {
         radius: params.baseRadius,
         collides: false,
         defaultState: STATE.DO_NOTHING,
-        drawFn: drawBaseUnit,
+        draw: {
+            shape: "circle",
+            strokeColor: "red",
+        }
     },
     circle: {
         weapon: weapons.elbow,
@@ -73,7 +118,10 @@ const units = {
         radius: 10,
         collides: true,
         defaultState: STATE.PROCEED,
-        drawFn: drawCircleUnit,
+        draw: {
+            shape: "circle",
+            fillColor: "TEAM",
+        }
     },
     boid: {
         weapon: weapons.none,
@@ -84,7 +132,10 @@ const units = {
         radius:10,
         collides: true,
         defaultState: STATE.DO_NOTHING,
-        drawFn: drawBoidUnit,
+        draw: {
+            shape: "triangle",
+            fillColor: "TEAM",
+        }
     }
 };
 
@@ -506,18 +557,6 @@ function drawLane(lane)
     }
 }
 
-function drawBoidUnit(pos, angle, team) {
-    fillEquilateralTriangle(pos, angle, 10, 15, params.teamColors[team]);
-}
-
-function drawBaseUnit(pos, angle, team) {
-    strokeCircle(pos, params.baseRadius, 2, 'red');
-}
-
-function drawCircleUnit(pos, angle, team) {
-    fillCircle(pos, 10, params.teamColors[team]);
-}
-
 export function render()
 {
     canvas.width  = window.innerWidth;
@@ -540,7 +579,7 @@ export function render()
         if (!exists[i]) {
             continue;
         }
-        unit[i].drawFn(pos[i], angle[i], team[i])
+        drawUnit(pos[i], angle[i], team[i], unit[i]);
         if (debug.drawRadii) {
             strokeCircle(pos[i], unit[i].radius, 1, physState[i].colliding ? 'red' : '#880000');
         }
