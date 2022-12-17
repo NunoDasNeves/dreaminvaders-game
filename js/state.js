@@ -3,6 +3,10 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { params, STATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
 
+/*
+ * Game state init and related helpers
+ */
+
 export function enemyTeam(team)
 {
     return (team % 2) + 1;

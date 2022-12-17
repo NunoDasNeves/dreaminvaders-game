@@ -1,6 +1,7 @@
 /*
- * Parameters n such
+ * Static data
  */
+
 export const debug = {
     drawRadii: true,
     drawSight: false,

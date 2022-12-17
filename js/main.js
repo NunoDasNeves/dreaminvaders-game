@@ -1,5 +1,6 @@
 import * as Game from "./game.js";
 import * as State from "./state.js";
+import * as Render from "./render.js";
 
 window.onload = start;
 
@@ -27,22 +28,22 @@ function gameLoop(timeElapsed)
         ticks++;
         Game.update(timeElapsed, ticks * frameTime, frameTime);
     }
-    Game.render();
+    Render.draw();
 }
 
 function initEvents()
 {
     document.addEventListener('mousemove', function (event) {
-        State.updateMousePos(event, Game.canvas.getBoundingClientRect());
+        State.updateMousePos(event, Render.getBoundingClientRect());
     });
 
     document.addEventListener('mousedown', function (event) {
-        State.updateMousePos(event, Game.canvas.getBoundingClientRect());
+        State.updateMousePos(event, Render.getBoundingClientRect());
         State.updateMouseClick(event.button, true);
     });
 
     document.addEventListener('mouseup', function (event) {
-        State.updateMousePos(event, Game.canvas.getBoundingClientRect());
+        State.updateMousePos(event, Render.getBoundingClientRect());
         State.updateMouseClick(event.button, false);
     });
 
@@ -64,6 +65,7 @@ function initEvents()
 function start()
 {
     Game.init();
+    Render.init();
     initEvents();
 
     window.requestAnimationFrame(gameLoop);
