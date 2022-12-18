@@ -99,15 +99,32 @@ function drawUnit(i)
         if (unit[i].weapon != weapons.none && atkState[i].state != ATKSTATE.NONE && t != INVALID_ENTITY_INDEX) {
             const dir = vecNormalize(vecSub(pos[t], pos[i]));
             const tangent = vecTangentRight(dir);
-            let f = 0;
-            if (atkState[i].state == ATKSTATE.SWING) {
-                f = clamp(1 - atkState[i].timer / unit[i].weapon.swingMs, 0, 1);
-            }
-            const off = vecMul(dir, unit[i].radius*0.75 + f*3);
             const offTangent = vecMul(tangent, unit[i].radius*0.5);
+            const off = vecMul(dir, unit[i].radius*0.75);
+            let f = 0;
+            let color = 'rgb(100,20,20)';
             vecAddTo(off, offTangent);
             const finalPos = vecAdd(pos[i], off);
-            fillEquilateralTriangle(finalPos, vecToAngle(dir), 5, 8, '#441111');
+            switch(atkState[i].state) {
+                case ATKSTATE.AIM:
+                    break;
+                case ATKSTATE.SWING:
+                {
+                    const f = clamp(1 - atkState[i].timer / unit[i].weapon.swingMs, 0, 1);
+                    const forwardOff = vecMul(dir, f*3);
+                    vecAddTo(finalPos, forwardOff);
+                    color = `rgb(${100 + 155*f}, 20, 20)`;
+                    break;
+                }
+                case ATKSTATE.RECOVER:
+                {
+                    const f = clamp(atkState[i].timer / unit[i].weapon.recoverMs, 0, 1);
+                    const forwardOff = vecMul(dir, f*3);
+                    vecAddTo(finalPos, forwardOff);
+                    break;
+                }
+            }
+            fillEquilateralTriangle(finalPos, vecToAngle(dir), 5, 8, color);
         }
     }
 }
