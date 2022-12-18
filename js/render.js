@@ -244,18 +244,31 @@ function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
     context.fill();
 }
 
-function drawBase(team, base)
+function drawIsland(team, island)
 {
     const teamColor = params.teamColors[team];
-    const coords = worldToCamera(base.pos.x, base.pos.y);
-    var gradient = context.createRadialGradient(coords.x, coords.y, (params.baseRadius - 50) / gameState.camera.scale, coords.x, coords.y, params.baseVisualRadius / gameState.camera.scale);
+    const coords = worldToCamera(island.pos.x, island.pos.y);
+    var gradient = context.createRadialGradient(coords.x, coords.y, (params.islandRadius - 50) / gameState.camera.scale, coords.x, coords.y, params.islandRadius / gameState.camera.scale);
     gradient.addColorStop(0, teamColor);
     gradient.addColorStop(1, params.baseFadeColor);
 
     context.fillStyle = gradient;
     context.beginPath();
-    context.arc(coords.x, coords.y, params.baseVisualRadius / gameState.camera.scale, 0, 2 * Math.PI);
+    context.arc(coords.x, coords.y, params.islandRadius / gameState.camera.scale, 0, 2 * Math.PI);
     context.fill();
+
+
+    context.strokeStyle = params.pathColor;
+    context.setLineDash([]);
+    context.lineWidth = params.pathWidth / gameState.camera.scale;
+
+    for (const path of island.paths) {
+        const points = path.map(v => worldVecToCamera(v));
+        context.beginPath();
+        context.moveTo(points[0].x, points[0].y);
+        context.lineTo(points[1].x, points[1].y);
+        context.stroke();
+    }
 }
 
 function drawArrow(start, end, width, strokeStyle)
@@ -326,8 +339,8 @@ export function draw()
     context.fillStyle = params.backgroundColor;
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (const [team, base] of Object.entries(gameState.bases)) {
-        drawBase(team, base);
+    for (const [team, base] of Object.entries(gameState.islands)) {
+        drawIsland(team, base);
     }
 
     for (let i = 0; i < gameState.lanes.length; ++i) {

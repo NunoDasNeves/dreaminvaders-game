@@ -20,8 +20,10 @@ export const params = Object.freeze(
             baseFadeColor: "#101010",
             laneColor: "#888888",
             laneWidth: 60,
-            baseRadius: 200,
-            baseVisualRadius: 250,
+            pathWidth: 40,
+            pathColor: "#443322",
+            lighthouseRadius: 80,
+            islandRadius: 200,
             teamColors: [ "#6f6f6f", "#ff9933", "#3399ff" ], // first one is 'no team'
             hpBarTimeMs: 2000,
             hitFadeTimeMs: 300,
@@ -29,7 +31,7 @@ export const params = Object.freeze(
             fallTimeMs: 500,
             fallSizeReduction: 0.75,
         }
-        obj.laneDistFromBase = obj.baseRadius - 5;
+        obj.laneDistFromBase = obj.islandRadius - 15;
         return obj;
     }()
 );
@@ -82,7 +84,7 @@ export const units = Object.freeze({
         angSpeed: 0,
         maxHp: 1000,
         sightRadius: 0,
-        radius: params.baseRadius,
+        radius: params.lighthouseRadius,
         collides: false,
         canFall: false,
         defaultAiState: AISTATE.DO_NOTHING,

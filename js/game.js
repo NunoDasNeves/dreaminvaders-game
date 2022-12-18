@@ -258,7 +258,7 @@ function getSeparationForce(i)
 function updateBoidState()
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
-    const basePositions = [gameState.bases[TEAM.BLUE].pos, gameState.bases[TEAM.ORANGE].pos];
+    const basePositions = [gameState.islands[TEAM.BLUE].pos, gameState.islands[TEAM.ORANGE].pos];
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
             continue;
@@ -302,7 +302,7 @@ function updateAiState()
         if (aiState[i].state == AISTATE.DO_NOTHING) {
             continue;
         }
-        const toEnemyBase = vecSub(gameState.bases[enemyTeam(team[i])].pos, pos[i]);
+        const toEnemyBase = vecSub(gameState.islands[enemyTeam(team[i])].pos, pos[i]);
         const distToEnemyBase = vecLen(toEnemyBase);
         //const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
         //const distToEndOfLane = vecLen(toEndOfLane);

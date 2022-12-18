@@ -28,13 +28,13 @@ export function closestPoint(arr, pos)
 
 export function laneStart(lane, team)
 {
-    const base = gameState.bases[team];
+    const base = gameState.islands[team];
     return vecClone(closestPoint(lane.points, base.pos));
 }
 
 export function laneEnd(lane, team)
 {
-    const base = gameState.bases[enemyTeam(team)];
+    const base = gameState.islands[enemyTeam(team)];
     return vecClone(closestPoint(lane.points, base.pos));
 }
 
@@ -205,9 +205,17 @@ export function initGameState()
         },
         freeSlot: INVALID_ENTITY_INDEX,
         nextId: 0n, // bigint
-        bases: {
-            [TEAM.ORANGE]: { pos: { x: -600, y: -400 }, idx: INVALID_ENTITY_INDEX },
-            [TEAM.BLUE]: { pos: { x: 600, y: 400 }, idx: INVALID_ENTITY_INDEX },
+        islands: {
+            [TEAM.ORANGE]: {
+                pos: { x: -600, y: 0 },
+                idx: INVALID_ENTITY_INDEX,
+                paths: [],
+            },
+            [TEAM.BLUE]: {
+                pos: { x: 600, y: 0 },
+                idx: INVALID_ENTITY_INDEX,
+                paths: [],
+            },
         },
         lanes: [],
         camera: {
@@ -219,16 +227,29 @@ export function initGameState()
         lastInput: makeInput(),
         debugPause: false,
     };
-    const orangeToBlue = vecNorm(vecSub(gameState.bases[TEAM.BLUE].pos, gameState.bases[TEAM.ORANGE].pos));
-    gameState.lanes.push({
-        points: [
-            vecAdd(gameState.bases[TEAM.ORANGE].pos, vecMul(orangeToBlue, params.laneDistFromBase)),
-            vecAdd(gameState.bases[TEAM.BLUE].pos, vecMul(orangeToBlue, -params.laneDistFromBase)),
-        ]
-    });
+    const laneDir = vecNorm(vecSub(gameState.islands[TEAM.BLUE].pos, gameState.islands[TEAM.ORANGE].pos));
+    const islandPos = [gameState.islands[TEAM.ORANGE].pos, gameState.islands[TEAM.BLUE].pos];
+    const islandToLaneStart = vec(params.laneDistFromBase, 0);
+    const numLanes = 3;
+    const angleInc = Math.PI/4;
+    const angleSpan = (numLanes - 1) * angleInc;
+    const angleStart = -angleSpan/2;
+    for (let i = 0; i < numLanes; ++i) {
+        const points = [];
+        const pathPoints = [];
+        const off = vecRotateBy(vecRotateBy(vecClone(islandToLaneStart), angleStart), angleInc * i);
+        const pOrange = vecAdd(islandPos[0], off);
+        points.push(pOrange);
+        off.x = -off.x;
+        const pBlue = vecAdd(islandPos[1], off);
+        points.push(pBlue);
+        gameState.lanes.push({ points });
+        gameState.islands[TEAM.BLUE].paths.push([vecClone(pBlue), gameState.islands[TEAM.BLUE].pos]);
+        gameState.islands[TEAM.ORANGE].paths.push([vecClone(pOrange), gameState.islands[TEAM.ORANGE].pos]);
+    }
 
-    gameState.bases[TEAM.BLUE].idx = spawnEntity(gameState.bases[TEAM.BLUE].pos, TEAM.BLUE, units.base, weapons.none);
-    gameState.bases[TEAM.ORANGE].idx = spawnEntity(gameState.bases[TEAM.ORANGE].pos, TEAM.ORANGE, units.base, weapons.none);
+    gameState.islands[TEAM.BLUE].idx = spawnEntity(gameState.islands[TEAM.BLUE].pos, TEAM.BLUE, units.base);
+    gameState.islands[TEAM.ORANGE].idx = spawnEntity(gameState.islands[TEAM.ORANGE].pos, TEAM.ORANGE, units.base);
 }
 
 // Convert camera coordinates to world coordinates with scale
