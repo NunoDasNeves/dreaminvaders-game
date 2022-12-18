@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
+import { debug, params, AISTATE, TEAM, HITSTATE, ATKSTATE, weapons, units } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
 
 /*
@@ -24,7 +24,7 @@ function forAllEntities(fn)
     }
 }
 
-function nearestUnit(i, minRange, excludeFn)
+function nearestUnit(i, minRange, filterFn)
 {
     const { exists, unit, pos } = gameState.entities;
     let best = INVALID_ENTITY_INDEX;
@@ -34,7 +34,7 @@ function nearestUnit(i, minRange, excludeFn)
         if (!exists[j]) {
             continue;
         }
-        if (excludeFn(i, j)) {
+        if (!filterFn(i, j)) {
             continue;
         }
         const toUnit = vecSub(pos[j], pos[i]);
@@ -48,16 +48,22 @@ function nearestUnit(i, minRange, excludeFn)
     return new EntityRef(best);
 }
 
+function isAliveAndNotOnMyTeam(myIdx, theirIdx)
+{
+    const { team, hitState } = gameState.entities;
+    return hitState[theirIdx].state == HITSTATE.ALIVE && team[myIdx] != team[theirIdx];
+}
+
 function nearestEnemyInSightRadius(i)
 {
-    const { team, unit } = gameState.entities;
-    return nearestUnit(i, unit[i].sightRadius, (j, k) => team[j] == team[k]);
+    const { unit } = gameState.entities;
+    return nearestUnit(i, unit[i].sightRadius, isAliveAndNotOnMyTeam );
 }
 
 function nearestEnemyInAttackRange(i)
 {
-    const { team, unit } = gameState.entities;
-    return nearestUnit(i, unit[i].radius + unit[i].weapon.range, (j, k) => team[j] == team[k]);
+    const { unit } = gameState.entities;
+    return nearestUnit(i, unit[i].radius + unit[i].weapon.range, isAliveAndNotOnMyTeam);
 }
 
 // is unit i in range to attack unit j
@@ -72,26 +78,27 @@ function isInAttackRange(i, j)
 
 function canAttackTarget(i)
 {
-    const { exists, target } = gameState.entities;
+    const { target, hitState } = gameState.entities;
     const targetRef = target[i];
-    if (!targetRef.isValid()) {
+    const t = targetRef.getIndex();
+    if (t == INVALID_ENTITY_INDEX) {
         return false
     }
-    return isInAttackRange(i, targetRef.getIndex());
+    return hitState[t].state == HITSTATE.ALIVE && isInAttackRange(i, t);
 }
 
 function getCollidingWith(i)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     const colls = [];
-    if (!unit[i].collides) {
+    if (!physState[i].canCollide) {
         return colls;
     }
     for (let j = 0; j < exists.length; ++j) {
         if (!exists[j]) {
             continue;
         }
-        if (j == i || !unit[j].collides) {
+        if (j == i || !physState[j].canCollide) {
             continue;
         }
         const dist = getDist(pos[i], pos[j]);
@@ -111,14 +118,14 @@ function updateAllCollidingPairs(pairs)
         if (!exists[i]) {
             continue;
         }
-        if (!unit[i].collides) {
+        if (!physState[i].canCollide) {
             continue;
         }
         for (let j = i + 1; j < exists.length; ++j) {
             if (!exists[j]) {
                 continue;
             }
-            if (j == i || !unit[j].collides) {
+            if (j == i || !physState[j].canCollide) {
                 continue;
             }
             const dist = getDist(pos[i], pos[j]);
@@ -284,7 +291,7 @@ function updateBoidState()
     }
 }
 
-function updateUnitState()
+function updateAiState()
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, aiState, atkState, physState } = gameState.entities;
 
@@ -456,16 +463,35 @@ function hitEntity(i, damage)
 
 function updateHitState(timeDeltaMs)
 {
-    const { exists, team, unit, hp, hitState } = gameState.entities;
+    const { freeable, hp, aiState, atkState, hitState, physState } = gameState.entities;
     forAllEntities((i) => {
         hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
-        // reap
-        if (hp[i] <= 0) {
-            exists[i] = false;
-            // add to free list
-            gameState.entities.nextFree[i] = gameState.freeSlot;
-            gameState.freeSlot = i;
+
+        switch (hitState[i].state) {
+            case HITSTATE.ALIVE:
+            {
+                if (hp[i] <= 0) {
+                    // fade hpTimer fast
+                    if (hitState[i].hpBarTimer > 0) {
+                        hitState[i].hpBarTimer = params.deathTimeMs*0.5;
+                    }
+                    hitState[i].deadTimer = params.deathTimeMs;
+                    hitState[i].state = HITSTATE.DEAD;
+                    aiState[i].state = AISTATE.DO_NOTHING;
+                    atkState[i].state = ATKSTATE.NONE;
+                    physState[i].canCollide = false;
+                }
+                break;
+            }
+            case HITSTATE.DEAD:
+            {
+                hitState[i].deadTimer -= timeDeltaMs;
+                if (hitState[i].deadTimer <= 0) {
+                    freeable[i] = true;
+                }
+                break;
+            }
         }
     });
 }
@@ -517,13 +543,27 @@ function updateAtkState(timeDeltaMs)
 
 function updateGame(timeDeltaMs)
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    const { exists, freeable } = gameState.entities;
 
+    // order here matters!
     updatePhysicsState();
     updateAtkState(timeDeltaMs);
-    updateUnitState();
+    updateAiState();
+
+    // to remove/factor out
     updateBoidState();
+
+    // this should come right before reap
     updateHitState(timeDeltaMs);
+    // reap freeable entities
+    for (let i = 0; i < exists.length; ++i) {
+        if (exists[i] && freeable[i]) {
+            exists[i] = false;
+            // add to free list
+            gameState.entities.nextFree[i] = gameState.freeSlot;
+            gameState.freeSlot = i;
+        }
+    };
 }
 
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)

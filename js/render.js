@@ -1,48 +1,49 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
+import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units, HITSTATE } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
 export let canvas = null;
 let context = null;
 
-function drawCircleUnit(pos, angle, team, unit)
+function drawCircleUnit(pos, angle, team, unit, strokeColor, fillColor)
 {
-    if (unit.draw.strokeColor) {
-        let color = unit.draw.strokeColor;
-        if (color == "TEAM") {
-            color = params.teamColors[team];
-        }
-        strokeCircle(pos, unit.radius, 2, color);
+    if (strokeColor) {
+        strokeCircle(pos, unit.radius, 2, strokeColor);
     }
-    if (unit.draw.fillColor) {
-        let color = unit.draw.fillColor;
-        if (color == "TEAM") {
-            color = params.teamColors[team];
-        }
-        fillCircle(pos, unit.radius, color);
+    if (fillColor) {
+        fillCircle(pos, unit.radius, fillColor);
     }
 }
 
-function drawTriangleUnit(pos, angle, team, unit)
+function drawTriangleUnit(pos, angle, team, unit, fillColor)
 {
-    let color = unit.draw.fillColor;
-    if (color == "TEAM") {
-        color = params.teamColors[team];
-    }
-    fillEquilateralTriangle(pos, angle, unit.radius, unit.radius * 1.5, color);
+    fillEquilateralTriangle(pos, angle, unit.radius, unit.radius * 1.5, fillColor);
 }
 
 function drawUnit(i)
 {
     const { team, unit, pos, vel, angle, target, hp, aiState, atkState, physState, boidState, hitState } = gameState.entities;
+
+    let unitStrokeColor = unit[i].draw.strokeColor;
+    if (unitStrokeColor == "TEAM") {
+        unitStrokeColor = params.teamColors[team[i]];
+    }
+    let unitFillColor = unit[i].draw.fillColor;
+    if (unitFillColor == "TEAM") {
+        unitFillColor = params.teamColors[team[i]];
+    }
+    if (hitState[i].state == HITSTATE.DEAD) {
+        const f = hitState[i].deadTimer / params.deathTimeMs;
+        unitFillColor = `rgba(100,100,100,${f})`;
+    }
     // draw basic shape
     switch (unit[i].draw.shape) {
         case "circle":
-            drawCircleUnit(pos[i], angle[i], team[i], unit[i]);
+            drawCircleUnit(pos[i], angle[i], team[i], unit[i], unitStrokeColor, unitFillColor);
             break;
         case "triangle":
-            drawTriangleUnit(pos[i], angle[i], team[i], unit[i]);
+            drawTriangleUnit(pos[i], angle[i], team[i], unit[i], unitFillColor);
             break;
         default:
             console.error("invalid unit.draw");
@@ -312,13 +313,23 @@ export function draw()
         drawLane(gameState.lanes[i]);
     }
 
-    const { exists, team, unit, pos, angle, physState, boidState } = gameState.entities;
+    const { exists, team, unit, pos, angle, physState, boidState, hitState } = gameState.entities;
+    // TODO bit of hack to draw alive units on top of dead ones
+    // draw dead
     for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i]) {
+        if (!exists[i] || (hitState[i].state != HITSTATE.DEAD)) {
             continue;
         }
         drawUnit(i);
     }
+    //draw alive
+    for (let i = 0; i < exists.length; ++i) {
+        if (!exists[i] || (hitState[i].state != HITSTATE.ALIVE)) {
+            continue;
+        }
+        drawUnit(i);
+    }
+    // health bars on top!
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
             continue;

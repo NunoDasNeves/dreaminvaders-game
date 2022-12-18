@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, AISTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
+import { params, AISTATE, HITSTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -74,7 +74,7 @@ export class EntityRef {
 
 export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, id, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, target, lane, atkState, aiState, physState, boidState, hitState } = gameState.entities;
+    const { exists, freeable, id, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, target, lane, atkState, aiState, physState, boidState, hitState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -93,22 +93,40 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     gameState.freeSlot = nextFree[idx];
 
     exists[idx]     = true;
+    freeable[idx]   = false;
     id[idx]         = gameState.nextId;
     gameState.nextId++;
     nextFree[idx]   = INVALID_ENTITY_INDEX;
     team[idx]       = aTeam;
-    target[idx]     = new EntityRef(INVALID_ENTITY_INDEX);
-    lane[idx]       = aLane;
     unit[idx]       = aUnit;
     hp[idx]         = aUnit.maxHp;
     pos[idx]        = vecClone(aPos);
     vel[idx]        = vec();
-    accel[idx]      = vec();
+    accel[idx]      = vec(); // not used yet
     angle[idx]      = 0;
-    angVel[idx]     = 0;
-    aiState[idx]    = { state: unit[idx].defaultAiState };
-    atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
-    physState[idx]  = { colliding: false };
+    angVel[idx]     = 0; // not used yet
+    // possibly lane, and probably target, should be in aiState
+    lane[idx]       = aLane;
+    target[idx]     = new EntityRef(INVALID_ENTITY_INDEX);
+    // aiState, atkState, hitState are pretty interlinked
+    aiState[idx]    = {
+        state: unit[idx].defaultAiState
+    };
+    atkState[idx]   = {
+        state: ATKSTATE.NONE,
+        timer: 0,
+    };
+    hitState[idx]   = {
+        state: HITSTATE.ALIVE,
+        hitTimer: 0,
+        hpBarTimer: 0,
+        deadTimer: 0,
+    };
+    physState[idx]  = {
+        canCollide: unit[idx].collides,
+        colliding: false
+    };
+    // gonna be folded in or removed at some point
     boidState[idx]  = {
         targetPos: null,
         avoiding: false,
@@ -116,10 +134,6 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
         avoidanceForce: vec(),
         seekForce: vec()
     };
-    hitState[idx]   = {
-        hitTimer: 0,
-        hpBarTimer: 0,
-    }
 
     return idx;
 }
@@ -167,6 +181,7 @@ export function initGameState()
     gameState = {
         entities: {
             exists: [],
+            freeable: [],
             id: [],
             nextFree: [],
             team: [],
@@ -178,6 +193,7 @@ export function initGameState()
             angle: [],
             angVel: [],
             target: [],
+            targettable: [],
             lane: [],
             aiState: [],
             atkState: [],

@@ -25,6 +25,7 @@ export const params = Object.freeze(
             teamColors: [ "#6f6f6f", "#ff9933", "#3399ff" ], // first one is 'no team'
             hpBarTimeMs: 2000,
             hitFadeTimeMs: 300,
+            deathTimeMs: 1000,
         }
         obj.laneDistFromBase = obj.baseRadius - 5;
         return obj;
@@ -47,6 +48,10 @@ export const ATKSTATE = Object.freeze({
     AIM: 1,
     SWING: 2,
     RECOVER: 3,
+});
+export const HITSTATE = Object.freeze({
+    ALIVE: 0,
+    DEAD: 1,
 });
 
 export const weapons = Object.freeze({
