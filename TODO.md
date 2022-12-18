@@ -1,6 +1,7 @@
 ## TODO
-- death animation, unit can hang around after death and not be targetted
-- dying by falling off bridge
+- 'lighthouse' (unit?) with hp. Units are 'spent' when they go inside, and reduces the hp
+- units ignore others when on the last leg to the lighthouse
+- stop attacking or chasing enemies that are on the last leg to go into the lighthouse
 - display unit types on bottom of screen
 - select unit type with numbers (don't hardcode)
 - click on lane to place unit (don't hardcode)
@@ -19,6 +20,8 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- dying by falling off bridge
+- death animation, unit can hang around after death and not be targetted
 - 'hit' effect - flash red or something
 - health bars
     - appear when hit, fade after a second or so
