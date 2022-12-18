@@ -227,25 +227,37 @@ export function initGameState()
         lastInput: makeInput(),
         debugPause: false,
     };
-    const laneDir = vecNorm(vecSub(gameState.islands[TEAM.BLUE].pos, gameState.islands[TEAM.ORANGE].pos));
+    // compute the lane start and end points (bezier curves)
+    // line segements approximating the curve (for gameplay code) + paths to the lighthouse
     const islandPos = [gameState.islands[TEAM.ORANGE].pos, gameState.islands[TEAM.BLUE].pos];
+    const islandToIsland = vecSub(islandPos[1], islandPos[0]);
+    const centerPoint = vecAddTo(vecMul(islandToIsland, 0.5), islandPos[0]);
     const islandToLaneStart = vec(params.laneDistFromBase, 0);
     const numLanes = 3;
     const angleInc = Math.PI/4;
     const angleSpan = (numLanes - 1) * angleInc;
-    const angleStart = -angleSpan/2;
+    const angleStart = -angleSpan*0.5;
+    const ctrlPointInc = params.laneWidth * 4;
+    const ctrlPointSpan = (numLanes - 1) * ctrlPointInc;
+    const ctrlPointStart = -ctrlPointSpan*0.5;
+    const ctrlPointXOffset = vecLen(islandToIsland)/5;
     for (let i = 0; i < numLanes; ++i) {
         const points = [];
-        const pathPoints = [];
         const off = vecRotateBy(vecRotateBy(vecClone(islandToLaneStart), angleStart), angleInc * i);
         const pOrange = vecAdd(islandPos[0], off);
         points.push(pOrange);
         off.x = -off.x;
         const pBlue = vecAdd(islandPos[1], off);
         points.push(pBlue);
-        gameState.lanes.push({ points });
-        gameState.islands[TEAM.BLUE].paths.push([vecClone(pBlue), gameState.islands[TEAM.BLUE].pos]);
-        gameState.islands[TEAM.ORANGE].paths.push([vecClone(pOrange), gameState.islands[TEAM.ORANGE].pos]);
+        const centerControlPoint = vecAdd(centerPoint, vec(0, ctrlPointStart + ctrlPointInc*i));
+        const bezierPoints = [
+            points[0],
+            vecAdd(centerControlPoint, vec(-ctrlPointXOffset,0)),
+            vecAdd(centerControlPoint, vec(ctrlPointXOffset,0)),
+            points[1]];
+        gameState.lanes.push({ points, bezierPoints });
+        gameState.islands[TEAM.ORANGE].paths.push([vecClone(pOrange), islandPos[0]]);
+        gameState.islands[TEAM.BLUE].paths.push([vecClone(pBlue), islandPos[1]]);
     }
 
     gameState.islands[TEAM.BLUE].idx = spawnEntity(gameState.islands[TEAM.BLUE].pos, TEAM.BLUE, units.base);

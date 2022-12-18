@@ -306,21 +306,40 @@ function drawArrow(start, end, width, strokeStyle)
     context.stroke();
 }
 
+function strokePoints(arr, width, strokeStyle)
+{
+    // line segments
+    context.strokeStyle = strokeStyle;
+    context.setLineDash([]);
+    context.lineWidth = width / gameState.camera.scale;
+    context.beginPath();
+    const points = arr.map(v => worldVecToCamera(v));
+    context.moveTo(points[0].x, points[0].y);
+
+    for (let i = 1; i < points.length; ++i) {
+        context.lineTo(points[i].x, points[i].y);
+    }
+    context.stroke();
+
+}
+
 function drawLane(lane)
 {
+    // lanes; bezier curves
+    context.setLineDash([]);
+    context.lineWidth = params.laneWidth / gameState.camera.scale;
+    context.strokeStyle = params.laneColor;
     context.beginPath();
-    let coords = worldToCamera(lane.points[0].x, lane.points[0].y);
-    context.moveTo(coords.x, coords.y);
+    const bezPoints = lane.bezierPoints.map(v => worldVecToCamera(v));
+    context.moveTo(bezPoints[0].x, bezPoints[0].y);
+    context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
+    context.stroke();
 
-    for (let i = 1; i < lane.points.length; ++i) {
-        coords = worldToCamera(lane.points[i].x, lane.points[i].y);
-        context.lineTo(coords.x, coords.y);
-        context.strokeStyle = params.laneColor;
-        // Clear line dash
-        context.setLineDash([]);
-        context.lineWidth = params.laneWidth / gameState.camera.scale;
-        context.stroke();
-    }
+    // debug bezier control points
+    //strokePoints(lane.bezierPoints, 5, "#00ff00");
+
+    // debug line segments
+    //strokePoints(lane.points, 5, "#ff0000");
 }
 
 export function getBoundingClientRect()
