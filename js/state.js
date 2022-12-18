@@ -121,10 +121,12 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
         hitTimer: 0,
         hpBarTimer: 0,
         deadTimer: 0,
+        fallTimer: 0,
     };
     physState[idx]  = {
         canCollide: unit[idx].collides,
-        colliding: false
+        colliding: false,
+        canFall: unit[idx].canFall,
     };
     // gonna be folded in or removed at some point
     boidState[idx]  = {

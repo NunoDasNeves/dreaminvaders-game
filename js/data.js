@@ -26,6 +26,8 @@ export const params = Object.freeze(
             hpBarTimeMs: 2000,
             hitFadeTimeMs: 300,
             deathTimeMs: 1000,
+            fallTimeMs: 1000,
+            fallSizeReduction: 0.25,
         }
         obj.laneDistFromBase = obj.baseRadius - 5;
         return obj;
@@ -82,6 +84,7 @@ export const units = Object.freeze({
         sightRadius: 0,
         radius: params.baseRadius,
         collides: false,
+        canFall: false,
         defaultAiState: AISTATE.DO_NOTHING,
         draw: {
             shape: "circle",
@@ -96,6 +99,7 @@ export const units = Object.freeze({
         sightRadius: params.laneWidth*0.75,
         radius: 10,
         collides: true,
+        canFall: true,
         defaultAiState: AISTATE.PROCEED,
         draw: {
             shape: "circle",
@@ -110,6 +114,7 @@ export const units = Object.freeze({
         sightRadius: params.laneWidth,
         radius:10,
         collides: true,
+        canFall: false,
         defaultAiState: AISTATE.DO_NOTHING,
         draw: {
             shape: "triangle",

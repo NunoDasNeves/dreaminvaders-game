@@ -6,25 +6,26 @@ import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityR
 export let canvas = null;
 let context = null;
 
-function drawCircleUnit(pos, angle, team, unit, strokeColor, fillColor)
+function drawCircleUnit(pos, unit, scale, strokeColor, fillColor)
 {
     if (strokeColor) {
-        strokeCircle(pos, unit.radius, 2, strokeColor);
+        strokeCircle(pos, unit.radius * scale, 2, strokeColor);
     }
     if (fillColor) {
-        fillCircle(pos, unit.radius, fillColor);
+        fillCircle(pos, unit.radius * scale, fillColor);
     }
 }
 
-function drawTriangleUnit(pos, angle, team, unit, fillColor)
+function drawTriangleUnit(pos, angle, unit, scale, fillColor)
 {
-    fillEquilateralTriangle(pos, angle, unit.radius, unit.radius * 1.5, fillColor);
+    fillEquilateralTriangle(pos, angle, unit.radius * scale, unit.radius * 1.5 * scale, fillColor);
 }
 
 function drawUnit(i)
 {
     const { team, unit, pos, vel, angle, target, hp, aiState, atkState, physState, boidState, hitState } = gameState.entities;
 
+    let unitScale = 1;
     let unitStrokeColor = unit[i].draw.strokeColor;
     if (unitStrokeColor == "TEAM") {
         unitStrokeColor = params.teamColors[team[i]];
@@ -36,14 +37,17 @@ function drawUnit(i)
     if (hitState[i].state == HITSTATE.DEAD) {
         const f = hitState[i].deadTimer / params.deathTimeMs;
         unitFillColor = `rgba(100,100,100,${f})`;
+        if (hitState[i].fallTimer > 0) {
+            unitScale = 1 - ((hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction);
+        }
     }
     // draw basic shape
     switch (unit[i].draw.shape) {
         case "circle":
-            drawCircleUnit(pos[i], angle[i], team[i], unit[i], unitStrokeColor, unitFillColor);
+            drawCircleUnit(pos[i], unit[i], unitScale, unitStrokeColor, unitFillColor);
             break;
         case "triangle":
-            drawTriangleUnit(pos[i], angle[i], team[i], unit[i], unitFillColor);
+            drawTriangleUnit(pos[i], angle[i], unit[i], unitScale, unitFillColor);
             break;
         default:
             console.error("invalid unit.draw");
