@@ -445,36 +445,10 @@ function updatePhysicsState()
         vecAddTo(pos[j], corrPos);
     }
 
-    // rotate to face vel. also check for falling
+    // rotate to face vel
     forAllEntities((i) => {
         if (vecLen(vel[i]) > params.minUnitVelocity) {
             angle[i] = vecToAngle(vel[i]);
-        }
-        if (physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
-            const laneStartPos = laneStart(lane[i], team[i]);
-            const laneLine = vecSub(laneEnd(lane[i], team[i]), laneStartPos);
-            const laneLen = vecLen(laneLine);
-            const laneStartToEnt = vecSub(pos[i], laneStartPos);
-            const laneDir = vecMul(laneLine, 1/laneLen);
-            const distAlongLane = vecDot(laneDir, laneStartToEnt);
-            const inLine = distAlongLane > 0 && distAlongLane < laneLen;
-            const closestPoint = vecMul(laneDir, distAlongLane);
-            if (inLine && getDist(closestPoint, laneStartToEnt) >= params.laneWidth*0.5) {
-                // TODO push it with a force, don't just teleport
-                const dirAwayFromLane = vecNormalize(vecSub(laneStartToEnt, closestPoint));
-                vecAddTo(pos[i], vecMulBy(dirAwayFromLane, unit[i].radius));
-                // fade hpTimer fast
-                if (hitState[i].hpBarTimer > 0) {
-                    hitState[i].hpBarTimer = params.deathTimeMs*0.5;
-                }
-                hitState[i].fallTimer = params.fallTimeMs;
-                hitState[i].deadTimer = params.deathTimeMs;
-                hitState[i].state = HITSTATE.DEAD;
-                aiState[i].state = AISTATE.DO_NOTHING;
-                atkState[i].state = ATKSTATE.NONE;
-                physState[i].canCollide = false;
-                vecClear(vel[i]);
-            }
         }
     });
 }
@@ -489,7 +463,7 @@ function hitEntity(i, damage)
 
 function updateHitState(timeDeltaMs)
 {
-    const { freeable, vel, hp, aiState, atkState, hitState, physState } = gameState.entities;
+    const { freeable, unit, pos, vel, hp, lane, team, aiState, atkState, hitState, physState } = gameState.entities;
     forAllEntities((i) => {
         hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
@@ -497,6 +471,7 @@ function updateHitState(timeDeltaMs)
         switch (hitState[i].state) {
             case HITSTATE.ALIVE:
             {
+                // die from damage
                 if (hp[i] <= 0) {
                     // fade hpTimer fast
                     if (hitState[i].hpBarTimer > 0) {
@@ -508,6 +483,32 @@ function updateHitState(timeDeltaMs)
                     atkState[i].state = ATKSTATE.NONE;
                     physState[i].canCollide = false;
                     vecClear(vel[i]);
+                // die from falling
+                } else if (physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
+                    const laneStartPos = laneStart(lane[i], team[i]);
+                    const laneLine = vecSub(laneEnd(lane[i], team[i]), laneStartPos);
+                    const laneLen = vecLen(laneLine);
+                    const laneStartToEnt = vecSub(pos[i], laneStartPos);
+                    const laneDir = vecMul(laneLine, 1/laneLen);
+                    const distAlongLane = vecDot(laneDir, laneStartToEnt);
+                    const inLine = distAlongLane > 0 && distAlongLane < laneLen;
+                    const closestPoint = vecMul(laneDir, distAlongLane);
+                    if (inLine && getDist(closestPoint, laneStartToEnt) >= params.laneWidth*0.5) {
+                        // TODO push it with a force, don't just teleport
+                        const dirAwayFromLane = vecNormalize(vecSub(laneStartToEnt, closestPoint));
+                        vecAddTo(pos[i], vecMulBy(dirAwayFromLane, unit[i].radius));
+                        // fade hpTimer fast
+                        if (hitState[i].hpBarTimer > 0) {
+                            hitState[i].hpBarTimer = params.deathTimeMs*0.5;
+                        }
+                        hitState[i].fallTimer = params.fallTimeMs;
+                        hitState[i].deadTimer = params.fallTimeMs; // same as fall time!
+                        hitState[i].state = HITSTATE.DEAD;
+                        aiState[i].state = AISTATE.DO_NOTHING;
+                        atkState[i].state = ATKSTATE.NONE;
+                        physState[i].canCollide = false;
+                        vecClear(vel[i]);
+                    }
                 }
                 break;
             }

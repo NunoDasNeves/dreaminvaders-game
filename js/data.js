@@ -26,8 +26,8 @@ export const params = Object.freeze(
             hpBarTimeMs: 2000,
             hitFadeTimeMs: 300,
             deathTimeMs: 1000,
-            fallTimeMs: 1000,
-            fallSizeReduction: 0.25,
+            fallTimeMs: 500,
+            fallSizeReduction: 0.75,
         }
         obj.laneDistFromBase = obj.baseRadius - 5;
         return obj;

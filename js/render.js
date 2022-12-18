@@ -38,7 +38,7 @@ function drawUnit(i)
         const f = hitState[i].deadTimer / params.deathTimeMs;
         unitFillColor = `rgba(100,100,100,${f})`;
         if (hitState[i].fallTimer > 0) {
-            unitScale = 1 - ((hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction);
+            unitScale = (1 - params.fallSizeReduction) + (hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction;
         }
     }
     // draw basic shape
@@ -111,7 +111,7 @@ function drawUnit(i)
                 case ATKSTATE.SWING:
                 {
                     const f = clamp(1 - atkState[i].timer / unit[i].weapon.swingMs, 0, 1);
-                    const forwardOff = vecMul(dir, f*3);
+                    const forwardOff = vecMul(dir, f*unit[i].weapon.range);
                     vecAddTo(finalPos, forwardOff);
                     color = `rgb(${100 + 155*f}, 20, 20)`;
                     break;
@@ -119,7 +119,7 @@ function drawUnit(i)
                 case ATKSTATE.RECOVER:
                 {
                     const f = clamp(atkState[i].timer / unit[i].weapon.recoverMs, 0, 1);
-                    const forwardOff = vecMul(dir, f*3);
+                    const forwardOff = vecMul(dir, f*unit[i].weapon.range);
                     vecAddTo(finalPos, forwardOff);
                     break;
                 }
