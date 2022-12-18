@@ -14,6 +14,25 @@ export function almostZero(x)
     return Math.abs(x) < 0.0001;
 }
 
+export function cubicBezierPoint(ctrlPoints, t)
+{
+    // (1-t)^3P_0 + 3t(1-t)^2P_1 + 3t^2(1-t)P_2 + t^3P_3
+    console.assert(t >= 0 && t <= 1);
+    console.assert(ctrlPoints.length == 4);
+    const oneMinusT = 1-t;
+    const oneMinusTSquared = oneMinusT*oneMinusT;
+    const tSquared = t*t;
+    const terms = [null,null,null,null];
+    terms[0] = vecMul(ctrlPoints[0],   oneMinusTSquared*oneMinusT  );
+    terms[1] = vecMul(ctrlPoints[1], 3*oneMinusTSquared          *t);
+    terms[2] = vecMul(ctrlPoints[2], 3*oneMinusT                 *tSquared);
+    terms[3] = vecMul(ctrlPoints[3],                              tSquared*t);
+    const result1 = vecAddTo(terms[0], terms[1]);
+    const result2 = vecAddTo(terms[2], terms[3]);
+
+    return vecAdd(result1, result2);
+}
+
 /*
  * ##############
  * 2d Vectors

@@ -229,35 +229,47 @@ export function initGameState()
     };
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse
+    // ordering of points is from orange to blue, i.e. left to right
     const islandPos = [gameState.islands[TEAM.ORANGE].pos, gameState.islands[TEAM.BLUE].pos];
     const islandToIsland = vecSub(islandPos[1], islandPos[0]);
     const centerPoint = vecAddTo(vecMul(islandToIsland, 0.5), islandPos[0]);
     const islandToLaneStart = vec(params.laneDistFromBase, 0);
-    const numLanes = 3;
     const angleInc = Math.PI/4;
-    const angleSpan = (numLanes - 1) * angleInc;
+    const angleSpan = (params.numLanes - 1) * angleInc;
     const angleStart = -angleSpan*0.5;
     const ctrlPointInc = params.laneWidth * 4;
-    const ctrlPointSpan = (numLanes - 1) * ctrlPointInc;
+    const ctrlPointSpan = (params.numLanes - 1) * ctrlPointInc;
     const ctrlPointStart = -ctrlPointSpan*0.5;
     const ctrlPointXOffset = vecLen(islandToIsland)/5;
-    for (let i = 0; i < numLanes; ++i) {
-        const points = [];
+    for (let i = 0; i < params.numLanes; ++i) {
+        const points = []; // gameplay points, from lighthouse to lighthouse
+        const bezierPoints = []; // bezier points, just for drawing lanes
+        points.push(islandPos[0]);
+        // vector from island center to lane start at the edge
         const off = vecRotateBy(vecRotateBy(vecClone(islandToLaneStart), angleStart), angleInc * i);
-        const pOrange = vecAdd(islandPos[0], off);
-        points.push(pOrange);
-        off.x = -off.x;
-        const pBlue = vecAdd(islandPos[1], off);
-        points.push(pBlue);
+        const pLaneStart = vecAdd(islandPos[0], off);
+        points.push(pLaneStart);
+        bezierPoints.push(pLaneStart);
+        // center bezier points
         const centerControlPoint = vecAdd(centerPoint, vec(0, ctrlPointStart + ctrlPointInc*i));
-        const bezierPoints = [
-            points[0],
-            vecAdd(centerControlPoint, vec(-ctrlPointXOffset,0)),
-            vecAdd(centerControlPoint, vec(ctrlPointXOffset,0)),
-            points[1]];
+        // assume going left to right here, so -x then +x
+        bezierPoints.push(vecAdd(centerControlPoint, vec(-ctrlPointXOffset,0)));
+        bezierPoints.push(vecAdd(centerControlPoint, vec(ctrlPointXOffset,0)));
+        // reverse the angle in x axis for blue island
+        off.x = -off.x;
+        const pLaneEnd = vecAdd(islandPos[1], off);
+        bezierPoints.push(pLaneEnd);
+        // approximate intermediate points along bezier curve
+        for (let i = 1; i < params.numLaneSegs; ++i)
+        {
+            points.push(cubicBezierPoint(bezierPoints,i/params.numLaneSegs));
+        }
+        // end points
+        points.push(pLaneEnd);
+        points.push(islandPos[1]);
         gameState.lanes.push({ points, bezierPoints });
-        gameState.islands[TEAM.ORANGE].paths.push([vecClone(pOrange), islandPos[0]]);
-        gameState.islands[TEAM.BLUE].paths.push([vecClone(pBlue), islandPos[1]]);
+        gameState.islands[TEAM.ORANGE].paths.push([vecClone(pLaneStart), islandPos[0]]);
+        gameState.islands[TEAM.BLUE].paths.push([vecClone(pLaneEnd), islandPos[1]]);
     }
 
     gameState.islands[TEAM.BLUE].idx = spawnEntity(gameState.islands[TEAM.BLUE].pos, TEAM.BLUE, units.base);

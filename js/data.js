@@ -10,11 +10,15 @@ export const debug = {
     drawCapsule: true,
     drawForces: true,
     drawSwing: true,
+    drawLaneSegs: true,
+    drawBezierPoints: false,
 }
 
 export const params = Object.freeze(
     function() {
         const obj = {
+            numLanes: 3,
+            numLaneSegs: 8,
             minUnitVelocity: 0.5,
             backgroundColor: "#1f1f1f",
             baseFadeColor: "#101010",

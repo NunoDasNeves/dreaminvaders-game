@@ -320,7 +320,13 @@ function strokePoints(arr, width, strokeStyle)
         context.lineTo(points[i].x, points[i].y);
     }
     context.stroke();
+}
 
+function dotPoints(arr, radius, fillStyle)
+{
+    for (let i = 0; i < arr.length; ++i) {
+        fillCircle(arr[i], radius, fillStyle);
+    }
 }
 
 function drawLane(lane)
@@ -335,11 +341,14 @@ function drawLane(lane)
     context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
     context.stroke();
 
-    // debug bezier control points
-    //strokePoints(lane.bezierPoints, 5, "#00ff00");
+    if (debug.drawBezierPoints) {
+        strokePoints(lane.bezierPoints, 3, "#00ff00");
+    }
 
-    // debug line segments
-    //strokePoints(lane.points, 5, "#ff0000");
+    if (debug.drawLaneSegs) {
+        strokePoints(lane.points, 5, "#ff0000");
+        dotPoints(lane.points, 7, "#0000ff");
+    }
 }
 
 export function getBoundingClientRect()
