@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, STATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
+import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
 export let canvas = null;
 let context = null;
@@ -35,7 +35,7 @@ function drawTriangleUnit(pos, angle, team, unit)
 
 function drawUnit(i)
 {
-    const { team, unit, pos, vel, angle, target, hp, state, atkState, physState, boidState, hitState } = gameState.entities;
+    const { team, unit, pos, vel, angle, target, hp, aiState, atkState, physState, boidState, hitState } = gameState.entities;
     // draw basic shape
     switch (unit[i].draw.shape) {
         case "circle":
@@ -71,7 +71,7 @@ function drawUnit(i)
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, 'white');
     }
     if (debug.drawState) {
-        const color = state[i] == STATE.PROCEED ? 'blue' : state[i] == STATE.CHASE ? 'yellow' : 'red';
+        const color = aiState[i].state == AISTATE.PROCEED ? 'blue' : aiState[i].state == AISTATE.CHASE ? 'yellow' : 'red';
         const off = vecMulBy(vecFromAngle(angle[i]), -unit[i].radius*0.75);
         fillCircle(vecAdd(pos[i], off), unit[i].radius/3, color);
     }

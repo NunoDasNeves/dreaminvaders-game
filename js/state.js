@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, STATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
+import { params, AISTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -74,7 +74,7 @@ export class EntityRef {
 
 export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, id, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, target, lane, atkState, physState, boidState, hitState  } = gameState.entities;
+    const { exists, id, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, target, lane, atkState, aiState, physState, boidState, hitState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -106,7 +106,7 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
     accel[idx]      = vec();
     angle[idx]      = 0;
     angVel[idx]     = 0;
-    state[idx]      = unit[idx].defaultState;
+    aiState[idx]    = { state: unit[idx].defaultAiState };
     atkState[idx]   = { timer: 0, state: ATKSTATE.NONE };
     physState[idx]  = { colliding: false };
     boidState[idx]  = {
@@ -177,9 +177,9 @@ export function initGameState()
             accel: [],
             angle: [],
             angVel: [],
-            state: [],
             target: [],
             lane: [],
+            aiState: [],
             atkState: [],
             physState: [],
             boidState: [],

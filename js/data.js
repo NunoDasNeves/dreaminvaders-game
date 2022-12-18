@@ -31,16 +31,16 @@ export const params = Object.freeze(
     }()
 );
 
-export const STATE = Object.freeze({
-    DO_NOTHING: 0,
-    PROCEED: 1,
-    CHASE: 2,
-    ATTACK: 3,
-});
 export const TEAM = Object.freeze({
     NONE: 0,
     ORANGE: 1,
     BLUE: 2,
+});
+export const AISTATE = Object.freeze({
+    DO_NOTHING: 0,
+    PROCEED: 1,
+    CHASE: 2,
+    ATTACK: 3,
 });
 export const ATKSTATE = Object.freeze({
     NONE: 0,
@@ -77,7 +77,7 @@ export const units = Object.freeze({
         sightRadius: 0,
         radius: params.baseRadius,
         collides: false,
-        defaultState: STATE.DO_NOTHING,
+        defaultAiState: AISTATE.DO_NOTHING,
         draw: {
             shape: "circle",
             strokeColor: "red",
@@ -91,7 +91,7 @@ export const units = Object.freeze({
         sightRadius: params.laneWidth*0.75,
         radius: 10,
         collides: true,
-        defaultState: STATE.PROCEED,
+        defaultAiState: AISTATE.PROCEED,
         draw: {
             shape: "circle",
             fillColor: "TEAM",
@@ -105,7 +105,7 @@ export const units = Object.freeze({
         sightRadius: params.laneWidth,
         radius:10,
         collides: true,
-        defaultState: STATE.DO_NOTHING,
+        defaultAiState: AISTATE.DO_NOTHING,
         draw: {
             shape: "triangle",
             fillColor: "TEAM",

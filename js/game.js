@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, STATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
+import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
 
 /*
@@ -286,13 +286,13 @@ function updateBoidState()
 
 function updateUnitState()
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, aiState, atkState, physState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
             continue;
         }
-        if (state[i] == STATE.DO_NOTHING) {
+        if (aiState[i].state == AISTATE.DO_NOTHING) {
             continue;
         }
         const toEnemyBase = vecSub(gameState.bases[enemyTeam(team[i])].pos, pos[i]);
@@ -301,29 +301,28 @@ function updateUnitState()
         //const distToEndOfLane = vecLen(toEndOfLane);
         const nearestAtkTarget = nearestEnemyInAttackRange(i);
         const nearestChaseTarget = nearestEnemyInSightRadius(i);
-        // change state
-        switch (state[i]) {
-            case STATE.PROCEED:
+        switch (aiState[i].state) {
+            case AISTATE.PROCEED:
             {
                 if (distToEnemyBase < unit[i].radius) {
-                    state[i] = STATE.DO_NOTHING;
+                    aiState[i].state = AISTATE.DO_NOTHING;
                     vecClear(vel[i]);
                     break;
                 }
                 if (nearestAtkTarget.isValid()) {
-                    state[i] = STATE.ATTACK;
+                    aiState[i].state = AISTATE.ATTACK;
                     target[i] = nearestAtkTarget;
                 } else if (nearestChaseTarget.isValid()) {
-                    state[i] = STATE.CHASE;
+                    aiState[i].state = AISTATE.CHASE;
                     target[i] = nearestChaseTarget;
                 }
                 break;
             }
-            case STATE.CHASE:
+            case AISTATE.CHASE:
             {
                 // switch to attack if in range
                 if (nearestAtkTarget.isValid()) {
-                    state[i] = STATE.ATTACK;
+                    aiState[i].state = AISTATE.ATTACK;
                     target[i] = nearestAtkTarget;
                     atkState[i].timer = unit[i].weapon.aimMs;
                     atkState[i].state = ATKSTATE.AIM;
@@ -334,11 +333,11 @@ function updateUnitState()
 
                 // otherwise... continue on
                 } else {
-                    state[i] = STATE.PROCEED;
+                    aiState[i].state = AISTATE.PROCEED;
                 }
                 break;
             }
-            case STATE.ATTACK:
+            case AISTATE.ATTACK:
             {
                 // check we can still attack the current target
                 if (!canAttackTarget(i)) {
@@ -355,19 +354,19 @@ function updateUnitState()
                         atkState[i].state = ATKSTATE.AIM;
 
                     } else if (nearestChaseTarget.isValid()) {
-                        state[i] = STATE.CHASE;
+                        aiState[i].state = AISTATE.CHASE;
                         target[i] = nearestChaseTarget;
 
                     } else {
-                        state[i] = STATE.PROCEED;
+                        aiState[i].state = AISTATE.PROCEED;
                     }
                 }
                 break;
             }
         }
         // make decisions based on state
-        switch (state[i]) {
-            case STATE.PROCEED:
+        switch (aiState[i].state) {
+            case AISTATE.PROCEED:
             {
                 const dir = vecNorm(toEnemyBase);
                 vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEnemyBase));
@@ -375,7 +374,7 @@ function updateUnitState()
                 atkState[i].state = ATKSTATE.NONE;
                 break;
             }
-            case STATE.CHASE:
+            case AISTATE.CHASE:
             {
                 const t = target[i].getIndex();
                 console.assert(t != INVALID_ENTITY_INDEX);
@@ -387,7 +386,7 @@ function updateUnitState()
                 }
                 break;
             }
-            case STATE.ATTACK:
+            case AISTATE.ATTACK:
             {
                 const t = target[i].getIndex();
                 console.assert(t != INVALID_ENTITY_INDEX);
