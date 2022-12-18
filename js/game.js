@@ -558,7 +558,7 @@ function updateAtkState(timeDeltaMs)
                 if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
                     const t = target[i].getIndex();
                     console.assert(t != INVALID_ENTITY_INDEX);
-                    hitEntity(i, unit[i].weapon.damage);
+                    hitEntity(t, unit[i].weapon.damage);
                 }
                 break;
             }
