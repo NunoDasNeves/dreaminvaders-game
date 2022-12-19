@@ -404,17 +404,23 @@ function updateAiState()
                 const currPoint = bridgePoints[currIdx];
                 const nextPoint = vec();
                 // little bit of a hack, just check if we're on the island to go straight to the base
-                let goDirectlyToBase = false
+                let goToPoint = false
                 if (nextIdx >= bridgePoints.length || getDist(pos[i], enemyIslandPos) < params.islandRadius) {
-                    goDirectlyToBase = true;
+                    goToPoint = true;
+                    vecCopyTo(nextPoint, enemyIslandPos);
                 } else {
                     vecCopyTo(nextPoint, bridgePoints[nextIdx]);
+                    // getting close to edge of bridge, go back towards center
+                    if (dist > (params.laneWidth*0.5 - unit[i].radius)) {
+                        goToPoint = true;
+                    }
                 }
                 let goDir = null
-                if (goDirectlyToBase) {
-                    goDir = vecNormalize(vecSub(enemyIslandPos, pos[i]))
+                if (goToPoint) {
+                    // go to the point
+                    goDir = vecNormalize(vecSub(nextPoint, pos[i]))
                 } else {
-                    // go parallel to the line
+                    // go parallel to the bridge line
                     goDir = vecNormalize(vecSub(nextPoint, currPoint));
                 }
                 vel[i] = vecMul(goDir, Math.min(unit[i].speed, distToEnemyBase));
