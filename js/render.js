@@ -168,11 +168,10 @@ function fillCircle(worldPos, radius, fillStyle)
     context.fill();
 }
 
-function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
+function strokeCapsule(worldPos, length, radius, angle, width, strokeStyle, half=false)
 {
-    const worldLineLen = length - radius;
     const dir = vecFromAngle(angle);
-    const line = vecMul(dir, worldLineLen);
+    const line = vecMul(dir, length);
     const worldEnd = vecAdd(worldPos, line);
     const endCoords = worldToCamera(worldEnd.x, worldEnd.y); // where the circle center will be
     const originCoords = worldToCamera(worldPos.x, worldPos.y); // start of the line
@@ -199,6 +198,16 @@ function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
     context.lineTo(rightEndCoords.x, rightEndCoords.y);
     context.arc(endCoords.x, endCoords.y, radius / gameState.camera.scale, angle - Math.PI/2, angle + Math.PI/2);
     context.stroke();
+    if (!half) {
+        context.beginPath();
+        context.arc(originCoords.x, originCoords.y, radius / gameState.camera.scale, angle + Math.PI/2, angle - Math.PI/2);
+        context.stroke();
+    }
+}
+
+function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
+{
+    strokeCapsule(worldPos, length - radius, radius, angle, width, strokeStyle, true);
 }
 
 function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
@@ -322,6 +331,15 @@ function strokePoints(arr, width, strokeStyle)
     context.stroke();
 }
 
+function capsulePoints(arr, radius, strokeWidth, strokeStyle)
+{
+    for (let i = 0; i < arr.length - 1; ++i) {
+        const v = vecSub(arr[i+1], arr[i]);
+        const angle = vecToAngle(v);
+        strokeCapsule(arr[i], vecLen(v), radius, angle, strokeWidth, strokeStyle);
+    }
+}
+
 function dotPoints(arr, radius, fillStyle)
 {
     for (let i = 0; i < arr.length; ++i) {
@@ -329,12 +347,12 @@ function dotPoints(arr, radius, fillStyle)
     }
 }
 
-function drawLane(lane)
+function drawLane(lane, selected)
 {
     // lanes; bezier curves
     context.setLineDash([]);
     context.lineWidth = params.laneWidth / gameState.camera.scale;
-    context.strokeStyle = params.laneColor;
+    context.strokeStyle = selected ? params.laneSelectedColor : params.laneColor;
     context.beginPath();
     const bezPoints = lane.bezierPoints.map(v => worldVecToCamera(v));
     context.moveTo(bezPoints[0].x, bezPoints[0].y);
@@ -346,8 +364,11 @@ function drawLane(lane)
     }
 
     if (debug.drawLaneSegs) {
-        strokePoints(lane.points, 5, "#ff0000");
-        dotPoints(lane.points, 7, "#0000ff");
+        strokePoints(lane.bridgePoints, 5, "#ff0000");
+        capsulePoints(lane.bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
+        dotPoints(lane.bridgePoints, 7, "#0000ff");
+        fillCircle(lane.spawns[TEAM.ORANGE], 8, "#00ff00");
+        fillCircle(lane.spawns[TEAM.BLUE], 8, "#00ff00");
     }
 }
 
@@ -372,7 +393,7 @@ export function draw()
     }
 
     for (let i = 0; i < gameState.lanes.length; ++i) {
-        drawLane(gameState.lanes[i]);
+        drawLane(gameState.lanes[i], gameState.player.laneSelected == i);
     }
 
     const { exists, team, unit, pos, angle, physState, boidState, hitState } = gameState.entities;

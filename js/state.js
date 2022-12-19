@@ -29,13 +29,18 @@ export function closestPoint(arr, pos)
 export function laneStart(lane, team)
 {
     const base = gameState.islands[team];
-    return vecClone(closestPoint(lane.points, base.pos));
+    return vecClone(closestPoint(lane.pathPoints, base.pos));
+}
+
+export function laneSpawnPoint(lane, team)
+{
+    return vecClone(lane.spawns[team]);
 }
 
 export function laneEnd(lane, team)
 {
     const base = gameState.islands[enemyTeam(team)];
-    return vecClone(closestPoint(lane.points, base.pos));
+    return vecClone(closestPoint(lane.pathPoints, base.pos));
 }
 
 export let gameState = null;
@@ -142,7 +147,7 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 
 export function spawnEntityInLane(aLane, aTeam, aUnit)
 {
-    const pos = laneStart(aLane, aTeam);
+    const pos = laneSpawnPoint(aLane, aTeam);
     const randVec = vecMulBy(vecRand(), params.laneWidth/2);
     vecAddTo(pos, randVec);
     return spawnEntity(pos, aTeam, aUnit, aLane);
@@ -223,6 +228,10 @@ export function initGameState()
             scale: 1, // scale +++ means zoom out
             easeFactor: 0.1
         },
+        player: {
+            laneSelected: 0,
+            debugTeam: TEAM.ORANGE,
+        },
         input: makeInput(),
         lastInput: makeInput(),
         debugPause: false,
@@ -242,13 +251,15 @@ export function initGameState()
     const ctrlPointStart = -ctrlPointSpan*0.5;
     const ctrlPointXOffset = vecLen(islandToIsland)/5;
     for (let i = 0; i < params.numLanes; ++i) {
-        const points = []; // gameplay points, from lighthouse to lighthouse
+        const pathPoints = []; // points all the way from lighthouse to lighthouse
+        const bridgePoints = []; // just the bridge points (edge of island to edge of island)
         const bezierPoints = []; // bezier points, just for drawing lanes
-        points.push(islandPos[0]);
+        pathPoints.push(islandPos[0]);
         // vector from island center to lane start at the edge
         const off = vecRotateBy(vecRotateBy(vecClone(islandToLaneStart), angleStart), angleInc * i);
         const pLaneStart = vecAdd(islandPos[0], off);
-        points.push(pLaneStart);
+        pathPoints.push(pLaneStart);
+        bridgePoints.push(pLaneStart);
         bezierPoints.push(pLaneStart);
         // center bezier points
         const centerControlPoint = vecAdd(centerPoint, vec(0, ctrlPointStart + ctrlPointInc*i));
@@ -260,14 +271,21 @@ export function initGameState()
         const pLaneEnd = vecAdd(islandPos[1], off);
         bezierPoints.push(pLaneEnd);
         // approximate intermediate points along bezier curve
-        for (let i = 1; i < params.numLaneSegs; ++i)
-        {
-            points.push(cubicBezierPoint(bezierPoints,i/params.numLaneSegs));
+        for (let i = 1; i < params.numLaneSegs; ++i) {
+            const point = cubicBezierPoint(bezierPoints,i/params.numLaneSegs);
+            bridgePoints.push(point);
+            pathPoints.push(point);
         }
-        // end points
-        points.push(pLaneEnd);
-        points.push(islandPos[1]);
-        gameState.lanes.push({ points, bezierPoints });
+        bridgePoints.push(pLaneEnd);
+        pathPoints.push(pLaneEnd);
+        pathPoints.push(islandPos[1]);
+        const spawns = { [TEAM.ORANGE]: pLaneStart, [TEAM.BLUE]: pLaneEnd };
+        gameState.lanes.push({
+            pathPoints,
+            bridgePoints,
+            bezierPoints,
+            spawns
+        });
         gameState.islands[TEAM.ORANGE].paths.push([vecClone(pLaneStart), islandPos[0]]);
         gameState.islands[TEAM.BLUE].paths.push([vecClone(pLaneEnd), islandPos[1]]);
     }

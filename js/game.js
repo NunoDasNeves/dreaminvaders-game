@@ -610,10 +610,10 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
     }
 
     if (keyPressed('q')) {
-        spawnEntityInLane(gameState.lanes[0], TEAM.ORANGE, units.circle);
+        spawnEntityInLane(gameState.lanes[1], TEAM.ORANGE, units.circle);
     }
     if (keyPressed('w')) {
-        spawnEntityInLane(gameState.lanes[0], TEAM.BLUE, units.circle);
+        spawnEntityInLane(gameState.lanes[1], TEAM.BLUE, units.circle);
     }
     if (keyPressed('e')) {
         spawnEntity(gameState.input.mousePos, TEAM.BLUE, units.boid);

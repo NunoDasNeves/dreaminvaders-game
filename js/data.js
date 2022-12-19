@@ -23,6 +23,7 @@ export const params = Object.freeze(
             backgroundColor: "#1f1f1f",
             baseFadeColor: "#101010",
             laneColor: "#888888",
+            laneSelectedColor: "#cccccc",
             laneWidth: 60,
             pathWidth: 40,
             pathColor: "#443322",
