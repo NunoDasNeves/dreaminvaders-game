@@ -253,6 +253,7 @@ export function initGameState()
     const ctrlPointStart = -ctrlPointSpan*0.5;
     const ctrlPointXOffset = vecLen(islandToIsland)/5;
     for (let i = 0; i < params.numLanes; ++i) {
+        const numSegs = params.minNumLaneSegs + Math.floor(Math.abs(i - (params.numLanes - 1)*0.5));
         const pathPoints = []; // points all the way from lighthouse to lighthouse
         const bridgePoints = []; // just the bridge points (edge of island to edge of island)
         const bezierPoints = []; // bezier points, just for drawing lanes
@@ -273,8 +274,8 @@ export function initGameState()
         const pLaneEnd = vecAdd(islandPos[1], off);
         bezierPoints.push(pLaneEnd);
         // approximate intermediate points along bezier curve
-        for (let i = 1; i < params.numLaneSegs; ++i) {
-            const point = cubicBezierPoint(bezierPoints,i/params.numLaneSegs);
+        for (let i = 1; i < numSegs; ++i) {
+            const point = cubicBezierPoint(bezierPoints,i/numSegs);
             bridgePoints.push(point);
             pathPoints.push(point);
         }

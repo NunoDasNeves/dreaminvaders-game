@@ -17,8 +17,8 @@ export const debug = {
 export const params = Object.freeze(
     function() {
         const obj = {
-            numLanes: 3,
-            numLaneSegs: 8,
+            numLanes: 3, // min 1, max ~6
+            minNumLaneSegs: 8,
             minUnitVelocity: 0.5,
             backgroundColor: "#1f1f1f",
             baseFadeColor: "#101010",
