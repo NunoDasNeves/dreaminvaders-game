@@ -231,6 +231,8 @@ export function initGameState()
         player: {
             laneSelected: 0,
             debugTeam: TEAM.ORANGE,
+            debugClickedPoint: vec(),
+            debugClosestLanePoint: vec(),
         },
         input: makeInput(),
         lastInput: makeInput(),

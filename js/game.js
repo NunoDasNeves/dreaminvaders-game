@@ -490,18 +490,10 @@ function updateHitState(timeDeltaMs)
                     vecClear(vel[i]);
                 // die from falling
                 } else if (physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
-                    const laneStartPos = laneStart(lane[i], team[i]);
-                    const laneLine = vecSub(laneEnd(lane[i], team[i]), laneStartPos);
-                    const laneLen = vecLen(laneLine);
-                    const laneStartToEnt = vecSub(pos[i], laneStartPos);
-                    const laneDir = vecMul(laneLine, 1/laneLen);
-                    const distAlongLane = vecDot(laneDir, laneStartToEnt);
-                    const inLine = distAlongLane > 0 && distAlongLane < laneLen;
-                    const closestPoint = vecMul(laneDir, distAlongLane);
-                    if (inLine && getDist(closestPoint, laneStartToEnt) >= params.laneWidth*0.5) {
+                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePoints);
+                    if (dist >= params.laneWidth*0.5) {
                         // TODO push it with a force, don't just teleport
-                        const dirAwayFromLane = vecNormalize(vecSub(laneStartToEnt, closestPoint));
-                        vecAddTo(pos[i], vecMulBy(dirAwayFromLane, unit[i].radius));
+                        vecAddTo(pos[i], vecMulBy(dir, unit[i].radius));
                         // fade hpTimer fast
                         if (hitState[i].hpBarTimer > 0) {
                             hitState[i].hpBarTimer = params.deathTimeMs*0.5;
@@ -602,41 +594,68 @@ function updateGame(timeDeltaMs)
     };
 }
 
-function distFromBridge(point, bridgePoints)
+/*
+ * Get info about relationship between point and the closest point on lineSegs;
+ * lineSegs is a list of points treated as joined line segments.
+ * Returns: {
+ *      baseIdx,    // index in lineSegs of 'base' of line which point is closest to
+ *      point,      // point on lineSegs which is closest to point argument
+ *      dir,        // direction from point on lineSegs to point argument. null if point is very close to the line
+ *      dist,       // distance from point arg to closest point on lineSegs
+ * }
+ */
+function pointNearLineSegs(point, lineSegs)
 {
+    let minBaseIdx = 0;
+    let minPoint = null;
+    let minDir = null;
     let minDist = Infinity;
-    for (let i = 0; i < bridgePoints.length - 1; ++i) {
-        const capsuleLine = vecSub(bridgePoints[i+1], bridgePoints[i]);
+    for (let i = 0; i < lineSegs.length - 1; ++i) {
+        const capsuleLine = vecSub(lineSegs[i+1], lineSegs[i]);
         const lineLen = vecLen(capsuleLine);
-        const baseToPoint = vecSub(point, bridgePoints[i]);
+        const baseToPoint = vecSub(point, lineSegs[i]);
         if (almostZero(lineLen)) {
             const d = vecLen(baseToPoint);
             if (d < minDist) {
                 minDist = d;
+                minBaseIdx = i;
+                minPoint = vecClone(lineSegs[i]);
+                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
             }
             continue;
         }
-        const lineDir = vecMul(capsuleLine, lineLen);
+        const lineDir = vecMul(capsuleLine, 1/lineLen);
         const distAlongLine = vecDot(lineDir, baseToPoint);
         if (distAlongLine < 0) {
             const d = vecLen(baseToPoint);
             if (d < minDist) {
                 minDist = d;
+                minBaseIdx = i;
+                minPoint = vecClone(lineSegs[i]);
+                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
             }
         } else if (distAlongLine > lineLen) {
-            const d = getDist(bridgePoints[i+1], point);
+            const dir = vecSub(lineSegs[i+1], point);
+            const d = vecLen(dir);
             if (d < minDist) {
                 minDist = d;
+                minBaseIdx = i; // its the 'base' of the segment, so it is i and not i+1
+                minPoint = vecClone(lineSegs[i+1]);
+                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
             }
         } else {
-            const pointOnLine = vecMul(lineDir, distAlongLine);
-            const d = getDist(pointOnLine, point);
+            const pointOnLine = vecAddTo(vecMul(lineDir, distAlongLine), lineSegs[i]);
+            const dir = vecSub(point, pointOnLine);
+            const d = vecLen(dir);
             if (d < minDist) {
                 minDist = d;
+                minBaseIdx = i;
+                minPoint = pointOnLine;
+                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
             }
         }
     }
-    return minDist;
+    return { baseIdx: minBaseIdx, point: minPoint, dir: minDir, dist: minDist };
 }
 
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
@@ -654,15 +673,19 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
     if (mouseLeftPressed()) {
         let minLane = 0;
         let minDist = Infinity;
+        let minStuff = null;
         for (let i = 0; i < gameState.lanes.length; ++i) {
             const lane = gameState.lanes[i];
-            const d = distFromBridge(gameState.input.mousePos, lane.bridgePoints);
-            if (d < minDist) {
-                minDist = d;
+            const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
+            if (stuff.dist < minDist) {
                 minLane = i;
+                minDist = stuff.dist;
+                minStuff = stuff;
             }
         }
         gameState.player.laneSelected = minLane;
+        gameState.player.debugClickedPoint = vecClone(gameState.input.mousePos);
+        gameState.player.debugClosestLanePoint = minStuff.point;
     }
     if (keyPressed('q')) {
         spawnEntityInLane(gameState.lanes[1], TEAM.ORANGE, units.circle);

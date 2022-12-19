@@ -419,6 +419,12 @@ export function draw()
         }
         drawHpBar(i);
     }
+    drawArrow(
+        gameState.player.debugClosestLanePoint,
+        gameState.player.debugClickedPoint,
+        1,
+        "#ff0000"
+    );
 }
 
 export function init()
