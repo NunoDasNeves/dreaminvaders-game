@@ -1,17 +1,13 @@
 ## TODO
-- 'lighthouse' (unit?) with hp. Units are 'spent' when they go inside, and reduces the hp
-- units ignore others when on the last leg to the lighthouse
-- stop attacking or chasing enemies that are on the last leg to go into the lighthouse
-- display unit types on bottom of screen
-- select unit type with numbers (don't hardcode)
-- click on lane to place unit (don't hardcode)
-    - place on closest lane
-    - don't randomize placement; place at a specific distance, on spot closest to mouse
-- for debugging, cycle team with some button (TAB or something)
-- add additional lanes! curves! bezier! probably!
-    - units need to follow the lane properly without falling off
+- load placeholder graphics for testing
 - Make the layout look more like the concept art
+- add another unit type for testing
+- display unit types on bottom of screen
+- select unit type with numbers (don't hardcode) - or just press the button to send the unit on the current lane
+- for debugging, cycle team with some button (TAB or something)
 - unit acceleration instead of instant velocity change
+- don't randomize placement; place at a specific distance, on spot closest to mouse ?
+- make units push each other less; especially friendlies - maybe separation force?
 - better collision? pushing...impulse?
 - better steering/avoidance?
     - deal with avoidance conflict (they avoid the same way)?
@@ -20,6 +16,13 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- 'lighthouse' (unit?) with hp. Units are 'spent' when they go inside, and reduces the hp
+- units ignore others when on the last leg to the lighthouse
+- stop attacking or chasing enemies that are on the last leg to go into the lighthouse
+- click on lane to place unit (don't hardcode)
+    - place on closest lane
+- add additional lanes! curves! bezier! probably!
+    - units need to follow the lane properly without falling off
 - dying by falling off bridge
 - death animation, unit can hang around after death and not be targetted
 - 'hit' effect - flash red or something
