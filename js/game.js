@@ -404,6 +404,11 @@ function updateAiState()
     }
 }
 
+function mouseLeftPressed()
+{
+    return gameState.input.mouseLeft && !gameState.lastInput.mouseLeft;
+}
+
 function keyPressed(k)
 {
     return gameState.input.keyMap[k] && !gameState.lastInput.keyMap[k];
@@ -597,6 +602,43 @@ function updateGame(timeDeltaMs)
     };
 }
 
+function distFromBridge(point, bridgePoints)
+{
+    let minDist = Infinity;
+    for (let i = 0; i < bridgePoints.length - 1; ++i) {
+        const capsuleLine = vecSub(bridgePoints[i+1], bridgePoints[i]);
+        const lineLen = vecLen(capsuleLine);
+        const baseToPoint = vecSub(point, bridgePoints[i]);
+        if (almostZero(lineLen)) {
+            const d = vecLen(baseToPoint);
+            if (d < minDist) {
+                minDist = d;
+            }
+            continue;
+        }
+        const lineDir = vecMul(capsuleLine, lineLen);
+        const distAlongLine = vecDot(lineDir, baseToPoint);
+        if (distAlongLine < 0) {
+            const d = vecLen(baseToPoint);
+            if (d < minDist) {
+                minDist = d;
+            }
+        } else if (distAlongLine > lineLen) {
+            const d = getDist(bridgePoints[i+1], point);
+            if (d < minDist) {
+                minDist = d;
+            }
+        } else {
+            const pointOnLine = vecMul(lineDir, distAlongLine);
+            const d = getDist(pointOnLine, point);
+            if (d < minDist) {
+                minDist = d;
+            }
+        }
+    }
+    return minDist;
+}
+
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
 {
     // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
@@ -609,6 +651,19 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         }
     }
 
+    if (mouseLeftPressed()) {
+        let minLane = 0;
+        let minDist = Infinity;
+        for (let i = 0; i < gameState.lanes.length; ++i) {
+            const lane = gameState.lanes[i];
+            const d = distFromBridge(gameState.input.mousePos, lane.bridgePoints);
+            if (d < minDist) {
+                minDist = d;
+                minLane = i;
+            }
+        }
+        gameState.player.laneSelected = minLane;
+    }
     if (keyPressed('q')) {
         spawnEntityInLane(gameState.lanes[1], TEAM.ORANGE, units.circle);
     }
