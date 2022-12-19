@@ -506,21 +506,30 @@ function updateHitState(timeDeltaMs)
                     vecClear(vel[i]);
                 // die from falling
                 } else if (physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
-                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePointsByTeam[team[i]]);
-                    if (dist >= params.laneWidth*0.5) {
-                        // TODO push it with a force, don't just teleport
-                        vecAddTo(pos[i], vecMulBy(dir, unit[i].radius));
-                        // fade hpTimer fast
-                        if (hitState[i].hpBarTimer > 0) {
-                            hitState[i].hpBarTimer = params.deathTimeMs*0.5;
+                    let onIsland = false;
+                    for (const island of Object.values(gameState.islands)) {
+                        if (getDist(pos[i], island.pos) < params.islandRadius) {
+                            onIsland = true;
+                            break;
                         }
-                        hitState[i].fallTimer = params.fallTimeMs;
-                        hitState[i].deadTimer = params.fallTimeMs; // same as fall time!
-                        hitState[i].state = HITSTATE.DEAD;
-                        aiState[i].state = AISTATE.DO_NOTHING;
-                        atkState[i].state = ATKSTATE.NONE;
-                        physState[i].canCollide = false;
-                        vecClear(vel[i]);
+                    }
+                    if (!onIsland) {
+                        const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePointsByTeam[team[i]]);
+                        if (dist >= params.laneWidth*0.5) {
+                            // TODO push it with a force, don't just teleport
+                            vecAddTo(pos[i], vecMulBy(dir, unit[i].radius));
+                            // fade hpTimer fast
+                            if (hitState[i].hpBarTimer > 0) {
+                                hitState[i].hpBarTimer = params.deathTimeMs*0.5;
+                            }
+                            hitState[i].fallTimer = params.fallTimeMs;
+                            hitState[i].deadTimer = params.fallTimeMs; // same as fall time!
+                            hitState[i].state = HITSTATE.DEAD;
+                            aiState[i].state = AISTATE.DO_NOTHING;
+                            atkState[i].state = ATKSTATE.NONE;
+                            physState[i].canCollide = false;
+                            vecClear(vel[i]);
+                        }
                     }
                 }
                 break;
