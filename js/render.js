@@ -134,7 +134,7 @@ function drawHpBar(i)
     const { team, unit, pos, vel, angle, target, hp, atkState, physState, boidState, hitState } = gameState.entities;
     // hp bar
     if (hitState[i].hpBarTimer > 0) {
-        const hpBarWidth = unit[i].maxHp * 10;
+        const hpBarWidth = unit[i].radius*2;
         const hpBarHeight = 3;
         const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
         const hpPos = vecAdd(pos[i], hpOff);
@@ -420,12 +420,14 @@ export function draw()
         }
         drawHpBar(i);
     }
-    drawArrow(
-        gameState.player.debugClosestLanePoint,
-        gameState.player.debugClickedPoint,
-        1,
-        "#ff0000"
-    );
+    if (debug.drawClickBridgeDebugArrow) {
+        drawArrow(
+            gameState.player.debugClosestLanePoint,
+            gameState.player.debugClickedPoint,
+            1,
+            "#ff0000"
+        );
+    }
 }
 
 export function init()

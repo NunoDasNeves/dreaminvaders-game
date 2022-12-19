@@ -10,8 +10,9 @@ export const debug = {
     drawCapsule: true,
     drawForces: true,
     drawSwing: true,
-    drawLaneSegs: true,
+    drawLaneSegs: false,
     drawBezierPoints: false,
+    drawClickBridgeDebugArrow: false,
 }
 
 export const params = Object.freeze(
@@ -27,7 +28,7 @@ export const params = Object.freeze(
             laneWidth: 60,
             pathWidth: 40,
             pathColor: "#443322",
-            lighthouseRadius: 80,
+            lighthouseRadius: 50,
             islandRadius: 200,
             teamColors: [ "#6f6f6f", "#ff9933", "#3399ff" ], // first one is 'no team'
             hpBarTimeMs: 2000,
@@ -94,6 +95,7 @@ export const units = Object.freeze({
         collides: false,
         canFall: false,
         defaultAiState: AISTATE.DO_NOTHING,
+        lighthouseDamage: 0,
         draw: {
             shape: "circle",
             strokeColor: "red",
@@ -109,6 +111,7 @@ export const units = Object.freeze({
         collides: true,
         canFall: true,
         defaultAiState: AISTATE.PROCEED,
+        lighthouseDamage: 5,
         draw: {
             shape: "circle",
             fillColor: "TEAM",
@@ -124,6 +127,7 @@ export const units = Object.freeze({
         collides: true,
         canFall: false,
         defaultAiState: AISTATE.DO_NOTHING,
+        lighthouseDamage: 0,
         draw: {
             shape: "triangle",
             fillColor: "TEAM",
