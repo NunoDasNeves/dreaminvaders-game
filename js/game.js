@@ -375,20 +375,21 @@ function updateAiState()
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             {
-                const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePoints);
+                const bridgePoints = lane[i].bridgePointsByTeam[team[i]];
+                const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
                 let currIdx = baseIdx;
                 let nextIdx = baseIdx+1;
                 // if close to next point, go there instead
-                if (getDist(pos[i], lane[i].bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
+                if (getDist(pos[i], bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
                     currIdx++;
                     nextIdx++;
                 }
-                const currPoint = lane[i].bridgePoints[currIdx];
+                const currPoint = bridgePoints[currIdx];
                 const nextPoint = vec();
-                if (nextIdx >= lane[i].bridgePoints.length) {
-                    vecCopyTo(nextPoint, lane[i].pathPoints[lane[i].pathPoints.length - 1]);
+                if (nextIdx >= bridgePoints.length) {
+                    vecCopyTo(nextPoint, gameState.islands[enemyTeam(team[i])].pos);
                 } else {
-                    vecCopyTo(nextPoint, lane[i].bridgePoints[nextIdx]);
+                    vecCopyTo(nextPoint, bridgePoints[nextIdx]);
                 }
                 const goDir = vecNorm(vecSub(nextPoint, currPoint));
                 vel[i] = vecMul(goDir, Math.min(unit[i].speed, distToEnemyBase));
@@ -505,7 +506,7 @@ function updateHitState(timeDeltaMs)
                     vecClear(vel[i]);
                 // die from falling
                 } else if (physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
-                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePoints);
+                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePointsByTeam[team[i]]);
                     if (dist >= params.laneWidth*0.5) {
                         // TODO push it with a force, don't just teleport
                         vecAddTo(pos[i], vecMulBy(dir, unit[i].radius));
@@ -691,7 +692,7 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         let minStuff = null;
         for (let i = 0; i < gameState.lanes.length; ++i) {
             const lane = gameState.lanes[i];
-            const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
+            const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePointsByTeam[TEAM.ORANGE]);
             if (stuff.dist < minDist) {
                 minLane = i;
                 minDist = stuff.dist;

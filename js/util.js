@@ -14,6 +14,15 @@ export function almostZero(x)
     return Math.abs(x) < 0.0001;
 }
 
+export function reverseToNewArray(arr)
+{
+    const newArr = [];
+    for (let i = arr.length-1; i >= 0; --i) {
+        newArr.push(arr[i]);
+    }
+    return newArr;
+}
+
 export function cubicBezierPoint(ctrlPoints, t)
 {
     // (1-t)^3P_0 + 3t(1-t)^2P_1 + 3t^2(1-t)P_2 + t^3P_3

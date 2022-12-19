@@ -364,9 +364,10 @@ function drawLane(lane, selected)
     }
 
     if (debug.drawLaneSegs) {
-        strokePoints(lane.bridgePoints, 5, "#ff0000");
-        capsulePoints(lane.bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
-        dotPoints(lane.bridgePoints, 7, "#0000ff");
+        const bridgePoints = lane.bridgePointsByTeam[TEAM.ORANGE];
+        strokePoints(bridgePoints, 5, "#ff0000");
+        capsulePoints(bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
+        dotPoints(bridgePoints, 7, "#0000ff");
         fillCircle(lane.spawns[TEAM.ORANGE], 8, "#00ff00");
         fillCircle(lane.spawns[TEAM.BLUE], 8, "#00ff00");
     }

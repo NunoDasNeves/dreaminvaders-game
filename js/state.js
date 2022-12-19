@@ -284,7 +284,7 @@ export function initGameState()
         const spawns = { [TEAM.ORANGE]: pLaneStart, [TEAM.BLUE]: pLaneEnd };
         gameState.lanes.push({
             pathPoints,
-            bridgePoints,
+            bridgePointsByTeam: { [TEAM.ORANGE]: bridgePoints, [TEAM.BLUE]: reverseToNewArray(bridgePoints) },
             bezierPoints,
             spawns
         });
