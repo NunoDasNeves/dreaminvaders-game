@@ -102,7 +102,13 @@ export function vecTangentRight(v)
 export function vecRand()
 {
     const v = vec(Math.random()-0.5, Math.random()-0.5);
-    return vecNorm(v);
+    return v;
+}
+
+export function vecRandDir()
+{
+    const v = vec(Math.random()-0.5, Math.random()-0.5);
+    return vecNormalize(v);
 }
 
 // In-place functions, prefer these whenever possible to avoid creating a new object

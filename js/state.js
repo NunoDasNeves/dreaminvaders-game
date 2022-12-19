@@ -148,7 +148,8 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 export function spawnEntityInLane(aLane, aTeam, aUnit)
 {
     const pos = laneSpawnPoint(aLane, aTeam);
-    const randVec = vecMulBy(vecRand(), (params.laneWidth - aUnit.radius)*0.5);
+    // units should get on the bridge pretty quick and try to stay on, so can spawn them near the edge
+    const randVec = vecMulBy(vecRandDir(), params.laneWidth*0.5);
     vecAddTo(pos, randVec);
     return spawnEntity(pos, aTeam, aUnit, aLane);
 }
