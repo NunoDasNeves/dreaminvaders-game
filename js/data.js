@@ -37,6 +37,7 @@ export const params = Object.freeze(
             fallSizeReduction: 0.75,
         }
         obj.laneDistFromBase = obj.islandRadius - 15;
+        obj.safePathDistFromBase = obj.laneDistFromBase - obj.laneWidth*0.5;
         return obj;
     }()
 );

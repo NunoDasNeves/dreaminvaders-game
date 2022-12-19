@@ -48,22 +48,36 @@ function nearestUnit(i, minRange, filterFn)
     return new EntityRef(best);
 }
 
-function isAliveAndNotOnMyTeam(myIdx, theirIdx)
+function canChaseOrAttack(myIdx, theirIdx)
 {
-    const { team, hitState } = gameState.entities;
-    return hitState[theirIdx].state == HITSTATE.ALIVE && team[myIdx] != team[theirIdx];
+    const { pos, team, hitState } = gameState.entities;
+    if (hitState[theirIdx].state != HITSTATE.ALIVE) {
+        return false;
+    }
+    if (team[myIdx] == team[theirIdx]) {
+        return false;
+    }
+    // ignore bases
+    if (gameState.islands[team[theirIdx]].idx == theirIdx) {
+        return false;
+    }
+    // ignore if they're already too far into our island
+    if (getDist(pos[theirIdx], gameState.islands[team[myIdx]].pos) < params.safePathDistFromBase) {
+        return false;
+    }
+    return true;
 }
 
 function nearestEnemyInSightRadius(i)
 {
     const { unit } = gameState.entities;
-    return nearestUnit(i, unit[i].sightRadius, isAliveAndNotOnMyTeam );
+    return nearestUnit(i, unit[i].sightRadius, canChaseOrAttack);
 }
 
 function nearestEnemyInAttackRange(i)
 {
     const { unit } = gameState.entities;
-    return nearestUnit(i, unit[i].radius + unit[i].weapon.range, isAliveAndNotOnMyTeam);
+    return nearestUnit(i, unit[i].radius + unit[i].weapon.range, canChaseOrAttack);
 }
 
 // is unit i in range to attack unit j
@@ -302,7 +316,8 @@ function updateAiState()
         if (aiState[i].state == AISTATE.DO_NOTHING) {
             continue;
         }
-        const toEnemyBase = vecSub(gameState.islands[enemyTeam(team[i])].pos, pos[i]);
+        const enemyIslandPos = gameState.islands[enemyTeam(team[i])].pos
+        const toEnemyBase = vecSub(enemyIslandPos, pos[i]);
         const distToEnemyBase = vecLen(toEnemyBase);
         //const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
         //const distToEndOfLane = vecLen(toEndOfLane);
@@ -316,7 +331,9 @@ function updateAiState()
                     vecClear(vel[i]);
                     break;
                 }
-                if (nearestAtkTarget.isValid()) {
+                if (distToEnemyBase < params.safePathDistFromBase) {
+                    // keep proceeding
+                } else if (nearestAtkTarget.isValid()) {
                     aiState[i].state = AISTATE.ATTACK;
                     target[i] = nearestAtkTarget;
                 } else if (nearestChaseTarget.isValid()) {
@@ -386,12 +403,20 @@ function updateAiState()
                 }
                 const currPoint = bridgePoints[currIdx];
                 const nextPoint = vec();
-                if (nextIdx >= bridgePoints.length) {
-                    vecCopyTo(nextPoint, gameState.islands[enemyTeam(team[i])].pos);
+                // little bit of a hack, just check if we're on the island to go straight to the base
+                let goDirectlyToBase = false
+                if (nextIdx >= bridgePoints.length || getDist(pos[i], enemyIslandPos) < params.islandRadius) {
+                    goDirectlyToBase = true;
                 } else {
                     vecCopyTo(nextPoint, bridgePoints[nextIdx]);
                 }
-                const goDir = vecNorm(vecSub(nextPoint, currPoint));
+                let goDir = null
+                if (goDirectlyToBase) {
+                    goDir = vecNormalize(vecSub(enemyIslandPos, pos[i]))
+                } else {
+                    // go parallel to the line
+                    goDir = vecNormalize(vecSub(nextPoint, currPoint));
+                }
                 vel[i] = vecMul(goDir, Math.min(unit[i].speed, distToEnemyBase));
                 target[i].invalidate();
                 atkState[i].state = ATKSTATE.NONE;
