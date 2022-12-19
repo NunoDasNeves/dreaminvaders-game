@@ -375,8 +375,23 @@ function updateAiState()
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             {
-                const dir = vecNorm(toEnemyBase);
-                vel[i] = vecMul(dir, Math.min(unit[i].speed, distToEnemyBase));
+                const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePoints);
+                let currIdx = baseIdx;
+                let nextIdx = baseIdx+1;
+                // if close to next point, go there instead
+                if (getDist(pos[i], lane[i].bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
+                    currIdx++;
+                    nextIdx++;
+                }
+                const currPoint = lane[i].bridgePoints[currIdx];
+                const nextPoint = vec();
+                if (nextIdx >= lane[i].bridgePoints.length) {
+                    vecCopyTo(nextPoint, lane[i].pathPoints[lane[i].pathPoints.length - 1]);
+                } else {
+                    vecCopyTo(nextPoint, lane[i].bridgePoints[nextIdx]);
+                }
+                const goDir = vecNorm(vecSub(nextPoint, currPoint));
+                vel[i] = vecMul(goDir, Math.min(unit[i].speed, distToEnemyBase));
                 target[i].invalidate();
                 atkState[i].state = ATKSTATE.NONE;
                 break;
@@ -635,7 +650,7 @@ function pointNearLineSegs(point, lineSegs)
                 minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
             }
         } else if (distAlongLine > lineLen) {
-            const dir = vecSub(lineSegs[i+1], point);
+            const dir = vecSub(point, lineSegs[i+1]);
             const d = vecLen(dir);
             if (d < minDist) {
                 minDist = d;
@@ -688,10 +703,10 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         gameState.player.debugClosestLanePoint = minStuff.point;
     }
     if (keyPressed('q')) {
-        spawnEntityInLane(gameState.lanes[1], TEAM.ORANGE, units.circle);
+        spawnEntityInLane(gameState.lanes[gameState.player.laneSelected], TEAM.ORANGE, units.circle);
     }
     if (keyPressed('w')) {
-        spawnEntityInLane(gameState.lanes[1], TEAM.BLUE, units.circle);
+        spawnEntityInLane(gameState.lanes[gameState.player.laneSelected], TEAM.BLUE, units.circle);
     }
     if (keyPressed('e')) {
         spawnEntity(gameState.input.mousePos, TEAM.BLUE, units.boid);
