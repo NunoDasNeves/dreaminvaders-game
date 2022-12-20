@@ -1,6 +1,7 @@
 import * as Game from "./game.js";
 import * as State from "./state.js";
 import * as Render from "./render.js";
+import * as Assets from "./assets.js";
 
 window.onload = start;
 
@@ -66,6 +67,7 @@ function start()
 {
     Game.init();
     Render.init();
+    Assets.init();
     initEvents();
 
     window.requestAnimationFrame(gameLoop);

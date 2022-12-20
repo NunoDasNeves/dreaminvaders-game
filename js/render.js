@@ -3,6 +3,7 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units, HITSTATE } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
+import { assets } from "./assets.js";
 export let canvas = null;
 let context = null;
 
@@ -277,6 +278,16 @@ function drawIsland(team, island)
         context.moveTo(points[0].x, points[0].y);
         context.lineTo(points[1].x, points[1].y);
         context.stroke();
+    }
+
+    const asset = assets['lighthouse'];
+    if (asset.loaded) {
+        const img = asset.img;
+        const drawWidth = asset.width / gameState.camera.scale;
+        const drawHeight = asset.height / gameState.camera.scale;
+        const drawCoords = vecAdd(vecSub(coords, vec(drawWidth/2, drawHeight/2)), vec(0,-74 / gameState.camera.scale));
+        context.imageSmoothingEnabled = false;
+        context.drawImage(img, drawCoords.x, drawCoords.y, drawWidth, drawHeight);
     }
 }
 
