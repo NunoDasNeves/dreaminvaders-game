@@ -1,15 +1,29 @@
+import * as utils from "./util.js";
+Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-export const assets = {}
+export const assets = {};
+
+const spriteData = {
+    lighthouse: {
+        filename: 'lighthouse.png',
+        width: 128,
+        height: 256,
+        centerOffset: vec(0, -74)
+    }
+};
 
 export function init()
 {
-    const img = new Image();
-    assets['lighthouse'] = { img, loaded: false } ;
-    const asset = assets['lighthouse'];
-    img.onload = function() {
-        asset.loaded = true;
-        asset.width = img.width;
-        asset.height = img.height;
-    };
-    img.src = "../assets/lighthouse.png";
+    for (const [name, data] of Object.entries(spriteData)) {
+        const { filename, width, height, centerOffset } = data;
+        const img = new Image();
+        assets[name] = { img, loaded: false, width, height, centerOffset } ;
+        const asset = assets[name];
+        img.onload = function() {
+            asset.loaded = true;
+            console.assert(asset.width == img.width);
+            console.assert(asset.height == img.height);
+        };
+        img.src = `../assets/${filename}`;
+    }
 }

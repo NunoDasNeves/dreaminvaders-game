@@ -51,8 +51,10 @@ function drawUnit(i)
             drawTriangleUnit(pos[i], angle[i], unit[i], unitScale, unitFillColor);
             break;
         default:
-            console.error("invalid unit.draw");
-            return;
+            break;
+    }
+    if (unit[i].draw.image) {
+        drawImage(unit[i].draw.image, pos[i]);
     }
     // bloood
     if (hitState[i].hitTimer > 0) {
@@ -254,6 +256,28 @@ function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
     context.fill();
 }
 
+function drawImage(name, pos, fromCenter = true)
+{
+    const asset = assets[name];
+    const drawWidth = asset.width / gameState.camera.scale;
+    const drawHeight = asset.height / gameState.camera.scale;
+    const drawPos = worldToCamera(pos.x, pos.y);
+    const offset = vec();
+    if (fromCenter) {
+        vecAddTo(offset, vecAdd(vec(-asset.width/2, -asset.height/2), asset.centerOffset));
+    }
+
+    if (asset.loaded) {
+        vecMulBy(offset, 1/gameState.camera.scale);
+        vecAddTo(drawPos, offset);
+        context.imageSmoothingEnabled = false;
+        context.drawImage(asset.img, drawPos.x, drawPos.y, drawWidth, drawHeight);
+    } else {
+        vecSubFrom(drawPos, offset);
+        fillRectangle(pos, asset.width, asset.height, "#000000", false);
+    }
+}
+
 function drawIsland(team, island)
 {
     const teamColor = params.teamColors[team];
@@ -278,16 +302,6 @@ function drawIsland(team, island)
         context.moveTo(points[0].x, points[0].y);
         context.lineTo(points[1].x, points[1].y);
         context.stroke();
-    }
-
-    const asset = assets['lighthouse'];
-    if (asset.loaded) {
-        const img = asset.img;
-        const drawWidth = asset.width / gameState.camera.scale;
-        const drawHeight = asset.height / gameState.camera.scale;
-        const drawCoords = vecAdd(vecSub(coords, vec(drawWidth/2, drawHeight/2)), vec(0,-74 / gameState.camera.scale));
-        context.imageSmoothingEnabled = false;
-        context.drawImage(img, drawCoords.x, drawCoords.y, drawWidth, drawHeight);
     }
 }
 

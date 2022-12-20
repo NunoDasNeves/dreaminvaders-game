@@ -97,8 +97,7 @@ export const units = Object.freeze({
         defaultAiState: AISTATE.DO_NOTHING,
         lighthouseDamage: 0,
         draw: {
-            shape: "circle",
-            strokeColor: "red",
+            image: "lighthouse",
         }
     },
     circle: {
