@@ -264,7 +264,7 @@ function drawImage(name, pos, fromCenter = true)
     const drawPos = worldToCamera(pos.x, pos.y);
     const offset = vec();
     if (fromCenter) {
-        vecAddTo(offset, vecAdd(vec(-asset.width/2, -asset.height/2), asset.centerOffset));
+        vecSubFrom(offset, vecAdd(vec(asset.width/2, asset.height/2), asset.centerOffset));
     }
 
     if (asset.loaded) {

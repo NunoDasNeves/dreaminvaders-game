@@ -114,6 +114,7 @@ export const units = Object.freeze({
         draw: {
             shape: "circle",
             fillColor: "TEAM",
+            image: "chogoringu",
         }
     },
     boid: {

@@ -8,8 +8,14 @@ const spriteData = {
         filename: 'lighthouse.png',
         width: 128,
         height: 256,
-        centerOffset: vec(0, -74)
-    }
+        centerOffset: vec(0, 74)
+    },
+    chogoringu: {
+        filename: 'unit.png',
+        width: 16,
+        height: 24,
+        centerOffset: vec(0, 3),
+    },
 };
 
 export function init()
