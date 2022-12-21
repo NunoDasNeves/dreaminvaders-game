@@ -508,6 +508,7 @@ export function draw(realTimeMs, timeDeltaMs)
         const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
         drawDebugUIText(updatesStr, vec(10,40), 'white');
     }
+    drawDebugUIText("team", vec(10,60), params.teamColors[gameState.player.debugTeam]);
 }
 
 function drawDebugUIText(string, screenPos, fillStyle)

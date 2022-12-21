@@ -144,7 +144,7 @@ export const units = Object.freeze({
             image: "lighthouse",
         }
     },
-    circle: {
+    chogoringu: {
         weapon: weapons.elbow,
         speed: 3,
         angSpeed: 1,
@@ -176,3 +176,7 @@ export const units = Object.freeze({
         }
     }
 });
+
+export const unitHotKeys = {
+    'q': units.chogoringu,
+};

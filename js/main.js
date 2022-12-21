@@ -56,6 +56,9 @@ function initEvents()
     });
 
     document.addEventListener('keydown', function (event) {
+        if (event.key == 'Tab') {
+            event.preventDefault();
+        }
         State.updateKey(event.key, true);
     });
 
