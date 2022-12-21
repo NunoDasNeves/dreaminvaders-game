@@ -84,23 +84,25 @@ export const sprites = {
         width: 16,
         height: 24,
         centerOffset: vec(0,8),
-        flipOffset: 1,
+        rows: 2, // used to get flip offset
         idle: {
+            // start at this row and col in the spritesheet
             row: 0, // one animation per row
             col: 0, // one frame per col
-            frames: 1,
+            frames: 2,
+            frameDur: 400,
         },
         walk: {
-            // start at this row and col in the spritesheet
-            row: 0,
+            row: 1,
             col: 0,
-            // how to draw it
             frames: 4,
+            frameDur: 100,
         },
         attack: {
             row: 0,
             col: 0,
-            frames: 1,
+            frames: 2,
+            frameDur: 400,
         },
     }
 };

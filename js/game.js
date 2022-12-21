@@ -645,25 +645,25 @@ function updateAnimState(timeDeltaMs)
             case AISTATE.CHASE:
             {
                 aState.anim = 'walk';
-                const anim = sprite['walk'];
-                if (aState.timer <= 0) {
-                    aState.timer += 100;
-                    aState.frame = (aState.frame + 1) % anim.frames;
-                }
                 break;
             }
             case AISTATE.ATTACK:
             {
                 aState.anim = 'attack';
-                aState.frame = 0;
+                //aState.frame = 0;
                 break;
             }
             default:
             {
                 aState.anim = 'idle';
-                aState.frame = 0;
+                //aState.frame = 0;
                 break;
             }
+        }
+        const anim = sprite[aState.anim];
+        if (aState.timer <= 0) {
+            aState.timer += anim.frameDur;
+            aState.frame = (aState.frame + 1) % anim.frames;
         }
     });
 }

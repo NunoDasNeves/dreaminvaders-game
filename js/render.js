@@ -36,7 +36,7 @@ function drawSprite(sprite, animName, frame, pos, flip)
         vecMulBy(offset, 1/gameState.camera.scale);
         vecAddTo(drawPos, offset);
         const sourceX = (anim.col + frame) * sprite.width;
-        const sourceY = (anim.col + flip ? sprite.flipOffset : 0) * sprite.height;
+        const sourceY = (anim.row + (flip ? sprite.rows : 0)) * sprite.height;
         context.imageSmoothingEnabled = false;
         context.drawImage(asset.img, sourceX, sourceY, sprite.width, sprite.height, drawPos.x, drawPos.y, drawWidth, drawHeight);
     } else {
