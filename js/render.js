@@ -3,7 +3,7 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units, HITSTATE } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
-import { assets } from "./assets.js";
+import { assets, sprites } from "./assets.js";
 export let canvas = null;
 let context = null;
 
@@ -20,6 +20,35 @@ function drawCircleUnit(pos, unit, scale, strokeColor, fillColor)
 function drawTriangleUnit(pos, angle, unit, scale, fillColor)
 {
     fillEquilateralTriangle(pos, angle, unit.radius * scale, unit.radius * 1.5 * scale, fillColor);
+}
+
+function drawSprite(spriteName, animName, frame, pos)
+{
+    const sprite = sprites[spriteName];
+    const anim = sprite[animName];
+    const asset = sprite.imgAsset;
+
+    const drawWidth = asset.width / gameState.camera.scale;
+    const drawHeight = asset.height / gameState.camera.scale;
+    const drawPos = worldToCamera(pos.x, pos.y);
+    const offset = vecNegate(vecAdd(vec(asset.width/2, asset.height/2), asset.centerOffset));
+
+    if (asset.loaded) {
+        vecMulBy(offset, 1/gameState.camera.scale);
+        vecAddTo(drawPos, offset);
+        context.imageSmoothingEnabled = false;
+        context.drawImage(asset.img, drawPos.x, drawPos.y, drawWidth, drawHeight);
+    } else {
+        vecSubFrom(drawPos, offset);
+        fillRectangle(pos, asset.width, asset.height, "#000000", false);
+    }
+}
+
+function drawUnitAnim(i)
+{
+    const { team, unit, pos, animState } = gameState.entities;
+    const { anim, frame, timer, loop } = animState[i];
+    drawSprite(unit[i].draw.sprite, anim, frame, pos[i]);
 }
 
 function drawUnit(i)
@@ -55,6 +84,9 @@ function drawUnit(i)
     }
     if (unit[i].draw.image) {
         drawImage(unit[i].draw.image, pos[i]);
+    }
+    if (unit[i].draw.sprite) {
+        drawUnitAnim(i);
     }
     // bloood
     if (hitState[i].hitTimer > 0) {
@@ -258,7 +290,7 @@ function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
 
 function drawImage(name, pos, fromCenter = true)
 {
-    const asset = assets[name];
+    const asset = assets.images[name];
     const drawWidth = asset.width / gameState.camera.scale;
     const drawHeight = asset.height / gameState.camera.scale;
     const drawPos = worldToCamera(pos.x, pos.y);
