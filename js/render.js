@@ -22,33 +22,40 @@ function drawTriangleUnit(pos, angle, unit, scale, fillColor)
     fillEquilateralTriangle(pos, angle, unit.radius * scale, unit.radius * 1.5 * scale, fillColor);
 }
 
-function drawSprite(spriteName, animName, frame, pos)
+function drawSprite(spriteName, animName, frame, pos, flip)
 {
     const sprite = sprites[spriteName];
     const anim = sprite[animName];
     const asset = sprite.imgAsset;
 
-    const drawWidth = asset.width / gameState.camera.scale;
-    const drawHeight = asset.height / gameState.camera.scale;
+    const drawWidth = sprite.width / gameState.camera.scale;
+    const drawHeight = sprite.height / gameState.camera.scale;
     const drawPos = worldToCamera(pos.x, pos.y);
-    const offset = vecNegate(vecAdd(vec(asset.width/2, asset.height/2), asset.centerOffset));
+    const offset = vecNegate(vecAdd(vec(sprite.width/2, sprite.height/2), sprite.centerOffset));
 
     if (asset.loaded) {
         vecMulBy(offset, 1/gameState.camera.scale);
         vecAddTo(drawPos, offset);
+        const sourceX = (anim.col + frame) * sprite.width;
+        const sourceY = (anim.col + flip ? sprite.flipOffset : 0) * sprite.height;
         context.imageSmoothingEnabled = false;
-        context.drawImage(asset.img, drawPos.x, drawPos.y, drawWidth, drawHeight);
+        context.drawImage(asset.img, sourceX, sourceY, sprite.width, sprite.height, drawPos.x, drawPos.y, drawWidth, drawHeight);
     } else {
-        vecSubFrom(drawPos, offset);
-        fillRectangle(pos, asset.width, asset.height, "#000000", false);
+        // fillRectangle takes pos in world coords
+        const rectPos = vecAdd(pos, offset);
+        fillRectangle(rectPos, sprite.width, sprite.height, "#000000", false);
     }
 }
 
 function drawUnitAnim(i)
 {
-    const { team, unit, pos, animState } = gameState.entities;
+    const { team, unit, pos, angle, animState } = gameState.entities;
     const { anim, frame, timer, loop } = animState[i];
-    drawSprite(unit[i].draw.sprite, anim, frame, pos[i]);
+    let flip = false;
+    if (vecFromAngle(angle[i]).x < 0) {
+        flip = true;
+    }
+    drawSprite(unit[i].draw.sprite, anim, frame, pos[i], flip);
 }
 
 function drawUnit(i)

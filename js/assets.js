@@ -8,10 +8,14 @@ export const assets = {
 const imageData = {
     lighthouse: {
         filename: 'lighthouse.png',
+        width: 128,
+        height: 256,
         centerOffset: vec(0, 74)
     },
     chogoringu: {
         filename: 'unit.png',
+        width: 44, // placeholders...
+        height: 44,
         centerOffset: vec(),
     },
 };
@@ -24,9 +28,10 @@ export const sprites = {
         width: 16,
         height: 24,
         centerOffset: vec(0,3),
+        flipOffset: 1,
         idle: {
-            row: 0,
-            col: 0,
+            row: 0, // one animation per row
+            col: 0, // one frame per col
             frames: 1,
         },
         walk: {
@@ -47,20 +52,28 @@ export const sprites = {
 export function init()
 {
     for (const [name, data] of Object.entries(imageData)) {
-        const { filename, centerOffset } = data;
+        const { filename, width, height, centerOffset } = data;
         const img = new Image();
-        assets.images[name] = { img, loaded: false, width: 0, height: 0, centerOffset } ;
+
+        // create asset, but not loaded yet
+        assets.images[name] = { img, loaded: false, width, height, centerOffset } ;
         const imageAsset = assets.images[name];
+
+        // populate sprites that use that asset
+        for (const sprite of Object.values(sprites)) {
+            if (sprite.imgName == name) {
+                sprite.imgAsset = imageAsset;
+            }
+        }
+
         img.onload = function() {
             imageAsset.loaded = true;
+            // update with real width and height; the others are just an estimate/placeholder...idk
             imageAsset.width = img.width;
             imageAsset.height = img.height;
-            for (const sprite of Object.values(sprites)) {
-                if (sprite.imgName == name) {
-                    sprite.imgAsset = imageAsset;
-                }
-            }
         };
+
+        // this actually makes it start loading the image
         img.src = `../assets/${filename}`;
     }
 }
