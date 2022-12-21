@@ -78,9 +78,7 @@ function drawUnit(i)
         }
     }
 
-    if (physState[i].colliding) {
-        strokeCircle(pos[i], unit[i].radius, 1, params.teamColors[team[i]]); 
-    }
+    strokeCircle(pos[i], unit[i].radius, 1, params.teamColors[team[i]]);
     // draw basic shape
     switch (unit[i].draw.shape) {
         case "triangle":
@@ -106,8 +104,8 @@ function drawUnit(i)
         return;
     }
     // all this stuff is debug only, later we wanna draw sprites
-    if (debug.drawRadii) {
-        strokeCircle(pos[i], unit[i].radius, 1, physState[i].colliding ? 'red' : '#880000');
+    if (debug.drawCollision && physState[i].colliding) {
+        strokeCircle(pos[i], unit[i].radius, 1, 'red');
     }
     if (debug.drawSight && unit[i].sightRadius > 0)
     {

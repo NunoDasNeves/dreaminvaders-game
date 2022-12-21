@@ -7,7 +7,7 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 export const debug = {
     drawState: false,
-    drawRadii: false,
+    drawCollision: false,
     drawSight: false,
     drawAngle: false,
     drawCapsule: true,
@@ -76,7 +76,7 @@ export const sprites = {
         imgAsset: null,
         width: 16,
         height: 24,
-        centerOffset: vec(0,3),
+        centerOffset: vec(0,8),
         flipOffset: 1,
         idle: {
             row: 0, // one animation per row
