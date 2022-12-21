@@ -1,6 +1,6 @@
 ## TODO
-- load placeholder graphics for testing
-- Make the layout look more like the concept art
+- basic animation - unit walk cycle
+- export sprites faster - created flipped version with exporter script
 - add another unit type for testing
 - display unit types on bottom of screen
 - select unit type with numbers (don't hardcode) - or just press the button to send the unit on the current lane
@@ -16,6 +16,8 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- load placeholder graphics for testing
+- Make the layout look more like the concept art
 - 'lighthouse' (unit?) with hp. Units are 'spent' when they go inside, and reduces the hp
 - units ignore others when on the last leg to the lighthouse
 - stop attacking or chasing enemies that are on the last leg to go into the lighthouse
