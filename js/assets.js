@@ -1,6 +1,8 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
+import { sprites } from "./data.js";
+
 export const assets = {
     images: {},
 };
@@ -18,35 +20,6 @@ const imageData = {
         height: 44,
         centerOffset: vec(),
     },
-};
-
-export const sprites = {
-    chogoringu: {
-        // where to get the spritesheet from
-        imgName: "chogoringu",
-        imgAsset: null,
-        width: 16,
-        height: 24,
-        centerOffset: vec(0,3),
-        flipOffset: 1,
-        idle: {
-            row: 0, // one animation per row
-            col: 0, // one frame per col
-            frames: 1,
-        },
-        walk: {
-            // start at this row and col in the spritesheet
-            row: 0,
-            col: 0,
-            // how to draw it
-            frames: 4,
-        },
-        attack: {
-            row: 0,
-            col: 0,
-            frames: 1,
-        },
-    }
 };
 
 export function init()

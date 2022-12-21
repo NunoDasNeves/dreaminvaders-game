@@ -1,3 +1,6 @@
+import * as utils from "./util.js";
+Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
+
 /*
  * Static data
  */
@@ -65,6 +68,36 @@ export const HITSTATE = Object.freeze({
     DEAD: 1,
 });
 
+// not frozen because it'll get updated when assets are loaded
+export const sprites = {
+    chogoringu: {
+        // where to get the spritesheet from
+        imgName: "chogoringu",
+        imgAsset: null,
+        width: 16,
+        height: 24,
+        centerOffset: vec(0,3),
+        flipOffset: 1,
+        idle: {
+            row: 0, // one animation per row
+            col: 0, // one frame per col
+            frames: 1,
+        },
+        walk: {
+            // start at this row and col in the spritesheet
+            row: 0,
+            col: 0,
+            // how to draw it
+            frames: 4,
+        },
+        attack: {
+            row: 0,
+            col: 0,
+            frames: 1,
+        },
+    }
+};
+
 export const weapons = Object.freeze({
     none: {
         range: 0,
@@ -112,9 +145,7 @@ export const units = Object.freeze({
         defaultAiState: AISTATE.PROCEED,
         lighthouseDamage: 5,
         draw: {
-            shape: "circle",
-            fillColor: "TEAM",
-            sprite: "chogoringu",
+            sprite: sprites.chogoringu,
         },
     },
     boid: {

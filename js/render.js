@@ -1,9 +1,9 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units, HITSTATE } from "./data.js";
+import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units, HITSTATE, sprites } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
-import { assets, sprites } from "./assets.js";
+import { assets } from "./assets.js";
 export let canvas = null;
 let context = null;
 
@@ -22,9 +22,8 @@ function drawTriangleUnit(pos, angle, unit, scale, fillColor)
     fillEquilateralTriangle(pos, angle, unit.radius * scale, unit.radius * 1.5 * scale, fillColor);
 }
 
-function drawSprite(spriteName, animName, frame, pos, flip)
+function drawSprite(sprite, animName, frame, pos, flip)
 {
-    const sprite = sprites[spriteName];
     const anim = sprite[animName];
     const asset = sprite.imgAsset;
 
@@ -78,11 +77,12 @@ function drawUnit(i)
             unitScale = (1 - params.fallSizeReduction) + (hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction;
         }
     }
+
+    if (physState[i].colliding) {
+        strokeCircle(pos[i], unit[i].radius, 1, params.teamColors[team[i]]); 
+    }
     // draw basic shape
     switch (unit[i].draw.shape) {
-        case "circle":
-            drawCircleUnit(pos[i], unit[i], unitScale, unitStrokeColor, unitFillColor);
-            break;
         case "triangle":
             drawTriangleUnit(pos[i], angle[i], unit[i], unitScale, unitFillColor);
             break;

@@ -3,7 +3,6 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, TEAM, HITSTATE, ATKSTATE, weapons, units } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js';
-import { sprites } from './assets.js';
 
 /*
  * Game init and update functions
@@ -636,7 +635,7 @@ function updateAnimState(timeDeltaMs)
 
     forAllEntities((i) => {
         const aState = animState[i];
-        const sprite = sprites[unit[i].draw.sprite];
+        const sprite = unit[i].draw.sprite;
         if (!sprite) {
             return;
         }
