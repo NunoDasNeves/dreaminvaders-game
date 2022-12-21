@@ -2,6 +2,7 @@ import * as Game from "./game.js";
 import * as State from "./state.js";
 import * as Render from "./render.js";
 import * as Assets from "./assets.js";
+import { debug } from "./data.js";
 
 window.onload = start;
 
@@ -27,6 +28,7 @@ function gameLoop(timeElapsed)
     while (timeSinceLastUpdate >= frameTime) {
         timeSinceLastUpdate -= frameTime;
         ticks++;
+        debug.numUpdates++;
         Game.update(timeElapsed, ticks * frameTime, frameTime);
     }
     Render.draw(timeElapsed, timeDelta);

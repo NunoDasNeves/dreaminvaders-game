@@ -490,16 +490,23 @@ export function draw(realTimeMs, timeDeltaMs)
             "#ff0000"
         );
     }
+    // compute fps and updates
+    debug.fpsTime += timeDeltaMs;
+    debug.fpsCounter++;
+    if (debug.fpsTime > 1000) {
+        debug.fps = 1000/debug.fpsCounter;
+        debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
+        debug.fpsTime -= 1000;
+        debug.fpsCounter = 0;
+        debug.numUpdates = 0;
+    }
     if (debug.drawFPS) {
-        debug.fpsTime += timeDeltaMs;
-        debug.fpsCounter++;
-        if (debug.fpsTime > 1000) {
-            debug.fps = 1000/debug.fpsCounter;
-            debug.fpsTime -= 1000;
-            debug.fpsCounter = 0;
-        }
         const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
         drawDebugUIText(fpsStr, vec(10,20), 'white');
+    }
+    if (debug.drawNumUpdates) {
+        const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
+        drawDebugUIText(updatesStr, vec(10,40), 'white');
     }
 }
 

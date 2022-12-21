@@ -20,6 +20,9 @@ export const debug = {
     fps: 0,
     fpsCounter: 0,
     fpsTime: 0,
+    drawNumUpdates: true,
+    numUpdates: 0,
+    avgUpdates: 0,
 }
 
 export const params = Object.freeze(
