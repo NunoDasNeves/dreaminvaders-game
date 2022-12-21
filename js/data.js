@@ -16,6 +16,10 @@ export const debug = {
     drawLaneSegs: false,
     drawBezierPoints: false,
     drawClickBridgeDebugArrow: false,
+    drawFPS: true,
+    fps: 0,
+    fpsCounter: 0,
+    fpsTime: 0,
 }
 
 export const params = Object.freeze(

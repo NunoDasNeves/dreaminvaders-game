@@ -29,7 +29,7 @@ function gameLoop(timeElapsed)
         ticks++;
         Game.update(timeElapsed, ticks * frameTime, frameTime);
     }
-    Render.draw();
+    Render.draw(timeElapsed, timeDelta);
 }
 
 function initEvents()

@@ -440,7 +440,7 @@ export function getBoundingClientRect()
     return canvas.getBoundingClientRect();
 }
 
-export function draw()
+export function draw(realTimeMs, timeDeltaMs)
 {
     updateCameraSize(canvas.width, canvas.height);
 
@@ -490,6 +490,30 @@ export function draw()
             "#ff0000"
         );
     }
+    if (debug.drawFPS) {
+        debug.fpsTime += timeDeltaMs;
+        debug.fpsCounter++;
+        if (debug.fpsTime > 1000) {
+            debug.fps = 1000/debug.fpsCounter;
+            debug.fpsTime -= 1000;
+            debug.fpsCounter = 0;
+        }
+        const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
+        drawDebugUIText(fpsStr, vec(10,20), 'white');
+    }
+}
+
+function drawDebugUIText(string, screenPos, fillStyle)
+{
+    context.font = "20px sans-serif";
+    // draw stroke behind text so we can make a nice outline
+    context.strokeStyle = 'black';
+    context.setLineDash([]);
+    context.lineWidth = 3;
+    context.strokeText(string, screenPos.x, screenPos.y);
+    context.fillStyle = fillStyle;
+    context.textAlign = 'left';
+    context.fillText(string, screenPos.x, screenPos.y);
 }
 
 export function init()
