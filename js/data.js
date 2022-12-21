@@ -6,6 +6,8 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
  */
 
 export const debug = {
+    canPause: true,
+    paused: false,
     drawState: false,
     drawCollision: false,
     drawSight: false,

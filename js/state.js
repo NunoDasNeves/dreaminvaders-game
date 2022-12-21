@@ -244,7 +244,6 @@ export function initGameState()
         },
         input: makeInput(),
         lastInput: makeInput(),
-        debugPause: false,
     };
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse

@@ -761,13 +761,8 @@ function pointNearLineSegs(point, lineSegs)
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
 {
     // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
-    if (keyPressed('p')) {
-        gameState.debugPause = !gameState.debugPause;
-    }
-    if (gameState.debugPause) {
-        // frame advance
-        if (!keyPressed('.')) {
-        }
+    if (keyPressed('p') && debug.canPause) {
+        debug.paused = !debug.paused;
     }
 
     if (mouseLeftPressed()) {
@@ -808,7 +803,7 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         }
     }
 
-    if (!gameState.debugPause || keyPressed('.')) {
+    if (!debug.paused || keyPressed('.')) {
         updateGame(timeDeltaMs);
     }
 
