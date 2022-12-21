@@ -2,7 +2,8 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, TEAM, HITSTATE, ATKSTATE, weapons, units } from "./data.js";
-import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
+import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js';
+import { sprites } from './assets.js';
 
 /*
  * Game init and update functions
@@ -629,6 +630,45 @@ function updateAtkState(timeDeltaMs)
     });
 }
 
+function updateAnimState(timeDeltaMs)
+{
+    const { exists, unit, aiState, atkState, animState } = gameState.entities;
+
+    forAllEntities((i) => {
+        const aState = animState[i];
+        const sprite = sprites[unit[i].draw.sprite];
+        if (!sprite) {
+            return;
+        }
+        aState.timer -= timeDeltaMs;
+        switch (aiState[i].state) {
+            case AISTATE.PROCEED:
+            case AISTATE.CHASE:
+            {
+                aState.anim = 'walk';
+                const anim = sprite['walk'];
+                if (aState.timer <= 0) {
+                    aState.timer += 100;
+                    aState.frame = (aState.frame + 1) % anim.frames;
+                }
+                break;
+            }
+            case AISTATE.ATTACK:
+            {
+                aState.anim = 'attack';
+                aState.frame = 0;
+                break;
+            }
+            default:
+            {
+                aState.anim = 'idle';
+                aState.frame = 0;
+                break;
+            }
+        }
+    });
+}
+
 function updateGame(timeDeltaMs)
 {
     const { exists, freeable } = gameState.entities;
@@ -637,6 +677,7 @@ function updateGame(timeDeltaMs)
     updatePhysicsState();
     updateAtkState(timeDeltaMs);
     updateAiState();
+    updateAnimState(timeDeltaMs);
 
     // to remove/factor out
     updateBoidState();
