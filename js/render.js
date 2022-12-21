@@ -493,10 +493,10 @@ export function draw(realTimeMs, timeDeltaMs)
     // compute fps and updates
     debug.fpsTime += timeDeltaMs;
     debug.fpsCounter++;
-    if (debug.fpsTime > 1000) {
-        debug.fps = 1000/debug.fpsCounter;
+    if (debug.fpsTime >= 1000) {
+        debug.fps = 1000*debug.fpsCounter/debug.fpsTime;
         debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
-        debug.fpsTime -= 1000;
+        debug.fpsTime = 0;
         debug.fpsCounter = 0;
         debug.numUpdates = 0;
     }
