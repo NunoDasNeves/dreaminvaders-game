@@ -490,15 +490,25 @@ function updatePhysicsState()
         physState[j].colliding = true;
         const dir = vecSub(pos[j],pos[i]);
         const len = vecLen(dir);
-        const correction = (unit[i].radius + unit[j].radius - len) / 2;
         if ( almostZero(len) ) {
             dir = vec(1,0);
         } else {
             vecMulBy(dir, 1/len);
         }
+        const veliLen = vecLen(vel[i])
+        const veljLen = vecLen(vel[j])
+        const velSum = veliLen + veljLen;
+        let velif = 0.5;
+        let veljf = 0.5;
+        if (!almostZero(velSum)) {
+            velif = veliLen / velSum;
+            veljf = veljLen / velSum;
+        }
+        const correctioni = (unit[i].radius + unit[j].radius - len) * velif;
+        const correctionj = (unit[i].radius + unit[j].radius - len) * veljf;
+        const corrPos = vecMul(dir, correctionj);
         const dirNeg = vecMul(dir, -1);
-        const corrPos = vecMul(dir, correction);
-        const corrNeg = vecMul(dirNeg, correction);
+        const corrNeg = vecMul(dirNeg, correctioni);
 
         vecAddTo(pos[i], corrNeg);
         vecAddTo(pos[j], corrPos);
