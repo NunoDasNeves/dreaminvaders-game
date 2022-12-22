@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, AISTATE, HITSTATE, TEAM, ATKSTATE, weapons, units } from "./data.js";
+import { params, AISTATE, HITSTATE, TEAM, ATKSTATE, ANIM, weapons, units } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -134,7 +134,7 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
         canFall: unit[idx].canFall,
     };
     animState[idx]  = {
-        anim: 'idle',
+        anim: ANIM.IDLE,
         frame: 0,
         timer: 0,
         loop: true,

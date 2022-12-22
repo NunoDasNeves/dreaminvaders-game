@@ -24,7 +24,7 @@ function drawTriangleUnit(pos, angle, unit, scale, fillColor)
 
 function drawSprite(sprite, animName, frame, pos, flip)
 {
-    const anim = sprite[animName];
+    const anim = sprite.anims[animName];
     const asset = sprite.imgAsset;
 
     const drawWidth = sprite.width / gameState.camera.scale;

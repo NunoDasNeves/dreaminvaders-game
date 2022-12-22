@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, TEAM, HITSTATE, ATKSTATE, weapons, units, unitHotKeys } from "./data.js";
+import { debug, params, AISTATE, TEAM, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
 import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js';
 
 /*
@@ -640,27 +640,26 @@ function updateAnimState(timeDeltaMs)
             return;
         }
         aState.timer -= timeDeltaMs;
+        // TODO this properly... this is all placeholder
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             case AISTATE.CHASE:
             {
-                aState.anim = 'walk';
+                aState.anim = ANIM.WALK;
                 break;
             }
             case AISTATE.ATTACK:
             {
-                aState.anim = 'attack';
-                //aState.frame = 0;
+                aState.anim = ANIM.IDLE;
                 break;
             }
             default:
             {
-                aState.anim = 'idle';
-                //aState.frame = 0;
+                aState.anim = ANIM.IDLE;
                 break;
             }
         }
-        const anim = sprite[aState.anim];
+        const anim = sprite.anims[aState.anim];
         if (aState.timer <= 0) {
             aState.timer += anim.frameDur;
             aState.frame = (aState.frame + 1) % anim.frames;
