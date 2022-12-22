@@ -677,9 +677,6 @@ function updateGame(timeDeltaMs)
     updateAiState();
     updateAnimState(timeDeltaMs);
 
-    // to remove/factor out
-    updateBoidState();
-
     // this should come right before reap
     updateHitState(timeDeltaMs);
     // reap freeable entities

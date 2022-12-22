@@ -12,8 +12,6 @@ export const debug = {
     drawCollision: false,
     drawSight: false,
     drawAngle: false,
-    drawCapsule: true,
-    drawForces: true,
     drawSwing: true,
     drawLaneSegs: false,
     drawBezierPoints: false,
@@ -219,22 +217,6 @@ export const units = Object.freeze({
         draw: {
             sprite: sprites.tank,
         },
-    },
-    boid: {
-        weapon: weapons.none,
-        speed: 1,
-        angspeed: 0.5,
-        maxHp: 1,
-        sightRadius: params.laneWidth,
-        radius:10,
-        collides: true,
-        canFall: false,
-        defaultAiState: AISTATE.DO_NOTHING,
-        lighthouseDamage: 0,
-        draw: {
-            shape: "triangle",
-            fillColor: "TEAM",
-        }
     }
 });
 

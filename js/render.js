@@ -59,7 +59,7 @@ function drawUnitAnim(i)
 
 function drawUnit(i)
 {
-    const { team, unit, pos, vel, angle, target, hp, aiState, atkState, physState, boidState, hitState } = gameState.entities;
+    const { team, unit, pos, vel, angle, target, hp, aiState, atkState, physState, hitState } = gameState.entities;
 
     let unitScale = 1;
     let unitStrokeColor = unit[i].draw.strokeColor;
@@ -120,20 +120,6 @@ function drawUnit(i)
         const off = vecMulBy(vecFromAngle(angle[i]), -unit[i].radius*0.75);
         fillCircle(vecAdd(pos[i], off), unit[i].radius/3, color);
     }
-    if (unit[i] == units.boid)
-    {
-        if (debug.drawCapsule) // && unit[i].avoiding)
-        {
-            strokeHalfCapsule(pos[i], unit[i].sightRadius, unit[i].radius, vecToAngle(boidState[i].seekForce), 1, boidState[i].avoiding ? '#00ff00' : 'green');
-        }
-        if (debug.drawForces)
-        {
-            if (boidState[i].avoiding) {
-                drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].avoidanceForce, 20)), 1, 'red');
-            }
-            drawArrow(pos[i], vecAdd(pos[i], vecMul(boidState[i].seekForce, 20)), 1, 'white');
-        }
-    }
     if (debug.drawSwing) {
         const t = target[i].getIndex();
         if (unit[i].weapon != weapons.none && atkState[i].state != ATKSTATE.NONE && t != INVALID_ENTITY_INDEX) {
@@ -171,7 +157,7 @@ function drawUnit(i)
 
 function drawHpBar(i)
 {
-    const { team, unit, pos, vel, angle, target, hp, atkState, physState, boidState, hitState } = gameState.entities;
+    const { team, unit, pos, vel, angle, target, hp, atkState, physState, hitState } = gameState.entities;
     // hp bar
     if (hitState[i].hpBarTimer > 0) {
         const hpBarWidth = unit[i].radius*2;
@@ -459,7 +445,7 @@ export function draw(realTimeMs, timeDeltaMs)
         drawLane(gameState.lanes[i], gameState.player.laneSelected == i);
     }
 
-    const { exists, team, unit, pos, angle, physState, boidState, hitState } = gameState.entities;
+    const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
     // TODO bit of hack to draw alive units on top of dead ones
     // draw dead
     for (let i = 0; i < exists.length; ++i) {
