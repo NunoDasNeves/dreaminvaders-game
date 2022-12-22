@@ -175,7 +175,8 @@ export const weapons = Object.freeze({
 export const units = Object.freeze({
     base: {
         weapon: weapons.none,
-        speed: 0,
+        maxSpeed: 0,
+        accel: 0,
         angSpeed: 0,
         maxHp: 1000,
         sightRadius: 0,
@@ -190,7 +191,8 @@ export const units = Object.freeze({
     },
     chogoringu: {
         weapon: weapons.elbow,
-        speed: 3,
+        maxSpeed: 3,
+        accel: 0.15,
         angSpeed: 1,
         maxHp: 3,
         sightRadius: params.laneWidth*0.75,
@@ -205,7 +207,8 @@ export const units = Object.freeze({
     },
     tank: {
         weapon: weapons.elbow,
-        speed: 3,
+        maxSpeed: 3,
+        accel: 0.05,
         angSpeed: 1,
         maxHp: 3,
         sightRadius: params.laneWidth*0.75,

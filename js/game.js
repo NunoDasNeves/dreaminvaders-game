@@ -307,7 +307,7 @@ function updateBoidState()
 
 function updateAiState()
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, aiState, atkState, physState } = gameState.entities;
+    const { exists, team, unit, hp, pos, accel, angle, angVel, state, lane, target, aiState, atkState, physState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
@@ -328,7 +328,7 @@ function updateAiState()
             {
                 if (distToEnemyBase < unit[i].radius) {
                     aiState[i].state = AISTATE.DO_NOTHING;
-                    vecClear(vel[i]);
+                    vecClear(accel[i]);
                     break;
                 }
                 if (distToEnemyBase < params.safePathDistFromBase) {
@@ -423,7 +423,7 @@ function updateAiState()
                     // go parallel to the bridge line
                     goDir = vecNormalize(vecSub(nextPoint, currPoint));
                 }
-                vel[i] = vecMul(goDir, Math.min(unit[i].speed, distToEnemyBase));
+                accel[i] = vecMul(goDir, unit[i].accel);
                 target[i].invalidate();
                 atkState[i].state = ATKSTATE.NONE;
                 break;
@@ -436,7 +436,7 @@ function updateAiState()
                 const distToTarget = vecLen(toTarget);
                 if ( !almostZero(distToTarget) ) {
                     const dir = vecMul(toTarget, 1/distToTarget);
-                    vel[i] = vecMul(dir, Math.min(unit[i].speed, distToTarget));
+                    accel[i] = vecMul(dir, Math.min(unit[i].accel, distToTarget));
                 }
                 break;
             }
@@ -444,7 +444,7 @@ function updateAiState()
             {
                 const t = target[i].getIndex();
                 console.assert(t != INVALID_ENTITY_INDEX);
-                vecClear(vel[i]); // stand still
+                vecClear(accel[i]); // stand still
             }
             break;
         }
@@ -463,7 +463,7 @@ function keyPressed(k)
 
 function updatePhysicsState()
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState } = gameState.entities;
+    const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState } = gameState.entities;
 
     // very simple collisions, just reset position
     const pairs = [];
@@ -473,6 +473,13 @@ function updatePhysicsState()
             continue;
         }
         physState[i].colliding = false;
+
+        // friction: decelerate automatically if velocity with no acceleration
+        if (!vecAlmostZero(vel[i]) && vecAlmostZero(accel[i])) {
+            accel[i] = vecSetMag(vecMul(vel[i], -1), unit[i].accel);
+        }
+        vecAddTo(vel[i], accel[i]);
+        vecClampMag(vel[i], 0, unit[i].maxSpeed);
         vecAddTo(pos[i], vel[i]);
     };
 
