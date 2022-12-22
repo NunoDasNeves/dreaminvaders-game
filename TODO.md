@@ -1,13 +1,16 @@
 ## TODO
-- make units push each other less; especially friendlies - maybe separation force?
-- export sprites faster - created flipped version with exporter script
-- add another unit type for testing, actual placeholder graphics for it
+- unit come to a stop in attack range, instead of trying to get really close (try just increasing the range a tad first)
+- display resource count
+- resources go up over time
+- making a unit uses resources
+- armor
+- more weapon types
+- debug display: how long an update() takes
 - display unit types on bottom of screen
-- select unit type with numbers (don't hardcode) - or just press the button to send the unit on the current lane
-- for debugging, cycle team with some button (TAB or something)
-- unit acceleration instead of instant velocity change
-- don't randomize placement; place at a specific distance, on spot closest to mouse ?
-- better collision? pushing...impulse?
+- better collision
+    - more accurate, not velocity based
+    - no more drifting around
+    - support pushing (when we want it) - use unit mass or something
 - better steering/avoidance?
     - deal with avoidance conflict (they avoid the same way)?
     - use velocity to determine how far ahead to look
@@ -15,6 +18,12 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- make units push each other less; especially friendlies - maybe separation force?
+- unit acceleration instead of instant velocity change
+- for debugging, cycle team with some button (TAB or something)
+- select unit type with keys - just press the button to send the unit on the current lane
+- export sprites faster - created flipped version with exporter script
+- add another unit type for testing, actual placeholder graphics for it
 - basic perf counters - fps and updates per frame
 - basic animation - unit walk cycle
 - load placeholder graphics for testing
