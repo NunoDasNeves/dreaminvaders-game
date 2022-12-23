@@ -122,13 +122,25 @@ function drawUnit(i)
     if (debug.drawCollision && physState[i].colliding) {
         strokeCircle(pos[i], unit[i].radius, 1, 'red');
     }
-    if (debug.drawSight && unit[i].sightRadius > 0)
+    if (debug.drawSightRange && unit[i].sightRange > 0)
     {
-        strokeCircle(pos[i], unit[i].sightRadius, 1, 'yellow');
+        strokeCircle(pos[i], unit[i].sightRange + unit[i].radius, 1, 'yellow');
+    }
+    if (debug.drawWeaponRange && unit[i].weapon.range > 0)
+    {
+        strokeCircle(pos[i], unit[i].weapon.range + unit[i].radius, 1, 'red');
     }
     if (debug.drawAngle) {
-        const arrowLine = vecMulBy(utils.vecFromAngle(angle[i]), 10);
+        const arrowLine = vecMulBy(vecFromAngle(angle[i]), 10);
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, 'white');
+    }
+    if (debug.drawVel) {
+        const arrowLine = vecMul(vel[i], 10);
+        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, '#0066ff');
+    }
+    if (debug.drawAccel) {
+        const arrowLine = vecMul(accel[i], 10);
+        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, '#ffdd00');
     }
     if (debug.drawState) {
         const color = aiState[i].state == AISTATE.PROCEED ? 'blue' : aiState[i].state == AISTATE.CHASE ? 'yellow' : 'red';

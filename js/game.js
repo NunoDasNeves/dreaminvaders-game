@@ -39,10 +39,10 @@ function nearestUnit(i, minRange, filterFn)
         }
         const toUnit = vecSub(pos[j], pos[i]);
         const distToUnit = vecLen(toUnit);
-        const distToUnitEdge = distToUnit - unit[j].radius;
-        if (distToUnitEdge < minDist) {
+        const distToUse = distToUnit - unit[j].radius - unit[i].radius;
+        if (distToUse < minDist) {
             best = j;
-            minDist = distToUnitEdge;
+            minDist = distToUse;
         }
     }
     return new EntityRef(best);
@@ -68,16 +68,16 @@ function canChaseOrAttack(myIdx, theirIdx)
     return true;
 }
 
-function nearestEnemyInSightRadius(i)
+function nearestEnemyInSightRange(i)
 {
     const { unit } = gameState.entities;
-    return nearestUnit(i, unit[i].sightRadius, canChaseOrAttack);
+    return nearestUnit(i, unit[i].sightRange, canChaseOrAttack);
 }
 
 function nearestEnemyInAttackRange(i)
 {
     const { unit } = gameState.entities;
-    return nearestUnit(i, unit[i].radius + unit[i].weapon.range, canChaseOrAttack);
+    return nearestUnit(i, unit[i].weapon.range, canChaseOrAttack);
 }
 
 // is unit i in range to attack unit j
@@ -86,8 +86,8 @@ function isInAttackRange(i, j)
     const { unit, pos } = gameState.entities;
     const toUnit = vecSub(pos[j], pos[i]);
     const distToUnit = vecLen(toUnit);
-    const distToUnitEdge = distToUnit - unit[j].radius;
-    return distToUnitEdge < (unit[i].radius + unit[i].weapon.range);
+    const distForAttacking = Math.max(distToUnit - unit[j].radius - unit[i].radius, 0);
+    return distForAttacking < unit[i].weapon.range;
 }
 
 function canAttackTarget(i)
@@ -169,7 +169,7 @@ function getAvoidanceForce(i, seekForce)
     let minToBoid = vec(); // vector to boid to avoid
     const lineDir = vecNorm(goingDir);
     // the capsule that is our avoidance 'sight'
-    const capsuleLen = unit[i].sightRadius;
+    const capsuleLen = unit[i].sightRange;
     //  the line in the center of the capsule, from our center to the center of the circle on the end
     const lineLen = capsuleLen - unit[i].radius;
     for (let j = 0; j < exists.length; ++j) {
@@ -187,7 +187,7 @@ function getAvoidanceForce(i, seekForce)
         const len = vecLen(toBoid) - unit[j].radius;
         // TODO don't try to avoid target[i]; we wanna go straight towards it
         // can see it
-        if (len > unit[i].sightRadius) {
+        if (len > unit[i].sightRange) {
             continue;
         }
         // it's in front
@@ -238,21 +238,20 @@ function getAvoidanceForce(i, seekForce)
 
 function getSeparationForce(i)
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
-    const bState = boidState[i];
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     const separationForce = vec();
     let separationCount = 0;
     for (let j = 0; j < exists.length; ++j) {
         if (!exists[j]) {
             continue;
         }
-        if (unit[j] != units.boid) {
+        if (!physState[i].canCollide) {
             continue;
         }
         if (i == j) {
             continue;
         }
-        const separationRadius = unit[i].radius + unit[j].radius;
+        const separationRadius = unit[i].radius + unit[j].radius + 10;
         const dist = getDist(pos[i], pos[j]);
         if (dist > separationRadius) {
             continue;
@@ -336,7 +335,7 @@ function updateAiState()
         //const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
         //const distToEndOfLane = vecLen(toEndOfLane);
         const nearestAtkTarget = nearestEnemyInAttackRange(i);
-        const nearestChaseTarget = nearestEnemyInSightRadius(i);
+        const nearestChaseTarget = nearestEnemyInSightRange(i);
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             {

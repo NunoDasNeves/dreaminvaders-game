@@ -10,7 +10,8 @@ export const debug = {
     paused: false,
     drawState: false,
     drawCollision: false,
-    drawSight: false,
+    drawSightRange: true,
+    drawWeaponRange: true,
     drawAngle: false,
     drawVel: true,
     drawAccel: true,
@@ -165,13 +166,21 @@ export const weapons = Object.freeze({
         missChance: 1,
     },
     elbow: {
-        range: 5,        // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
+        range: 10,       // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
         aimMs: 300,      // time from deciding to attack until starting attack
         swingMs: 200,    // time from starting attack til attack hits
         recoverMs: 400,  // time after attack hits til can attack again
         damage: 1,
         missChance: 0.3,
-    }
+    },
+    tentacle: {
+        range: 30,
+        aimMs: 300,
+        swingMs: 300,
+        recoverMs: 500,
+        damage: 3,
+        missChance: 0.25,
+    },
 });
 
 export const units = Object.freeze({
@@ -181,7 +190,7 @@ export const units = Object.freeze({
         accel: 0,
         angSpeed: 0,
         maxHp: 1000,
-        sightRadius: 0,
+        sightRange: 0,
         radius: params.lighthouseRadius,
         collides: false,
         canFall: false,
@@ -197,7 +206,7 @@ export const units = Object.freeze({
         accel: 0.4,
         angSpeed: 1,
         maxHp: 3,
-        sightRadius: params.laneWidth*0.75,
+        sightRange: params.laneWidth*0.5,
         radius: 10,
         collides: true,
         canFall: true,
@@ -208,12 +217,12 @@ export const units = Object.freeze({
         },
     },
     tank: {
-        weapon: weapons.elbow,
+        weapon: weapons.tentacle,
         maxSpeed: 2,
         accel: 0.1,
         angSpeed: 1,
-        maxHp: 3,
-        sightRadius: params.laneWidth*0.75,
+        maxHp: 10,
+        sightRange: params.laneWidth*2,
         radius: 20,
         collides: true,
         canFall: true,
