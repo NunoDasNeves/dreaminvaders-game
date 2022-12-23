@@ -320,7 +320,7 @@ function decel(i)
 
 function updateAiState()
 {
-    const { exists, team, unit, hp, pos, accel, angle, angVel, state, lane, target, aiState, atkState, physState } = gameState.entities;
+    const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
         if (!exists[i]) {
@@ -447,9 +447,28 @@ function updateAiState()
                 console.assert(t != INVALID_ENTITY_INDEX);
                 const toTarget = vecSub(pos[t], pos[i]);
                 const distToTarget = vecLen(toTarget);
-                if ( !almostZero(distToTarget) ) {
-                    const dir = vecMul(toTarget, 1/distToTarget);
-                    accel[i] = vecMul(dir, Math.min(unit[i].accel, distToTarget));
+                if (almostZero(distToTarget)) {
+                    decel(i);
+                    break;
+                }
+                const rangeToTarget = distToTarget - unit[i].radius - unit[t].radius;
+                const desiredRange = unit[i].weapon.range;
+                const distToDesired = rangeToTarget - desiredRange;
+                if (distToDesired < 0) {
+                    break;
+                }
+                const dir = vecNorm(toTarget, 1/distToTarget);
+                const velTowardsTarget = vecDot(vel[i], dir);
+                // compute the approximate stopping distance
+                // ...these are kinematic equations of motion!
+                // underestimate the time it takes to stop by a frame
+                const stopFrames = Math.ceil(velTowardsTarget / unit[i].accel - 1); // v = v_0 + at, solve for t
+                const stopRange = ( velTowardsTarget + 0.5*unit[i].accel*stopFrames ) * stopFrames; // dx = v_0t + 1/2at^2
+                debugState[i].stopRange = vecMul(dir, stopRange);
+                if ( distToDesired > stopRange ) {
+                    accel[i] = vecMul(dir, Math.min(unit[i].accel, distToDesired));
+                } else {
+                    decel(i);
                 }
                 break;
             }

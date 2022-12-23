@@ -79,7 +79,7 @@ export class EntityRef {
 
 export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
 {
-    const { exists, freeable, id, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, target, lane, atkState, aiState, physState, boidState, hitState, animState } = gameState.entities;
+    const { exists, freeable, id, nextFree, team, unit, hp, pos, vel, accel, angle, angVel, state, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -139,6 +139,7 @@ export function spawnEntity(aPos, aTeam, aUnit, aLane = null)
         timer: 0,
         loop: true,
     };
+    debugState[idx] = {}; // misc debug stuff
     // gonna be folded in or removed at some point
     boidState[idx]  = {
         targetPos: null,
@@ -215,6 +216,7 @@ export function initGameState()
             boidState: [],
             hitState: [],
             animState: [],
+            debugState: [],
         },
         freeSlot: INVALID_ENTITY_INDEX,
         nextId: 0n, // bigint

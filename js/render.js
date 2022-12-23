@@ -88,7 +88,7 @@ function drawUnitAnim(i, alpha, colorOverlay)
 
 function drawUnit(i)
 {
-    const { team, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState } = gameState.entities;
+    const { team, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
 
     if (unit[i].draw.image) {
         drawImage(unit[i].draw.image, pos[i]);
@@ -129,6 +129,11 @@ function drawUnit(i)
     if (debug.drawWeaponRange && unit[i].weapon.range > 0)
     {
         strokeCircle(pos[i], unit[i].weapon.range + unit[i].radius, 1, 'red');
+    }
+    // TODO remove
+    if (debugState[i].stopRange) {
+        const arrowLine = debugState[i].stopRange;
+        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, '#00ff00');
     }
     if (debug.drawAngle) {
         const arrowLine = vecMulBy(vecFromAngle(angle[i]), 10);
