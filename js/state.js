@@ -191,6 +191,18 @@ export function updateGameInput()
     }
 }
 
+export function getLocalPlayer()
+{
+    return gameState.players[gameState.localPlayerIdx];
+}
+
+export function cycleLocalPlayer()
+{
+    const laneSelected = getLocalPlayer().laneSelected;
+    gameState.localPlayerIdx = (gameState.localPlayerIdx + 1) % gameState.players.length;
+    getLocalPlayer().laneSelected = laneSelected;
+}
+
 export function initGameState()
 {
     gameState = {
@@ -238,15 +250,18 @@ export function initGameState()
             scale: 1, // scale +++ means zoom out
             easeFactor: 0.1
         },
-        players: []
+        players: [],
+        localPlayerIdx: 0,
         input: makeInput(),
         lastInput: makeInput(),
     };
     gameState.players.push({
         laneSelected: 0,
-        debugTeam: TEAM.ORANGE,
-        debugClickedPoint: vec(),
-        debugClosestLanePoint: vec(),
+        team: TEAM.ORANGE,
+    });
+    gameState.players.push({
+        laneSelected: 0,
+        team: TEAM.BLUE,
     });
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse

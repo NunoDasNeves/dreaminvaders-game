@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, TEAM, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
-import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js';
+import { enemyTeam, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
 
 /*
  * Game init and update functions
@@ -870,16 +870,17 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
                 minStuff = stuff;
             }
         }
-        gameState.player.laneSelected = minLane;
-        gameState.player.debugClickedPoint = vecClone(gameState.input.mousePos);
-        gameState.player.debugClosestLanePoint = minStuff.point;
+        getLocalPlayer().laneSelected = minLane;
+        debug.clickedPoint = vecClone(gameState.input.mousePos);
+        debug.closestLanePoint = minStuff.point;
     }
     if (keyPressed('Tab')) {
-        gameState.player.debugTeam = enemyTeam(gameState.player.debugTeam);
+        cycleLocalPlayer();
     }
     for (const [key, unit] of Object.entries(unitHotKeys)) {
         if (keyPressed(key)) {
-            spawnEntityInLane(gameState.lanes[gameState.player.laneSelected], gameState.player.debugTeam, unit);
+            const player = getLocalPlayer();
+            spawnEntityInLane(gameState.lanes[player.laneSelected], player.team, unit);
         }
     }
     // camera controls

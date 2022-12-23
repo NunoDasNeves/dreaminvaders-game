@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units, HITSTATE, sprites } from "./data.js";
-import { enemyTeam, laneStart, laneEnd, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, cameraToWorld, cameraVecToWorld, worldToCamera, worldVecToCamera } from './state.js'
+import { enemyTeam, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
 import { assets } from "./assets.js";
 
 let canvas = null;
@@ -456,7 +456,8 @@ export function draw(realTimeMs, timeDeltaMs)
     }
 
     for (let i = 0; i < gameState.lanes.length; ++i) {
-        drawLane(gameState.lanes[i], gameState.player.laneSelected == i);
+        const player = getLocalPlayer();
+        drawLane(gameState.lanes[i], player.laneSelected == i);
     }
 
     const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
@@ -484,8 +485,8 @@ export function draw(realTimeMs, timeDeltaMs)
     }
     if (debug.drawClickBridgeDebugArrow) {
         drawArrow(
-            gameState.player.debugClosestLanePoint,
-            gameState.player.debugClickedPoint,
+            debug.closestLanePoint,
+            debug.clickedPoint,
             1,
             "#ff0000"
         );
@@ -508,7 +509,8 @@ export function draw(realTimeMs, timeDeltaMs)
         const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
         drawDebugUIText(updatesStr, vec(10,40), 'white');
     }
-    drawDebugUIText("team", vec(10,60), params.teamColors[gameState.player.debugTeam]);
+    const player = getLocalPlayer();
+    drawDebugUIText("team", vec(10,60), params.teamColors[player.team]);
 }
 
 function drawDebugUIText(string, screenPos, fillStyle)
