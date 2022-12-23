@@ -8,10 +8,10 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 export const debug = {
     canPause: true,
     paused: false,
-    drawState: false,
+    drawAiState: true,
     drawCollision: false,
-    drawSightRange: true,
-    drawWeaponRange: true,
+    drawSightRange: false,
+    drawWeaponRange: false,
     drawAngle: false,
     drawVel: true,
     drawAccel: true,

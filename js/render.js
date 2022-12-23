@@ -133,7 +133,7 @@ function drawUnit(i)
     // TODO remove
     if (debugState[i].stopRange) {
         const arrowLine = debugState[i].stopRange;
-        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, '#00ff00');
+        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, debugState[i].stopping ? 'red' : '#00ff00');
     }
     if (debug.drawAngle) {
         const arrowLine = vecMulBy(vecFromAngle(angle[i]), 10);
@@ -147,7 +147,7 @@ function drawUnit(i)
         const arrowLine = vecMul(accel[i], 10);
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, '#ffdd00');
     }
-    if (debug.drawState) {
+    if (debug.drawAiState) {
         const color = aiState[i].state == AISTATE.PROCEED ? 'blue' : aiState[i].state == AISTATE.CHASE ? 'yellow' : 'red';
         const off = vecMulBy(vecFromAngle(angle[i]), -unit[i].radius*0.75);
         fillCircle(vecAdd(pos[i], off), unit[i].radius/3, color);

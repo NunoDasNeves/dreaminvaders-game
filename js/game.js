@@ -309,12 +309,25 @@ function decel(i)
     const { unit, vel, accel } = gameState.entities;
     // friction: decelerate automatically if velocity with no acceleration
     const velLen = vecLen(vel[i]);
+    // accel to inverse of velLen; ensures we don't undershoot and go backwards
     vecClear(accel[i])
-    if (!vecAlmostZero(vel[i])) {
-        vecCopyTo(accel[i], vel[i]);
-        vecNegate(accel[i]);
-        // don't overshoot!
-        vecSetMag(accel[i], Math.min(velLen, unit[i].accel));
+    vecCopyTo(accel[i], vel[i]);
+    vecNegate(accel[i]);
+    // common case; reduce vel by acceleration rate
+    if (unit[i].accel < velLen) {
+        vecSetMag(accel[i], unit[i].accel);
+    }
+}
+
+function accelAwayFromEdge(i)
+{
+    const { unit, lane, team, pos, accel } = gameState.entities;
+    const bridgePoints = lane[i].bridgePointsByTeam[team[i]];
+    const { dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
+    if (dist > (params.laneWidth*0.5 - unit[i].radius)) {
+        const force = vecMul(dir, -unit[i].accel);
+        vecAddTo(accel[i], force);
+        vecClampMag(accel[i], 0, unit[i].accel);
     }
 }
 
@@ -357,8 +370,8 @@ function updateAiState()
             }
             case AISTATE.CHASE:
             {
-                // switch to attack if in range
-                if (nearestAtkTarget.isValid()) {
+                // switch to attack if in range (and stopped)
+                if (nearestAtkTarget.isValid() && vecAlmostZero(vel[i])) {
                     aiState[i].state = AISTATE.ATTACK;
                     target[i] = nearestAtkTarget;
                     atkState[i].timer = unit[i].weapon.aimMs;
@@ -449,27 +462,33 @@ function updateAiState()
                 const distToTarget = vecLen(toTarget);
                 if (almostZero(distToTarget)) {
                     decel(i);
+                    accelAwayFromEdge(i);
                     break;
                 }
                 const rangeToTarget = distToTarget - unit[i].radius - unit[t].radius;
                 const desiredRange = unit[i].weapon.range;
                 const distToDesired = rangeToTarget - desiredRange;
                 if (distToDesired < 0) {
+                    decel(i);
+                    accelAwayFromEdge(i);
                     break;
                 }
-                const dir = vecNorm(toTarget, 1/distToTarget);
-                const velTowardsTarget = vecDot(vel[i], dir);
+                const dirToTarget = vecNorm(toTarget, 1/distToTarget);
+                const velTowardsTarget = vecDot(vel[i], dirToTarget);
                 // compute the approximate stopping distance
                 // ...these are kinematic equations of motion!
                 // underestimate the time it takes to stop by a frame
                 const stopFrames = Math.ceil(velTowardsTarget / unit[i].accel - 1); // v = v_0 + at, solve for t
                 const stopRange = ( velTowardsTarget + 0.5*unit[i].accel*stopFrames ) * stopFrames; // dx = v_0t + 1/2at^2
-                debugState[i].stopRange = vecMul(dir, stopRange);
+                debugState[i].stopRange = vecMul(dirToTarget, stopRange);
                 if ( distToDesired > stopRange ) {
-                    accel[i] = vecMul(dir, Math.min(unit[i].accel, distToDesired));
+                    accel[i] = vecMul(dirToTarget, Math.min(unit[i].accel, distToDesired));
+                    debugState[i].stopping = false;
                 } else {
+                    debugState[i].stopping = true;
                     decel(i);
                 }
+                accelAwayFromEdge(i);
                 break;
             }
             case AISTATE.ATTACK:
