@@ -324,9 +324,16 @@ function accelAwayFromEdge(i)
     const { unit, lane, team, pos, accel } = gameState.entities;
     const bridgePoints = lane[i].bridgePointsByTeam[team[i]];
     const { dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
-    if (dist > (params.laneWidth*0.5 - unit[i].radius)) {
-        const force = vecMul(dir, -unit[i].accel);
-        vecAddTo(accel[i], force);
+    const distUntilFall = params.laneWidth*0.5 - dist;
+    if (distUntilFall < unit[i].radius) {
+        const x =  clamp(distUntilFall / unit[i].radius, 0, 1);
+        // smoothstep
+        const a = x * x * (3 - 2 * x);
+        const fullIn = vecMul(dir, -unit[i].accel);
+        const inVec = vecMul(fullIn, 1 - a);
+        const stayVec = vecMul(accel[i], a);
+        const result = vecAdd(inVec, stayVec);
+        vecCopyTo(accel[i], result);
         vecClampMag(accel[i], 0, unit[i].accel);
     }
 }
@@ -436,10 +443,6 @@ function updateAiState()
                     vecCopyTo(nextPoint, enemyIslandPos);
                 } else {
                     vecCopyTo(nextPoint, bridgePoints[nextIdx]);
-                    // getting close to edge of bridge, go back towards center
-                    if (dist > (params.laneWidth*0.5 - unit[i].radius)) {
-                        goToPoint = true;
-                    }
                 }
                 let goDir = null
                 if (goToPoint) {
@@ -450,6 +453,9 @@ function updateAiState()
                     goDir = vecNormalize(vecSub(nextPoint, currPoint));
                 }
                 accel[i] = vecMul(goDir, unit[i].accel);
+                if (!isOnIsland(i)) {
+                    accelAwayFromEdge(i);
+                }
                 target[i].invalidate();
                 atkState[i].state = ATKSTATE.NONE;
                 break;
@@ -596,6 +602,17 @@ function hitEntity(i, damage)
     hitState[i].hpBarTimer = params.hpBarTimeMs;
 }
 
+function isOnIsland(i)
+{
+    const { pos } = gameState.entities;
+    for (const island of Object.values(gameState.islands)) {
+        if (getDist(pos[i], island.pos) < params.islandRadius) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function updateHitState(timeDeltaMs)
 {
     const { freeable, unit, pos, vel, accel, hp, lane, team, aiState, atkState, hitState, physState } = gameState.entities;
@@ -606,14 +623,8 @@ function updateHitState(timeDeltaMs)
         switch (hitState[i].state) {
             case HITSTATE.ALIVE:
             {
-                let onIsland = false;
-                for (const island of Object.values(gameState.islands)) {
-                    if (getDist(pos[i], island.pos) < params.islandRadius) {
-                        onIsland = true;
-                        break;
-                    }
-                }
                 const enemyLighthouse = gameState.islands[enemyTeam(team[i])];
+                const onIsland = isOnIsland(i);
                 // die from damage
                 if (hp[i] <= 0) {
                     // fade hpTimer fast
