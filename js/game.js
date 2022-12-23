@@ -514,7 +514,7 @@ function keyPressed(k)
 
 function updatePhysicsState()
 {
-    const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState } = gameState.entities;
+    const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState, debugState } = gameState.entities;
 
     // very simple collisions, just reset position
     const pairs = [];
@@ -535,6 +535,12 @@ function updatePhysicsState()
     updateAllCollidingPairs(pairs);
     for (let k = 0; k < pairs.length; ++k) {
         const [i, j] = pairs[k];
+        if (!physState[i].colliding) {
+            debugState[i].velPreColl = vecClone(vel[i]);
+        }
+        if (!physState[j].colliding) {
+            debugState[j].velPreColl = vecClone(vel[j]);
+        }
         physState[i].colliding = true;
         physState[j].colliding = true;
         const dir = vecSub(pos[j],pos[i]);
@@ -561,6 +567,17 @@ function updatePhysicsState()
 
         vecAddTo(pos[i], corrNeg);
         vecAddTo(pos[j], corrPos);
+
+        // fix the velocity; slide by removing component normal to collision
+        // only if it's > 0, otherwise we'll go toward the collision!
+        const veliNormLen = vecDot(vel[i], dir);
+        if (veliNormLen > 0) {
+            vecSubFrom(vel[i], vecMul(dir, veliNormLen));
+        }
+        const veljNormLen = vecDot(vel[j], dirNeg);
+        if (veljNormLen > 0) {
+            vecSubFrom(vel[j], vecMul(dirNeg, veljNormLen));
+        }
     }
 
     // rotate to face vel

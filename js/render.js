@@ -131,10 +131,14 @@ function drawUnit(i)
         strokeCircle(pos[i], unit[i].weapon.range + unit[i].radius, 1, 'red');
     }
     // TODO remove
-    if (debugState[i].stopRange) {
+    if (debugState[i].velPreColl) {
+        const arrowLine = vecMul(debugState[i].velPreColl, 10);
+        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, "#00ffff");
+    }
+    /*if (debugState[i].stopRange) {
         const arrowLine = debugState[i].stopRange;
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, debugState[i].stopping ? 'red' : '#00ff00');
-    }
+    }*/
     if (debug.drawAngle) {
         const arrowLine = vecMulBy(vecFromAngle(angle[i]), 10);
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, 'white');
@@ -343,10 +347,10 @@ function drawArrow(start, end, width, strokeStyle)
     const startCoords = worldVecToCamera(start);
     const endCoords = worldVecToCamera(end);
     // arrow as a vector in screen space
-    const arrowDir = utils.vecSub(endCoords, startCoords);
+    const arrowDir = vecSub(endCoords, startCoords);
     const arrowLen = vecLen(arrowDir);
-    const barbX = arrowLen*7/8;
-    const barby = arrowLen/8;
+    const barbX = arrowLen - (5 / gameState.camera.scale);
+    const barby = 5 / gameState.camera.scale; // always make head visible
     // arrow points to rotate
     const arrowPoints = [
         vec(),              // start
