@@ -88,7 +88,7 @@ function drawUnitAnim(i, alpha, colorOverlay)
 
 function drawUnit(i)
 {
-    const { team, unit, pos, vel, angle, target, hp, aiState, atkState, physState, hitState } = gameState.entities;
+    const { team, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState } = gameState.entities;
 
     if (unit[i].draw.image) {
         drawImage(unit[i].draw.image, pos[i]);

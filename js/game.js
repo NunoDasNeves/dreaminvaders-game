@@ -305,6 +305,20 @@ function updateBoidState()
     }
 }
 
+function decel(i)
+{
+    const { unit, vel, accel } = gameState.entities;
+    // friction: decelerate automatically if velocity with no acceleration
+    const velLen = vecLen(vel[i]);
+    vecClear(accel[i])
+    if (!vecAlmostZero(vel[i])) {
+        vecCopyTo(accel[i], vel[i]);
+        vecNegate(accel[i]);
+        // don't overshoot!
+        vecSetMag(accel[i], Math.min(velLen, unit[i].accel));
+    }
+}
+
 function updateAiState()
 {
     const { exists, team, unit, hp, pos, accel, angle, angVel, state, lane, target, aiState, atkState, physState } = gameState.entities;
@@ -328,7 +342,7 @@ function updateAiState()
             {
                 if (distToEnemyBase < unit[i].radius) {
                     aiState[i].state = AISTATE.DO_NOTHING;
-                    vecClear(accel[i]);
+                    decel(i); // stand still
                     break;
                 }
                 if (distToEnemyBase < params.safePathDistFromBase) {
@@ -444,7 +458,7 @@ function updateAiState()
             {
                 const t = target[i].getIndex();
                 console.assert(t != INVALID_ENTITY_INDEX);
-                vecClear(accel[i]); // stand still
+                decel(i); // stand still
             }
             break;
         }
@@ -473,13 +487,11 @@ function updatePhysicsState()
             continue;
         }
         physState[i].colliding = false;
-
-        // friction: decelerate automatically if velocity with no acceleration
-        if (!vecAlmostZero(vel[i]) && vecAlmostZero(accel[i])) {
-            accel[i] = vecSetMag(vecMul(vel[i], -1), unit[i].accel);
-        }
         vecAddTo(vel[i], accel[i]);
         vecClampMag(vel[i], 0, unit[i].maxSpeed);
+        if (vecAlmostZero(vel[i])) {
+            vecClear(vel[i]);
+        }
         vecAddTo(pos[i], vel[i]);
     };
 
@@ -532,7 +544,7 @@ function hitEntity(i, damage)
 
 function updateHitState(timeDeltaMs)
 {
-    const { freeable, unit, pos, vel, hp, lane, team, aiState, atkState, hitState, physState } = gameState.entities;
+    const { freeable, unit, pos, vel, accel, hp, lane, team, aiState, atkState, hitState, physState } = gameState.entities;
     forAllEntities((i) => {
         hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
@@ -560,6 +572,7 @@ function updateHitState(timeDeltaMs)
                     atkState[i].state = ATKSTATE.NONE;
                     physState[i].canCollide = false;
                     vecClear(vel[i]);
+                    vecClear(accel[i]);
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
                     const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePointsByTeam[team[i]]);
@@ -577,6 +590,7 @@ function updateHitState(timeDeltaMs)
                         atkState[i].state = ATKSTATE.NONE;
                         physState[i].canCollide = false;
                         vecClear(vel[i]);
+                        vecClear(accel[i]);
                     }
                 // 'die' by scoring
                 } else if (onIsland && getDist(pos[i], enemyLighthouse.pos) < params.lighthouseRadius) {

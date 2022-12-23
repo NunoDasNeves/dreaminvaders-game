@@ -12,6 +12,8 @@ export const debug = {
     drawCollision: false,
     drawSight: false,
     drawAngle: false,
+    drawVel: true,
+    drawAccel: true,
     drawSwing: true,
     drawLaneSegs: false,
     drawBezierPoints: false,
@@ -192,7 +194,7 @@ export const units = Object.freeze({
     chogoringu: {
         weapon: weapons.elbow,
         maxSpeed: 3,
-        accel: 0.15,
+        accel: 0.4,
         angSpeed: 1,
         maxHp: 3,
         sightRadius: params.laneWidth*0.75,
@@ -207,8 +209,8 @@ export const units = Object.freeze({
     },
     tank: {
         weapon: weapons.elbow,
-        maxSpeed: 3,
-        accel: 0.05,
+        maxSpeed: 2,
+        accel: 0.1,
         angSpeed: 1,
         maxHp: 3,
         sightRadius: params.laneWidth*0.75,
