@@ -26,23 +26,6 @@ export function closestPoint(arr, pos)
     return minPoint;
 }
 
-export function laneStart(lane, team)
-{
-    const pos = gameState.players[team].island.pos;
-    return vecClone(closestPoint(lane.pathPoints, pos));
-}
-
-export function laneSpawnPoint(lane, playerIdx)
-{
-    return vecClone(lane.spawns[playerIdx]);
-}
-
-export function laneEnd(lane, team)
-{
-    const pos = gameState.players[enemyTeam(team)].island.pos;
-    return vecClone(closestPoint(lane.pathPoints, pos));
-}
-
 export let gameState = null;
 
 /*
@@ -154,18 +137,17 @@ export function spawnEntity(aPos, aTeam, aColor, aUnit, aHomeIsland = null, aLan
     return idx;
 }
 
-export function spawnEntityInLane(lane, playerIdx, unit)
+export function spawnEntityInLane(laneIdx, playerIdx, unit)
 {
     const player = gameState.players[playerIdx];
     const team = player.team;
     const color = player.color;
     const island = player.island;
-
-    const pos = laneSpawnPoint(lane, playerIdx);
+    const lane = player.island.lanes[laneIdx];
+    const pos = lane.spawnPos;
     // units should get on the bridge pretty quick and try to stay on, so can spawn them near the edge
-    const randVec = vecMulBy(vecRandDir(), params.laneWidth*0.5);
-    vecAddTo(pos, randVec);
-    return spawnEntity(pos, team, color, unit, island, lane);
+    const randPos = vecAdd(pos, vecMulBy(vecRandDir(), params.laneWidth*0.5));
+    return spawnEntity(randPos, team, color, unit, island, lane);
 }
 
 export function getLocalPlayer()
@@ -190,6 +172,7 @@ function addPlayer(pos, team, color)
             pos,
             idx: INVALID_ENTITY_INDEX,
             paths: [],
+            lanes: [],
         },
     });
 }
@@ -225,13 +208,14 @@ export function initGameState()
         },
         freeSlot: INVALID_ENTITY_INDEX,
         nextId: 0n, // bigint
-        lanes: [],
         camera: {
             pos: vec(),
             scale: 1, // scale +++ means zoom out
             easeFactor: 0.1
         },
         players: [],
+        islands: [],
+        lanes: [],
         localPlayerIdx: 0,
         input: makeInput(),
         lastInput: makeInput(),
@@ -239,11 +223,11 @@ export function initGameState()
 
     addPlayer(vec(-600, 0), 0, params.playerColors[0]);
     addPlayer(vec(600, 0), 1, params.playerColors[1]);
-    // compute the lane start and end points (bezier curves)
-    // line segements approximating the curve (for gameplay code) + paths to the lighthouse
-    // ordering of points is from orange to blue, i.e. left to right
     const islands = gameState.players.map(({ island }) => island);
     gameState.islands = islands;
+    // compute the lane start and end points (bezier curves)
+    // line segements approximating the curve (for gameplay code) + paths to the lighthouse
+    // NOTE: assumes 2 players, ordered left to right (orange -> blue)
     const islandPos = islands.map(island => island.pos);
     const islandToIsland = vecSub(islandPos[1], islandPos[0]);
     const centerPoint = vecAddTo(vecMul(islandToIsland, 0.5), islandPos[0]);
@@ -285,17 +269,31 @@ export function initGameState()
         bridgePoints.push(pLaneEnd);
         pathPoints.push(pLaneEnd);
         pathPoints.push(islandPos[1]);
-        const spawns = { 0: pLaneStart, 1: pLaneEnd };
+        const bridgePointsReversed = reverseToNewArray(bridgePoints);
+        // create the lanes
+        const p0Lane = {
+            bridgePoints,
+            spawnPos: pLaneStart,
+            otherPlayer: 1,
+        };
+        const p1Lane = {
+            bridgePoints: bridgePointsReversed,
+            spawnPos: pLaneEnd,
+            otherPlayer: 0,
+        };
+        gameState.players[0].island.lanes.push(p0Lane);
+        gameState.players[1].island.lanes.push(p1Lane);
         gameState.lanes.push({
-            pathPoints,
-            bridgePointsByPlayer: { 0: bridgePoints, 1: reverseToNewArray(bridgePoints) },
+            playerLanes: { 0: p0Lane, 1: p1Lane },
+            pathPoints, // TODO these don't seem to be used rn
             bezierPoints,
-            spawns
         });
+        // TODO probably don't need these
         islands[0].paths.push([vecClone(pLaneStart), islandPos[0]]);
         islands[1].paths.push([vecClone(pLaneEnd), islandPos[1]]);
     }
 
+    // spawn lighthouses
     islands[1].idx = spawnEntity(islandPos[1], 1, 1, units.base, islands[1]);
     islands[0].idx = spawnEntity(islandPos[0], 0, 0, units.base, islands[0]);
 }
