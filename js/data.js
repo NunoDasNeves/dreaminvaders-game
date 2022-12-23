@@ -45,7 +45,7 @@ export const params = Object.freeze(
             pathColor: "#443322",
             lighthouseRadius: 50,
             islandRadius: 200,
-            teamColors: [ "#6f6f6f", "#ff9933", "#3399ff" ], // first one is 'no team'
+            playerColors: [ "#ff9933", "#3399ff" ],
             hpBarTimeMs: 2000,
             hitFadeTimeMs: 300,
             deathTimeMs: 1000,
@@ -60,8 +60,6 @@ export const params = Object.freeze(
 
 export const TEAM = Object.freeze({
     NONE: 0,
-    ORANGE: 1,
-    BLUE: 2,
 });
 export const AISTATE = Object.freeze({
     DO_NOTHING: 0,

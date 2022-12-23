@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, TEAM, ATKSTATE, weapons, units, HITSTATE, sprites } from "./data.js";
+import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites } from "./data.js";
 import { enemyTeam, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
 import { assets } from "./assets.js";
 
@@ -88,7 +88,7 @@ function drawUnitAnim(i, alpha, colorOverlay)
 
 function drawUnit(i)
 {
-    const { team, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
+    const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
 
     if (unit[i].draw.image) {
         drawImage(unit[i].draw.image, pos[i]);
@@ -105,7 +105,7 @@ function drawUnit(i)
                 //unitScale = (1 - params.fallSizeReduction) + (hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction;
             }
         } else {
-            strokeCircle(pos[i], unit[i].radius, 1, params.teamColors[team[i]]);
+            strokeCircle(pos[i], unit[i].radius, 1, color[i]);
         }
         // flash red when hit
         if (hitState[i].hitTimer > 0) {
@@ -317,7 +317,7 @@ function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
 
 function drawIsland(team, island)
 {
-    const teamColor = params.teamColors[team];
+    const teamColor = params.playerColors[team];
     const coords = worldToCamera(island.pos.x, island.pos.y);
     var gradient = context.createRadialGradient(coords.x, coords.y, (params.islandRadius - 50) / gameState.camera.scale, coords.x, coords.y, params.islandRadius / gameState.camera.scale);
     gradient.addColorStop(0, teamColor);
@@ -426,12 +426,12 @@ function drawLane(lane, selected)
     }
 
     if (debug.drawLaneSegs) {
-        const bridgePoints = lane.bridgePointsByTeam[TEAM.ORANGE];
+        const bridgePoints = lane.bridgePointsByPlayer[0];
         strokePoints(bridgePoints, 5, "#ff0000");
         capsulePoints(bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
         dotPoints(bridgePoints, 7, "#0000ff");
-        fillCircle(lane.spawns[TEAM.ORANGE], 8, "#00ff00");
-        fillCircle(lane.spawns[TEAM.BLUE], 8, "#00ff00");
+        fillCircle(lane.spawns[0], 8, "#00ff00");
+        fillCircle(lane.spawns[1], 8, "#00ff00");
     }
 }
 
@@ -510,7 +510,7 @@ export function draw(realTimeMs, timeDeltaMs)
         drawDebugUIText(updatesStr, vec(10,40), 'white');
     }
     const player = getLocalPlayer();
-    drawDebugUIText("team", vec(10,60), params.teamColors[player.team]);
+    drawDebugUIText("team", vec(10,60), params.playerColors[player.team]);
 }
 
 function drawDebugUIText(string, screenPos, fillStyle)

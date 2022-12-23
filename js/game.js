@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, TEAM, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
+import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
 import { enemyTeam, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
 
 /*
@@ -50,7 +50,7 @@ function nearestUnit(i, minRange, filterFn)
 
 function canChaseOrAttack(myIdx, theirIdx)
 {
-    const { pos, team, hitState } = gameState.entities;
+    const { unit, pos, team, homeIsland, hitState } = gameState.entities;
     if (hitState[theirIdx].state != HITSTATE.ALIVE) {
         return false;
     }
@@ -58,11 +58,11 @@ function canChaseOrAttack(myIdx, theirIdx)
         return false;
     }
     // ignore bases
-    if (gameState.islands[team[theirIdx]].idx == theirIdx) {
+    if (unit[theirIdx] == units.base) {
         return false;
     }
     // ignore if they're already too far into our island
-    if (getDist(pos[theirIdx], gameState.islands[team[myIdx]].pos) < params.safePathDistFromBase) {
+    if (homeIsland[myIdx] && getDist(pos[theirIdx], homeIsland[myIdx].pos) < params.safePathDistFromBase) {
         return false;
     }
     return true;
@@ -268,42 +268,6 @@ function getSeparationForce(i)
     return separationForce;
 }
 
-function updateBoidState()
-{
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState, boidState } = gameState.entities;
-    const basePositions = [gameState.islands[TEAM.BLUE].pos, gameState.islands[TEAM.ORANGE].pos];
-    for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i]) {
-            continue;
-        }
-        if (unit[i] != units.boid) {
-            continue;
-        }
-        const bState = boidState[i];
-        if (bState.targetPos != null) {
-            if (utils.getDist(pos[i], bState.targetPos) < (params.baseRadius + 5)) {
-                bState.targetPos = null;
-            }
-        }
-        if (bState.targetPos == null) {
-            bState.targetPos = basePositions.reduce((acc, v) => {
-                const d = getDist(v, pos[i]);
-                return d > acc[1] ? [v, d] : acc;
-            }, [pos[i], 0])[0];
-        }
-        const toTargetPos = vecSub(bState.targetPos, pos[i]);
-        const targetDir = vecNorm(toTargetPos);
-        const seekForce = vecMul(targetDir, unit[i].speed);
-        bState.seekForce = seekForce;
-        const finalForce = vecClone(seekForce);
-        const avoidanceForce = getAvoidanceForce(i, seekForce);
-
-        vecAddTo(finalForce, avoidanceForce);
-        vecSetMag(finalForce, unit[i].speed);
-        vecCopyTo(vel[i], finalForce);
-    }
-}
-
 function decel(i)
 {
     const { unit, vel, accel } = gameState.entities;
@@ -322,7 +286,7 @@ function decel(i)
 function accelAwayFromEdge(i)
 {
     const { unit, lane, team, pos, accel } = gameState.entities;
-    const bridgePoints = lane[i].bridgePointsByTeam[team[i]];
+    const bridgePoints = lane[i].bridgePointsByPlayer[team[i]];
     const { dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
     const distUntilFall = params.laneWidth*0.5 - dist;
     if (distUntilFall < unit[i].radius) {
@@ -349,7 +313,7 @@ function updateAiState()
         if (aiState[i].state == AISTATE.DO_NOTHING) {
             continue;
         }
-        const enemyIslandPos = gameState.islands[enemyTeam(team[i])].pos
+        const enemyIslandPos = gameState.players[enemyTeam(team[i])].island.pos
         const toEnemyBase = vecSub(enemyIslandPos, pos[i]);
         const distToEnemyBase = vecLen(toEnemyBase);
         //const toEndOfLane = vecSub(laneEnd(lane[i], team[i]), pos[i]);
@@ -425,7 +389,7 @@ function updateAiState()
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             {
-                const bridgePoints = lane[i].bridgePointsByTeam[team[i]];
+                const bridgePoints = lane[i].bridgePointsByPlayer[team[i]];
                 const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
                 let currIdx = baseIdx;
                 let nextIdx = baseIdx+1;
@@ -623,7 +587,7 @@ function updateHitState(timeDeltaMs)
         switch (hitState[i].state) {
             case HITSTATE.ALIVE:
             {
-                const enemyLighthouse = gameState.islands[enemyTeam(team[i])];
+                const enemyLighthouse = gameState.players[enemyTeam(team[i])].island;
                 const onIsland = isOnIsland(i);
                 // die from damage
                 if (hp[i] <= 0) {
@@ -640,7 +604,7 @@ function updateHitState(timeDeltaMs)
                     vecClear(accel[i]);
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
-                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePointsByTeam[team[i]]);
+                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePointsByPlayer[team[i]]);
                     if (dist >= params.laneWidth*0.5) {
                         // TODO push it with a force, don't just teleport
                         vecAddTo(pos[i], vecMulBy(dir, unit[i].radius));
@@ -863,7 +827,7 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         let minStuff = null;
         for (let i = 0; i < gameState.lanes.length; ++i) {
             const lane = gameState.lanes[i];
-            const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePointsByTeam[TEAM.ORANGE]);
+            const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePointsByPlayer[0]);
             if (stuff.dist < minDist) {
                 minLane = i;
                 minDist = stuff.dist;
@@ -880,7 +844,7 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
     for (const [key, unit] of Object.entries(unitHotKeys)) {
         if (keyPressed(key)) {
             const player = getLocalPlayer();
-            spawnEntityInLane(gameState.lanes[player.laneSelected], player.team, unit);
+            spawnEntityInLane(gameState.lanes[player.laneSelected], gameState.localPlayerIdx, unit);
         }
     }
     // camera controls
