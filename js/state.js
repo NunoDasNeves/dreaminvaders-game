@@ -7,11 +7,6 @@ import { params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units } from "./dat
  * Game state init and related helpers
  */
 
-export function enemyTeam(team)
-{
-    return (team + 1) % 2;
-}
-
 export function closestPoint(arr, pos)
 {
     let minDist = Infinity;
@@ -137,17 +132,22 @@ export function spawnEntity(aPos, aTeam, aColor, aUnit, aHomeIsland = null, aLan
     return idx;
 }
 
-export function spawnEntityInLane(laneIdx, playerIdx, unit)
+export function spawnEntityForPlayer(pos, playerIdx, unit, lane=null)
 {
     const player = gameState.players[playerIdx];
     const team = player.team;
     const color = player.color;
     const island = player.island;
+    return spawnEntity(pos, team, color, unit, island, lane);
+}
+
+export function spawnEntityInLane(laneIdx, playerIdx, unit)
+{
+    const player = gameState.players[playerIdx];
     const lane = player.island.lanes[laneIdx];
     const pos = lane.spawnPos;
-    // units should get on the bridge pretty quick and try to stay on, so can spawn them near the edge
     const randPos = vecAdd(pos, vecMulBy(vecRandDir(), params.laneWidth*0.5));
-    return spawnEntity(randPos, team, color, unit, island, lane);
+    return spawnEntityForPlayer(randPos, playerIdx, unit, lane);
 }
 
 export function getLocalPlayer()
@@ -221,8 +221,8 @@ export function initGameState()
         lastInput: makeInput(),
     };
 
-    addPlayer(vec(-600, 0), 0, params.playerColors[0]);
-    addPlayer(vec(600, 0), 1, params.playerColors[1]);
+    addPlayer(vec(-600, 0), 1, params.playerColors[0]);
+    addPlayer(vec(600, 0), 0, params.playerColors[1]);
     const islands = gameState.players.map(({ island }) => island);
     gameState.islands = islands;
     // compute the lane start and end points (bezier curves)
@@ -274,12 +274,12 @@ export function initGameState()
         const p0Lane = {
             bridgePoints,
             spawnPos: pLaneStart,
-            otherPlayer: 1,
+            otherPlayerIdx: 1,
         };
         const p1Lane = {
             bridgePoints: bridgePointsReversed,
             spawnPos: pLaneEnd,
-            otherPlayer: 0,
+            otherPlayerIdx: 0,
         };
         gameState.players[0].island.lanes.push(p0Lane);
         gameState.players[1].island.lanes.push(p1Lane);
@@ -294,8 +294,8 @@ export function initGameState()
     }
 
     // spawn lighthouses
-    islands[1].idx = spawnEntity(islandPos[1], 1, 1, units.base, islands[1]);
-    islands[0].idx = spawnEntity(islandPos[0], 0, 0, units.base, islands[0]);
+    islands[0].idx = spawnEntityForPlayer(islandPos[0], 0, units.base);
+    islands[1].idx = spawnEntityForPlayer(islandPos[1], 1, units.base);
 }
 
 function makeInput()

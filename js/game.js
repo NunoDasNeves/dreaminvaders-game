@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
-import { enemyTeam, gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
+import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
 
 /*
  * Game init and update functions
@@ -313,7 +313,7 @@ function updateAiState()
         if (aiState[i].state == AISTATE.DO_NOTHING) {
             continue;
         }
-        const enemyIslandPos = gameState.players[enemyTeam(team[i])].island.pos
+        const enemyIslandPos = gameState.players[lane[i].otherPlayerIdx].island.pos;
         const toEnemyBase = vecSub(enemyIslandPos, pos[i]);
         const distToEnemyBase = vecLen(toEnemyBase);
         const nearestAtkTarget = nearestEnemyInAttackRange(i);

@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites } from "./data.js";
-import { enemyTeam, gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
+import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
 import { assets } from "./assets.js";
 
 let canvas = null;
@@ -426,12 +426,12 @@ function drawLane(lane, selected)
     }
 
     if (debug.drawLaneSegs) {
-        const bridgePoints = lane.bridgePointsByPlayer[0];
+        const bridgePoints = lane.playerLanes[0].bridgePoints[0];
         strokePoints(bridgePoints, 5, "#ff0000");
         capsulePoints(bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
         dotPoints(bridgePoints, 7, "#0000ff");
-        fillCircle(lane.spawns[0], 8, "#00ff00");
-        fillCircle(lane.spawns[1], 8, "#00ff00");
+        fillCircle(lane.playerLanes[0].spawnPos, 8, "#00ff00");
+        fillCircle(lane.playerLanes[1].spawnPos, 8, "#00ff00");
     }
 }
 
@@ -456,8 +456,7 @@ export function draw(realTimeMs, timeDeltaMs)
     }
 
     for (let i = 0; i < gameState.lanes.length; ++i) {
-        const player = getLocalPlayer();
-        drawLane(gameState.lanes[i], player.laneSelected == i);
+        drawLane(gameState.lanes[i], localPlayer.laneSelected == i);
     }
 
     const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
@@ -510,7 +509,7 @@ export function draw(realTimeMs, timeDeltaMs)
         drawDebugUIText(updatesStr, vec(10,40), 'white');
     }
     const player = getLocalPlayer();
-    drawDebugUIText("team", vec(10,60), params.playerColors[player.team]);
+    drawDebugUIText("player", vec(10,60), player.color);
 }
 
 function drawDebugUIText(string, screenPos, fillStyle)
