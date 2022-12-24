@@ -1,32 +1,48 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites } from "./data.js";
+import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites, unitHotKeys  } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
 import { assets } from "./assets.js";
 
 let canvas = null;
 let context = null;
 
-function drawImage(name, pos, fromCenter = true)
+/* Add to position to draw sprite centered */
+function getDrawUnitPos(pos, width, height, centerOffset)
 {
-    const asset = assets.images[name];
-    const drawWidth = asset.width / gameState.camera.scale;
-    const drawHeight = asset.height / gameState.camera.scale;
-    const drawPos = worldToCamera(pos.x, pos.y);
-    const offset = vec();
-    if (fromCenter) {
-        vecSubFrom(offset, vecAdd(vec(asset.width/2, asset.height/2), asset.centerOffset));
-    }
+    return vecSub(pos, vecAddTo(vec(width*0.5, height*0.5), centerOffset));
+}
 
-    if (asset.loaded) {
-        vecMulBy(offset, 1/gameState.camera.scale);
-        vecAddTo(drawPos, offset);
+function drawImage(imgAsset, pos)
+{
+    const drawWidth = imgAsset.width / gameState.camera.scale;
+    const drawHeight = imgAsset.height / gameState.camera.scale;
+    const drawPos = worldToCamera(pos.x, pos.y);
+
+    if (imgAsset.loaded) {
         context.imageSmoothingEnabled = false;
-        context.drawImage(asset.img, drawPos.x, drawPos.y, drawWidth, drawHeight);
+        context.drawImage(imgAsset.img, drawPos.x, drawPos.y, drawWidth, drawHeight);
     } else {
-        const rectPos = vecAdd(pos, offset);
-        fillRectangle(rectPos, asset.width, asset.height, "#000000", false);
+        fillRectangleScreen(drawPos, drawWidth, drawHeight, "#000000");
+    }
+}
+
+function drawSpriteScreen(sprite, row, col, pos)
+{
+    const asset = sprite.imgAsset;
+    if (asset.loaded) {
+        const sourceX = col * sprite.width;
+        const sourceY = row * sprite.height;
+        context.imageSmoothingEnabled = false;
+        context.drawImage(
+            asset.img,
+            sourceX, sourceY,
+            sprite.width, sprite.height,
+            pos.x, pos.y,
+            sprite.width, sprite.height);
+    } else {
+        fillRectangleScreen(pos, sprite.width, sprite.height, "#000000");
     }
 }
 
@@ -36,19 +52,19 @@ function drawSprite(sprite, row, col, pos)
     const drawWidth = sprite.width / gameState.camera.scale;
     const drawHeight = sprite.height / gameState.camera.scale;
     const drawPos = worldToCamera(pos.x, pos.y);
-    const offset = vecNegate(vecAdd(vec(sprite.width/2, sprite.height/2), sprite.centerOffset));
 
     if (asset.loaded) {
-        vecMulBy(offset, 1/gameState.camera.scale);
-        vecAddTo(drawPos, offset);
         const sourceX = col * sprite.width;
         const sourceY = row * sprite.height;
         context.imageSmoothingEnabled = false;
-        context.drawImage(asset.img, sourceX, sourceY, sprite.width, sprite.height, drawPos.x, drawPos.y, drawWidth, drawHeight);
+        context.drawImage(
+            asset.img,
+            sourceX, sourceY,
+            sprite.width, sprite.height,
+            drawPos.x, drawPos.y,
+            drawWidth, drawHeight);
     } else {
-        // fillRectangle takes pos in world coords
-        const rectPos = vecAdd(pos, offset);
-        fillRectangle(rectPos, sprite.width, sprite.height, "#000000", false);
+        fillRectangleScreen(drawPos, drawWidth, drawHeight, "#000000");
     }
 }
 
@@ -77,11 +93,12 @@ function drawUnitAnim(i, alpha, colorOverlay)
     const animObj = sprite.anims[anim];
     const col = animObj.col + frame;
     const row = animObj.row + (flip ? sprite.rows : 0);
+    const drawUnitPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
     context.globalAlpha = alpha;
     if (colorOverlay != null) {
-        drawSpriteWithOverlay(sprite, row, col, pos[i], colorOverlay);
+        drawSpriteWithOverlay(sprite, row, col, drawUnitPos, colorOverlay);
     } else {
-        drawSprite(sprite, row, col, pos[i]);
+        drawSprite(sprite, row, col, drawUnitPos);
     }
     context.globalAlpha = 1;
 }
@@ -91,7 +108,9 @@ function drawUnit(i)
     const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
 
     if (unit[i].draw.image) {
-        drawImage(unit[i].draw.image, pos[i]);
+        const asset = assets.images[unit[i].draw.image];
+        const drawUnitPos = getDrawUnitPos(pos[i], asset.width, asset.height, asset.centerOffset);
+        drawImage(asset, drawUnitPos);
         return;
     }
 
@@ -301,18 +320,23 @@ function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
 
 }
 
+function fillRectangleScreen(pos, width, height, fillStyle, fromCenter=false)
+{
+    let coords = pos;
+    if (fromCenter) {
+        coords = vec(pos.x - width * 0.5, pos.y - height * 0.5);
+    }
+    context.beginPath();
+    context.rect(coords.x, coords.y, width, height);
+    context.fillStyle = fillStyle;
+    context.fill();
+}
+
 function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
     let coords = worldToCamera(worldPos.x, worldPos.y);
     const scaledWidth = width / gameState.camera.scale;
     const scaledHeight = height / gameState.camera.scale;
-    if (fromCenter) {
-        coords.x -= scaledWidth / 2;
-        coords.y -= scaledHeight / 2;
-    }
-    context.beginPath();
-    context.rect(coords.x, coords.y, scaledWidth, scaledHeight);
-    context.fillStyle = fillStyle;
-    context.fill();
+    fillRectangleScreen(coords, scaledWidth, scaledHeight, fillStyle, fromCenter);
 }
 
 function drawIsland(team, island)
@@ -440,6 +464,35 @@ export function getBoundingClientRect()
     return canvas.getBoundingClientRect();
 }
 
+function drawUI()
+{
+    for (let i = 0; i < gameState.players.length; ++i) {
+        const player = gameState.players[i];
+        drawDebugUIText(`$${Math.floor(player.gold)}`, vec(10,80+i*20), player.color);
+    }
+    const buttonDims = vec(64,64);
+    const buttonStart = vec(32, canvas.height-32-buttonDims.y);
+    const buttonXGap = 16;
+    let xoff = 0;
+    for (const [key, unit] of Object.entries(unitHotKeys)) {
+        const pos = vec(
+            buttonStart.x + xoff,
+            buttonStart.y
+        );
+        fillRectangleScreen(pos, buttonDims.x, buttonDims.y, "#444444");
+        // TODO
+        if (unit.draw.sprite) {
+            const sprite = unit.draw.sprite;
+            const spriteDrawPos = vecAdd(pos, vecMul(buttonDims, 0.5))
+            vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
+            drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
+        }
+        // draw key
+        // draw cost
+        xoff += buttonDims.x + buttonXGap;
+    }
+}
+
 export function draw(realTimeMs, timeDeltaMs)
 {
     const localPlayer = getLocalPlayer();
@@ -511,10 +564,7 @@ export function draw(realTimeMs, timeDeltaMs)
     }
     drawDebugUIText("player", vec(10,60), localPlayer.color);
 
-    for (let i = 0; i < gameState.players.length; ++i) {
-        const player = gameState.players[i];
-        drawDebugUIText(`$${Math.floor(player.gold)}`, vec(10,80+i*20), player.color);
-    }
+    drawUI();
 }
 
 function drawDebugUIText(string, screenPos, fillStyle)
