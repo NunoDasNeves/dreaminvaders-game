@@ -732,6 +732,14 @@ function updateAnimState(timeDeltaMs)
     });
 }
 
+function updatePlayerState(timeDeltaMs)
+{
+    const timeDeltaSec = 0.001 * timeDeltaMs;
+    for (const player of gameState.players) {
+        player.gold += player.goldPerSec * timeDeltaSec;
+    }
+}
+
 function updateGame(timeDeltaMs)
 {
     const { exists, freeable } = gameState.entities;
@@ -753,6 +761,8 @@ function updateGame(timeDeltaMs)
             gameState.freeSlot = i;
         }
     };
+
+    updatePlayerState(timeDeltaMs);
 }
 
 /*
@@ -846,10 +856,16 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
     if (keyPressed('Tab')) {
         cycleLocalPlayer();
     }
+    if (keyPressed('m')) {
+        getLocalPlayer().gold += 100;
+    }
     for (const [key, unit] of Object.entries(unitHotKeys)) {
         if (keyPressed(key)) {
             const player = getLocalPlayer();
-            spawnEntityInLane(player.laneSelected, gameState.localPlayerIdx, unit);
+            if (player.gold >= unit.goldCost) {
+                player.gold -= unit.goldCost;
+                spawnEntityInLane(player.laneSelected, gameState.localPlayerIdx, unit);
+            }
         }
     }
     // camera controls

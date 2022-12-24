@@ -168,6 +168,8 @@ function addPlayer(pos, team, color)
         laneSelected: 0,
         color,
         team,
+        gold: 0,
+        goldPerSec: 1,
         island: {
             pos,
             idx: INVALID_ENTITY_INDEX,

@@ -196,6 +196,7 @@ export const units = Object.freeze({
         canFall: false,
         defaultAiState: AISTATE.DO_NOTHING,
         lighthouseDamage: 0,
+        goldCost: Infinity,
         draw: {
             image: "lighthouse",
         }
@@ -212,6 +213,7 @@ export const units = Object.freeze({
         canFall: true,
         defaultAiState: AISTATE.PROCEED,
         lighthouseDamage: 5,
+        goldCost: 5,
         draw: {
             sprite: sprites.chogoringu,
         },
@@ -228,6 +230,7 @@ export const units = Object.freeze({
         canFall: true,
         defaultAiState: AISTATE.PROCEED,
         lighthouseDamage: 5,
+        goldCost: 20,
         draw: {
             sprite: sprites.tank,
         },

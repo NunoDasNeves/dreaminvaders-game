@@ -442,6 +442,7 @@ export function getBoundingClientRect()
 
 export function draw(realTimeMs, timeDeltaMs)
 {
+    const localPlayer = getLocalPlayer();
     updateCameraSize(canvas.width, canvas.height);
 
     canvas.width  = window.innerWidth;
@@ -508,8 +509,12 @@ export function draw(realTimeMs, timeDeltaMs)
         const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
         drawDebugUIText(updatesStr, vec(10,40), 'white');
     }
-    const player = getLocalPlayer();
-    drawDebugUIText("player", vec(10,60), player.color);
+    drawDebugUIText("player", vec(10,60), localPlayer.color);
+
+    for (let i = 0; i < gameState.players.length; ++i) {
+        const player = gameState.players[i];
+        drawDebugUIText(`$${Math.floor(player.gold)}`, vec(10,80+i*20), player.color);
+    }
 }
 
 function drawDebugUIText(string, screenPos, fillStyle)
