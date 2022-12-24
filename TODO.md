@@ -1,13 +1,14 @@
 ## TODO
-- support multiple player states, keeping in mind scenarios EvE, PvE, PvP (local), PvP (remote)...(to some degree)
 - display player/s resource count/s
 - resources go up over time
 - making a unit uses resources
     - debug option to increase resources
+- support multiple player types? keeping in mind scenarios EvE, PvE, PvP (local), PvP (remote)...(to some degree)
 - armor
 - more weapon types - AOE, projectile, visual effects (tracer, missed attack etc)
 - debug display: how long an update() takes
 - display unit types on bottom of screen
+- fix resolution; default camera scale should look the best
 - units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - better collision or AI for collision
     - less jittering/bouncing
@@ -17,9 +18,9 @@
     - use velocity to determine how far ahead to look
         - use other boids velocity to determine where they'll be
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
-- separate concept of 'team' for identifying friend/foe, and 'color' for rendering - they could diverge!
 
 ## Done
+- separate concept of 'team' for identifying friend/foe, and 'color' for rendering - they could diverge!
 - improve collision...remove velocity normal to collision
 - dont fall off edge when chasing or proceeding (as much)
 - unit come to a stop in attack range, instead of trying to get really close (try just increasing the range a tad first)
