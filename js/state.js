@@ -238,15 +238,16 @@ export function initGameState()
             scale: 1, // scale +++ means zoom out
             easeFactor: 0.1
         },
-        player: {
-            laneSelected: 0,
-            debugTeam: TEAM.ORANGE,
-            debugClickedPoint: vec(),
-            debugClosestLanePoint: vec(),
-        },
+        players: []
         input: makeInput(),
         lastInput: makeInput(),
     };
+    gameState.players.push({
+        laneSelected: 0,
+        debugTeam: TEAM.ORANGE,
+        debugClickedPoint: vec(),
+        debugClosestLanePoint: vec(),
+    });
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse
     // ordering of points is from orange to blue, i.e. left to right
