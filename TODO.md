@@ -1,8 +1,20 @@
 ## TODO
-- debug UI - options to enable debug draw stuff
-- fix units staying in chase and not attacking
+- reset game function + debug hotkey
+- reset game if a lighthouse is destroyed - i.e. complete the full game 'loop'
+- design: producing units takes time
+- design: theres a production queue for each lane, 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
 - armor
-- more weapon types - AOE, projectile, visual effects (tracer, missed attack etc)
+- more weapon types
+    - AOE weapon
+    - projectile weapon
+    - visual effects (tracer, missed attack etc)
+- unit colors based on team - probably easiest to extend spritesheet
+    - program to do spritesheet extensions we need
+        - flip
+        - recolor
+- animation - fix flicker on change to animation with different number of frames
+- debug UI - options to enable debug draw stuff at runtime
+    - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
 - support multiple player types? keeping in mind scenarios EvE, PvE, PvP (local), PvP (remote)...(to some degree)
 - fix resolution; default camera scale should look the best
@@ -17,6 +29,7 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- fix units staying in chase and not attacking - allow them to attack when only MOSTLY stopped, not fully
 - display unit types, cost, hotkey, on bottom of screen
 - display player/s resource count/s
 - resources go up over time
