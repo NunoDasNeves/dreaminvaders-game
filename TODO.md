@@ -1,13 +1,10 @@
 ## TODO
-- display player/s resource count/s
-- resources go up over time
-- making a unit uses resources
-    - debug option to increase resources
-- support multiple player types? keeping in mind scenarios EvE, PvE, PvP (local), PvP (remote)...(to some degree)
+- debug UI - options to enable debug draw stuff
+- fix units staying in chase and not attacking
 - armor
 - more weapon types - AOE, projectile, visual effects (tracer, missed attack etc)
-- debug display: how long an update() takes
-- display unit types on bottom of screen
+- perf: debug display: how long an update() takes
+- support multiple player types? keeping in mind scenarios EvE, PvE, PvP (local), PvP (remote)...(to some degree)
 - fix resolution; default camera scale should look the best
 - units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - better collision or AI for collision
@@ -20,6 +17,11 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- display unit types, cost, hotkey, on bottom of screen
+- display player/s resource count/s
+- resources go up over time
+- making a unit uses resources
+    - debug option to increase resources
 - separate concept of 'team' for identifying friend/foe, and 'color' for rendering - they could diverge!
 - improve collision...remove velocity normal to collision
 - dont fall off edge when chasing or proceeding (as much)
