@@ -339,8 +339,11 @@ function updateAiState()
             }
             case AISTATE.CHASE:
             {
-                // switch to attack if in range (and stopped)
-                if (nearestAtkTarget.isValid() && vecAlmostZero(vel[i])) {
+                // switch to attack if in range (and mostly stopped)
+                // units can get stuck partially off the edge without
+                // their vel going to almostZero, so this kinda fixes that
+                const mostlyStopped = vecLen(vel[i]) < (unit[i].maxSpeed * 0.5);
+                if (nearestAtkTarget.isValid() && mostlyStopped) {
                     aiState[i].state = AISTATE.ATTACK;
                     target[i] = nearestAtkTarget;
                     atkState[i].timer = unit[i].weapon.aimMs;
@@ -497,18 +500,13 @@ function updatePhysicsState()
         if (vecAlmostZero(vel[i])) {
             vecClear(vel[i]);
         }
+        debugState[i].velPreColl = vecClone(vel[i]);
         vecAddTo(pos[i], vel[i]);
     };
 
     updateAllCollidingPairs(pairs);
     for (let k = 0; k < pairs.length; ++k) {
         const [i, j] = pairs[k];
-        if (!physState[i].colliding) {
-            debugState[i].velPreColl = vecClone(vel[i]);
-        }
-        if (!physState[j].colliding) {
-            debugState[j].velPreColl = vecClone(vel[j]);
-        }
         physState[i].colliding = true;
         physState[j].colliding = true;
         const dir = vecSub(pos[j],pos[i]);
