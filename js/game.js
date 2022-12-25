@@ -829,42 +829,33 @@ function pointNearLineSegs(point, lineSegs)
     return { baseIdx: minBaseIdx, point: minPoint, dir: minDir, dist: minDist };
 }
 
-export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
+function processLocalPlayerInput()
 {
-    // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
-    if (keyPressed('p') && debug.canPause) {
-        debug.paused = !debug.paused;
-    }
-
-    if (mouseLeftPressed()) {
-        let minLane = 0;
-        let minDist = Infinity;
-        let minStuff = null;
-        for (let i = 0; i < gameState.lanes.length; ++i) {
-            const lane = gameState.lanes[i].playerLanes[0];
-            const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
-            if (stuff.dist < minDist) {
-                minLane = i;
-                minDist = stuff.dist;
-                minStuff = stuff;
-            }
+    // select lane
+    const localPlayer = getLocalPlayer();
+    localPlayer.laneSelected = -1;
+    let minLane = 0;
+    let minDist = Infinity;
+    let minStuff = null;
+    for (let i = 0; i < gameState.lanes.length; ++i) {
+        const lane = gameState.lanes[i].playerLanes[0];
+        const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
+        if (stuff.dist < minDist) {
+            minLane = i;
+            minDist = stuff.dist;
+            minStuff = stuff;
         }
-        getLocalPlayer().laneSelected = minLane;
-        debug.clickedPoint = vecClone(gameState.input.mousePos);
-        debug.closestLanePoint = minStuff.point;
     }
-    if (keyPressed('Tab')) {
-        cycleLocalPlayer();
+    if (minDist < params.laneSelectDist) {
+        localPlayer.laneSelected = minLane;
     }
-    if (keyPressed('m')) {
-        getLocalPlayer().gold += 100;
-    }
-    for (const [key, unit] of Object.entries(unitHotKeys)) {
-        if (keyPressed(key)) {
-            const player = getLocalPlayer();
-            if (player.gold >= unit.goldCost) {
-                player.gold -= unit.goldCost;
-                spawnEntityInLane(player.laneSelected, gameState.localPlayerIdx, unit);
+    if (localPlayer.laneSelected >= 0) {
+        for (const [key, unit] of Object.entries(unitHotKeys)) {
+            if (keyPressed(key)) {
+                if (localPlayer.gold >= unit.goldCost) {
+                    localPlayer.gold -= unit.goldCost;
+                    spawnEntityInLane(localPlayer.laneSelected, gameState.localPlayerIdx, unit);
+                }
             }
         }
     }
@@ -876,6 +867,27 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
             vecSubFrom(gameState.camera.pos, delta);
         }
     }
+    // debug stuff
+    if (keyPressed('Tab')) {
+        cycleLocalPlayer();
+    }
+    if (keyPressed('m')) {
+        getLocalPlayer().gold += 100;
+    }
+    if (mouseLeftPressed()) {
+        debug.clickedPoint = vecClone(gameState.input.mousePos);
+        debug.closestLanePoint = minStuff.point;
+    }
+}
+
+export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
+{
+    // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
+    if (keyPressed('p') && debug.canPause) {
+        debug.paused = !debug.paused;
+    }
+
+    processLocalPlayerInput();
 
     if (!debug.paused || keyPressed('.')) {
         updateGame(timeDeltaMs);
