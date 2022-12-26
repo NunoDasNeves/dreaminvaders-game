@@ -83,7 +83,7 @@ function drawSpriteWithOverlay(sprite, row, col, pos, colorOverlay)
 
 function drawUnitAnim(i, alpha, colorOverlay)
 {
-    const { team, unit, pos, angle, animState } = gameState.entities;
+    const { team, colorIdx, unit, pos, angle, animState } = gameState.entities;
     const { anim, frame, timer, loop } = animState[i];
     let flip = false;
     if (vecFromAngle(angle[i]).x < 0) {
@@ -92,7 +92,9 @@ function drawUnitAnim(i, alpha, colorOverlay)
     const sprite = unit[i].draw.sprite;
     const animObj = sprite.anims[anim];
     const col = animObj.col + frame;
-    const row = animObj.row + (flip ? sprite.rows : 0);
+    const flipOffset = flip ? sprite.rows : 0;
+    const colorOffset = sprite.playerColors ? sprite.rows * 2 * colorIdx[i] : 0;
+    const row = animObj.row + flipOffset + colorOffset;
     const drawUnitPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
     context.globalAlpha = alpha;
     if (colorOverlay != null) {

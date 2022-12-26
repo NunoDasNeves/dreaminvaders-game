@@ -55,9 +55,9 @@ export class EntityRef {
     }
 }
 
-export function spawnEntity(aPos, aTeam, aColor, aUnit, aHomeIsland = null, aLane = null)
+export function spawnEntity(aPos, aTeam, aColorIdx, aUnit, aHomeIsland = null, aLane = null)
 {
-    const { exists, freeable, id, nextFree, homeIsland, team, color, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
+    const { exists, freeable, id, nextFree, homeIsland, team, color, colorIdx, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -82,7 +82,8 @@ export function spawnEntity(aPos, aTeam, aColor, aUnit, aHomeIsland = null, aLan
     nextFree[idx]   = INVALID_ENTITY_INDEX;
     homeIsland[idx] = aHomeIsland;
     team[idx]       = aTeam;
-    color[idx]      = aColor;
+    color[idx]      = params.playerColors[aColorIdx];
+    colorIdx[idx]   = aColorIdx;
     unit[idx]       = aUnit;
     hp[idx]         = aUnit.maxHp;
     pos[idx]        = vecClone(aPos);
@@ -136,9 +137,9 @@ export function spawnEntityForPlayer(pos, playerIdx, unit, lane=null)
 {
     const player = gameState.players[playerIdx];
     const team = player.team;
-    const color = player.color;
+    const colorIdx = player.colorIdx;
     const island = player.island;
-    return spawnEntity(pos, team, color, unit, island, lane);
+    return spawnEntity(pos, team, colorIdx, unit, island, lane);
 }
 
 export function spawnEntityInLane(laneIdx, playerIdx, unit)
@@ -162,11 +163,12 @@ export function cycleLocalPlayer()
     getLocalPlayer().laneSelected = laneSelected;
 }
 
-function addPlayer(pos, team, color)
+function addPlayer(pos, team, colorIdx)
 {
     gameState.players.push({
         laneSelected: 0,
-        color,
+        colorIdx,
+        color: params.playerColors[colorIdx],
         team,
         gold: 0,
         goldPerSec: 1,
@@ -190,6 +192,7 @@ export function initGameState()
             homeIsland: [],
             team: [],
             color: [],
+            colorIdx: [],
             unit: [],
             hp: [],
             pos: [],
@@ -223,8 +226,8 @@ export function initGameState()
         lastInput: makeInput(),
     };
 
-    addPlayer(vec(-600, 0), 1, params.playerColors[0]);
-    addPlayer(vec(600, 0), 0, params.playerColors[1]);
+    addPlayer(vec(-600, 0), 1, 0);
+    addPlayer(vec(600, 0), 0, 1);
     const islands = gameState.players.map(({ island }) => island);
     gameState.islands = islands;
     // compute the lane start and end points (bezier curves)

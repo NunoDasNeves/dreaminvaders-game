@@ -98,7 +98,8 @@ const obj = {
         width: 16,
         height: 24,
         centerOffset: vec(0,8), // additional offset so we draw it in the right spot in relation to entity position
-        rows: 2, // not including flipped frames; used to get flip offset
+        rows: 2, // not including flipped/recolored frames; used to get flip offset
+        playerColors: true,
         anims: {
             // all the animations will be populated by defaults if not specified
             [ANIM.IDLE]: {
@@ -139,6 +140,9 @@ const defaultAnim = {
 };
 for (const sprite of Object.values(obj)) {
     sprite.imgAsset = null;
+    if (!sprite.playerColors) {
+        sprite.playerColors = false;
+    }
     // add all the missing anims
     for (const animName of Object.values(ANIM)) {
         if (!sprite.anims[animName]) {
