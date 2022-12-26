@@ -539,42 +539,43 @@ export function draw(realTimeMs, timeDeltaMs)
         }
         drawUnit(i);
     }
-    // health bars on top!
-    for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i]) {
-            continue;
-        }
-        drawHpBar(i);
-    }
-    if (debug.drawClickBridgeDebugArrow) {
-        drawArrow(
-            debug.closestLanePoint,
-            debug.clickedPoint,
-            1,
-            "#ff0000"
-        );
-    }
-    // compute fps and updates
-    debug.fpsTime += timeDeltaMs;
-    debug.fpsCounter++;
-    if (debug.fpsTime >= 1000) {
-        debug.fps = 1000*debug.fpsCounter/debug.fpsTime;
-        debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
-        debug.fpsTime = 0;
-        debug.fpsCounter = 0;
-        debug.numUpdates = 0;
-    }
-    if (debug.drawFPS) {
-        const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
-        drawDebugUIText(fpsStr, vec(10,20), 'white');
-    }
-    if (debug.drawNumUpdates) {
-        const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
-        drawDebugUIText(updatesStr, vec(10,40), 'white');
-    }
-    drawDebugUIText("player", vec(10,60), localPlayer.color);
-
+    // only draw UI while game is running
     if (App.state.screen == SCREEN.GAME) {
+        // health bars on top!
+        for (let i = 0; i < exists.length; ++i) {
+            if (!exists[i]) {
+                continue;
+            }
+            drawHpBar(i);
+        }
+        if (debug.drawClickBridgeDebugArrow) {
+            drawArrow(
+                debug.closestLanePoint,
+                debug.clickedPoint,
+                1,
+                "#ff0000"
+            );
+        }
+        // compute fps and updates
+        debug.fpsTime += timeDeltaMs;
+        debug.fpsCounter++;
+        if (debug.fpsTime >= 1000) {
+            debug.fps = 1000*debug.fpsCounter/debug.fpsTime;
+            debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
+            debug.fpsTime = 0;
+            debug.fpsCounter = 0;
+            debug.numUpdates = 0;
+        }
+        if (debug.drawFPS) {
+            const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
+            drawDebugUIText(fpsStr, vec(10,20), 'white');
+        }
+        if (debug.drawNumUpdates) {
+            const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
+            drawDebugUIText(updatesStr, vec(10,40), 'white');
+        }
+        drawDebugUIText("player", vec(10,60), localPlayer.color);
+
         drawUI();
     }
 }
