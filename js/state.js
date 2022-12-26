@@ -170,8 +170,8 @@ function addPlayer(pos, team, colorIdx)
         colorIdx,
         color: params.playerColors[colorIdx],
         team,
-        gold: 0,
-        goldPerSec: 1,
+        gold: params.startingGold,
+        goldPerSec: params.startingGoldPerSec,
         island: {
             pos,
             idx: INVALID_ENTITY_INDEX,

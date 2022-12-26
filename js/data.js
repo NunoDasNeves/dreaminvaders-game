@@ -53,6 +53,8 @@ export const params = Object.freeze(
             deathTimeMs: 1000,
             fallTimeMs: 500,
             fallSizeReduction: 0.75,
+            startingGold: 10,
+            startingGoldPerSec: 1,
         }
         obj.laneDistFromBase = obj.islandRadius - 15;
         obj.safePathDistFromBase = obj.laneDistFromBase - obj.laneWidth*0.5;
