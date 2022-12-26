@@ -66,6 +66,9 @@ html, body {
 .menuCenter > input:active {
     background-color:bisque;
 }
+.menuCenter > input:disabled {
+    background-color: gainsboro;
+}
     </style>
 </head>
 <body>
@@ -74,9 +77,9 @@ html, body {
     </div>
     <div id="appUI" hidden>
         <div id="titleMenu" class="menuCenter">
-            <input id="buttonStartLocalDebug" type="button" value="Local Debug">
-            <input id="buttonStartPvE" type="button" value="PvE">
-            <input id="buttonStartPvPLocal" type="button" value="PvP local">
+            <input id="buttonStartLocalDebug" type="button" value="Debug mode">
+            <input id="buttonStartPvE" type="button" value="1 Player" disabled>
+            <input id="buttonStartPvPLocal" type="button" value="2 Player" disabled>
         </div>
         <div id="pauseMenu" class="menuCenter">
             <input id="buttonContinue" type="button" value="Continue">
