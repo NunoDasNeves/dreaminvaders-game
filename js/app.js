@@ -1,6 +1,6 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
-import { SCREEN } from "./data.js";
+import { debug, SCREEN } from "./data.js";
 import { init as resetGame } from "./game.js";
 
 export let state = null;
@@ -84,6 +84,9 @@ export function init()
     }
 
     changeScreen(SCREEN.TITLE);
+    if (debug.skipAppMenu) {
+        changeScreen(SCREEN.GAME);
+    }
 
     const appUIElem = document.getElementById("appUI");
     appUIElem.hidden = false;

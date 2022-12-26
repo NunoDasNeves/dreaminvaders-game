@@ -6,6 +6,7 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
  */
 
 export const debug = {
+    skipAppMenu: true, // launch straight into a game
     enableControls: true,
     paused: false,
     drawAiState: true,
