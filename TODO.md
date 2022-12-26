@@ -1,5 +1,5 @@
 ## TODO
-- reset game function + debug hotkey
+- basic menu for initting game etc
 - reset game if a lighthouse is destroyed - i.e. complete the full game 'loop'
 - design: producing units takes time
 - design: theres a production queue for each lane, 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
@@ -8,10 +8,6 @@
     - AOE weapon
     - projectile weapon
     - visual effects (tracer, missed attack etc)
-- unit colors based on team - probably easiest to extend spritesheet
-    - program to do spritesheet extensions we need
-        - flip
-        - recolor
 - animation - fix flicker on change to animation with different number of frames
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
@@ -29,6 +25,11 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- reset game function + debug hotkey
+- unit colors based on team - probably easiest to extend spritesheet
+    - program to do spritesheet extensions we need
+        - flip
+        - recolor
 - fix units staying in chase and not attacking - allow them to attack when only MOSTLY stopped, not fully
 - display unit types, cost, hotkey, on bottom of screen
 - display player/s resource count/s
