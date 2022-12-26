@@ -14,11 +14,6 @@ export function init()
     initGameState();
 }
 
-function gameOver(winner)
-{
-    App.gameOver(winner);
-}
-
 function forAllEntities(fn)
 {
     const { exists } = gameState.entities;
@@ -581,7 +576,7 @@ function isOnIsland(i)
 
 function updateHitState(timeDeltaMs)
 {
-    const { freeable, unit, pos, vel, accel, hp, lane, team, aiState, atkState, hitState, physState } = gameState.entities;
+    const { freeable, unit, color, pos, vel, accel, hp, lane, team, aiState, atkState, hitState, physState } = gameState.entities;
     forAllEntities((i) => {
         hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
@@ -632,7 +627,7 @@ function updateHitState(timeDeltaMs)
                         if (onIsland && getDist(pos[i], enemyLighthouse.pos) < params.lighthouseRadius) {
                             hitEntity(enemyLighthouse.idx, unit[i].lighthouseDamage);
                             if ( hp[enemyLighthouse.idx] <= 0 ) {
-                                gameOver(team[i]);
+                                App.gameOver(team[i], color[i]);
                             }
                             // instantly disappear this frame
                             freeable[i] = true;
@@ -891,7 +886,7 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
 
     if (debug.enableControls) {
         // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
-        if (keyPressed('[')) {
+        if (keyPressed('`')) {
             debug.paused = !debug.paused;
         }
         if (keyPressed(']')) {

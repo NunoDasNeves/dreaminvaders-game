@@ -1,6 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 import { SCREEN } from "./data.js";
+import { init as resetGame } from "./game.js";
 
 export let state = null;
 
@@ -14,6 +15,11 @@ const buttonData = [
         id: 'buttonContinue',
         fn: unpause,
         screen: SCREEN.PAUSE,
+    },
+    {
+        id: 'buttonBackToTitle',
+        fn: backToTitle,
+        screen: SCREEN.GAMEOVER,
     },
 ];
 
@@ -59,12 +65,18 @@ export function gameOver(winnerName, color)
     changeScreen(SCREEN.GAMEOVER);
 }
 
+function backToTitle()
+{
+    changeScreen(SCREEN.TITLE);
+    resetGame();
+}
+
 export function pause()
 {
     changeScreen(SCREEN.PAUSE);
 }
 
-export function unpause()
+function unpause()
 {
     changeScreen(SCREEN.GAME);
 }
