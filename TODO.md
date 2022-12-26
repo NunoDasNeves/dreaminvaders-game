@@ -1,6 +1,4 @@
 ## TODO
-- basic menu for initting game etc
-- reset game if a lighthouse is destroyed - i.e. complete the full game 'loop'
 - design: producing units takes time
 - design: theres a production queue for each lane, 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
 - armor
@@ -25,6 +23,8 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- basic menu for initting game etc
+- reset game if a lighthouse is destroyed - i.e. complete the full game 'loop'
 - reset game function + debug hotkey
 - unit colors based on team - probably easiest to extend spritesheet
     - program to do spritesheet extensions we need
