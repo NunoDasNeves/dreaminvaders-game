@@ -6,7 +6,7 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
  */
 
 export const debug = {
-    canPause: true,
+    enableControls: true,
     paused: false,
     drawAiState: true,
     drawCollision: false,
@@ -194,7 +194,7 @@ export const units = Object.freeze({
         maxSpeed: 0,
         accel: 0,
         angSpeed: 0,
-        maxHp: 1000,
+        maxHp: 50,
         sightRange: 0,
         radius: params.lighthouseRadius,
         collides: false,
@@ -246,3 +246,11 @@ export const unitHotKeys = {
     'q': units.chogoringu,
     'w': units.tank,
 };
+
+/* App stuff */
+export const SCREEN = Object.freeze({
+    TITLE: 0,
+    GAME: 1,
+    GAMEOVER: 2,
+    PAUSE: 3,
+});

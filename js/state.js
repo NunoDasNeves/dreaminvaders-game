@@ -166,7 +166,7 @@ export function cycleLocalPlayer()
 function addPlayer(pos, team, colorIdx)
 {
     gameState.players.push({
-        laneSelected: 0,
+        laneSelected: -1,
         colorIdx,
         color: params.playerColors[colorIdx],
         team,

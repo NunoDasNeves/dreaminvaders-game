@@ -1,8 +1,9 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
+import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys, SCREEN } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
+import * as App from './app.js';
 
 /*
  * Game init and update functions
@@ -11,6 +12,11 @@ import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInL
 export function init()
 {
     initGameState();
+}
+
+function gameOver(winner)
+{
+    App.gameOver(winner);
 }
 
 function forAllEntities(fn)
@@ -625,6 +631,9 @@ function updateHitState(timeDeltaMs)
                         const enemyLighthouse = player.island;
                         if (onIsland && getDist(pos[i], enemyLighthouse.pos) < params.lighthouseRadius) {
                             hitEntity(enemyLighthouse.idx, unit[i].lighthouseDamage);
+                            if ( hp[enemyLighthouse.idx] <= 0 ) {
+                                gameOver(team[i]);
+                            }
                             // instantly disappear this frame
                             freeable[i] = true;
                         }
@@ -865,31 +874,44 @@ function processLocalPlayerInput()
             vecSubFrom(gameState.camera.pos, delta);
         }
     }
-    // debug stuff
-    if (keyPressed('Tab')) {
-        cycleLocalPlayer();
-    }
-    if (keyPressed('m')) {
-        getLocalPlayer().gold += 100;
-    }
-    if (mouseLeftPressed()) {
-        debug.clickedPoint = vecClone(gameState.input.mousePos);
-        debug.closestLanePoint = minStuff.point;
+
+    if (debug.enableControls) {
+        if (mouseLeftPressed()) {
+            debug.clickedPoint = vecClone(gameState.input.mousePos);
+            debug.closestLanePoint = minStuff.point;
+        }
     }
 }
 
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
 {
-    // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
-    if (keyPressed('p') && debug.canPause) {
-        debug.paused = !debug.paused;
+    if (App.state.screen != SCREEN.GAME) {
+        return;
     }
 
-    processLocalPlayerInput();
-
-    if (!debug.paused || keyPressed('.')) {
-        updateGame(timeDeltaMs);
+    if (debug.enableControls) {
+        // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
+        if (keyPressed('[')) {
+            debug.paused = !debug.paused;
+        }
+        if (keyPressed(']')) {
+            init();
+        }
+        if (keyPressed('Tab')) {
+            cycleLocalPlayer();
+        }
+        if (keyPressed('m')) {
+            getLocalPlayer().gold += 100;
+        }
     }
-
+    if (keyPressed('p')) {
+        App.pause();
+    } else {
+        // keep getting input while debug paused
+        processLocalPlayerInput();
+        if (!debug.enableControls || !debug.paused || keyPressed('.')) {
+            updateGame(timeDeltaMs);
+        }
+    }
     updateGameInput();
 }
