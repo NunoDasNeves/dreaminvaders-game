@@ -5,16 +5,41 @@ import { init as resetGame } from "./game.js";
 
 export let state = null;
 
-const buttonData = [
+const elemData = [
+    // title
     {
-        id: 'buttonStart',
+        id: 'titleMenu',
+        screen: SCREEN.TITLE,
+    },
+    {
+        id: 'buttonStartLocalDebug',
         fn: startGame,
         screen: SCREEN.TITLE,
+    },
+    {
+        id: 'buttonStartPvE',
+        fn: startGame,
+        screen: SCREEN.TITLE,
+    },
+    {
+        id: 'buttonStartPvPLocal',
+        fn: startGame,
+        screen: SCREEN.TITLE,
+    },
+    // pause
+    {
+        id: 'pauseMenu',
+        screen: SCREEN.PAUSE,
     },
     {
         id: 'buttonContinue',
         fn: unpause,
         screen: SCREEN.PAUSE,
+    },
+    // game over
+    {
+        id: 'gameOverMenu',
+        screen: SCREEN.GAMEOVER,
     },
     {
         id: 'buttonBackToTitle',
@@ -47,12 +72,21 @@ export function init()
     for (const screenName of Object.values(SCREEN)) {
         screenElems[screenName] = [];
     }
-    for (const { id, fn, screen } of buttonData) {
+    for (const data of elemData) {
+        const { id, screen } = data;
         const elem = document.getElementById(id);
-        elem.onclick = fn;
+        if (elem.nodeName == 'INPUT' && elem.type == 'button') {
+            elem.onclick = data.fn;
+        }
+        // hide em all by default
+        elem.hidden = true;
         screenElems[screen].push(elem);
     }
+
     changeScreen(SCREEN.TITLE);
+
+    const appUIElem = document.getElementById("appUI");
+    appUIElem.hidden = false;
 }
 
 export function startGame()

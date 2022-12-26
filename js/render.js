@@ -1,9 +1,10 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites, unitHotKeys  } from "./data.js";
+import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites, unitHotKeys, SCREEN  } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
 import { assets } from "./assets.js";
+import * as App from './app.js';
 
 let canvas = null;
 let context = null;
@@ -573,7 +574,9 @@ export function draw(realTimeMs, timeDeltaMs)
     }
     drawDebugUIText("player", vec(10,60), localPlayer.color);
 
-    drawUI();
+    if (App.state.screen == SCREEN.GAME) {
+        drawUI();
+    }
 }
 
 function drawDebugUIText(string, screenPos, fillStyle)
