@@ -469,10 +469,6 @@ export function getBoundingClientRect()
 
 function drawUI()
 {
-    for (let i = 0; i < gameState.players.length; ++i) {
-        const player = gameState.players[i];
-        drawDebugUIText(`$${Math.floor(player.gold)}`, vec(10,80+i*20), player.color);
-    }
     const buttonDims = vec(64,64);
     const buttonStart = vec(32, canvas.height-32-buttonDims.y);
     const buttonXGap = 16;
@@ -566,30 +562,40 @@ export function draw(realTimeMs, timeDeltaMs)
             debug.fpsCounter = 0;
             debug.numUpdates = 0;
         }
+        drawDebugUIText(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20), 'white');
+        drawDebugUIText(" '`'   debug pause", vec(10,45), 'white');
+        drawDebugUIText(" '.'   frame advance", vec(10,70), 'white');
+        drawDebugUIText(" 'Tab' switch player", vec(10,95), 'white');
+        drawDebugUIText(" 'm'   +100 gold", vec(10,120), 'white');
+        drawDebugUIText(" ']'   reset game", vec(10,145), 'white');
         if (debug.drawFPS) {
             const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
-            drawDebugUIText(fpsStr, vec(10,20), 'white');
+            drawDebugUIText(fpsStr, vec(canvas.width - 10,20), 'white', 'right');
         }
         if (debug.drawNumUpdates) {
             const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
-            drawDebugUIText(updatesStr, vec(10,40), 'white');
+            drawDebugUIText(updatesStr, vec(canvas.width - 10,40), 'white', 'right');
         }
-        drawDebugUIText("player", vec(10,60), localPlayer.color);
+        drawDebugUIText("curr player (Tab to switch)", vec(10,200), localPlayer.color);
+        for (let i = 0; i < gameState.players.length; ++i) {
+            const player = gameState.players[i];
+            drawDebugUIText(`$${Math.floor(player.gold)}`, vec(10, 220 + i*20), player.color);
+        }
 
         drawUI();
     }
 }
 
-function drawDebugUIText(string, screenPos, fillStyle)
+function drawDebugUIText(string, screenPos, fillStyle, align='left')
 {
     context.font = "20px sans-serif";
     // draw stroke behind text so we can make a nice outline
     context.strokeStyle = 'black';
     context.setLineDash([]);
     context.lineWidth = 3;
+    context.textAlign = align;
     context.strokeText(string, screenPos.x, screenPos.y);
     context.fillStyle = fillStyle;
-    context.textAlign = 'left';
     context.fillText(string, screenPos.x, screenPos.y);
 }
 
