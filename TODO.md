@@ -1,16 +1,19 @@
 ## TODO
+- dreamer: most units past center of lane = lane control = increased gold rate
 - design: producing units takes time
 - design: theres a production queue for each lane, 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
-- armor
+- support multiple player types - keeping in mind scenarios EvE, PvE, PvP (local)... (any maybe PvP remote)
+- simple AI player (every couple seconds, pick a lane and spawn a random unit, or idle)
 - more weapon types
     - AOE weapon
     - projectile weapon
     - visual effects (tracer, missed attack etc)
+- armor
 - animation - fix flicker on change to animation with different number of frames
+- fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
-- support multiple player types? keeping in mind scenarios EvE, PvE, PvP (local), PvP (remote)...(to some degree)
 - fix resolution; default camera scale should look the best
 - units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - better collision or AI for collision
