@@ -33,7 +33,7 @@ function loadImageAsset(filename, width=50, height=50, centerOffset=vec())
     };
 
     // this actually makes it start loading the image
-    img.src = `../assets/${filename}`;
+    img.src = `assets/${filename}`;
 
     return imageAsset;
 }
