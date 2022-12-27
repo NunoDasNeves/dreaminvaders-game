@@ -463,6 +463,9 @@ function drawLane(lane, selected)
         fillCircle(lane.playerLanes[0].spawnPos, 8, "#00ff00");
         fillCircle(lane.playerLanes[1].spawnPos, 8, "#00ff00");
     }
+
+    const dreamer = lane.dreamer;
+    fillCircle(vecAdd(lane.middlePos, vec(0, -params.laneWidth)), 15, dreamer.color);
 }
 
 export function getBoundingClientRect()

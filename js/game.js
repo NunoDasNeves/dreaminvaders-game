@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys, SCREEN } from "./data.js";
+import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys, SCREEN, NO_PLAYER_INDEX } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
 import * as App from './app.js';
 
@@ -734,9 +734,59 @@ function updateAnimState(timeDeltaMs)
     });
 }
 
+function updateDreamerState(timeDeltaMs)
+{
+    const { playerId, unit, homeIsland, pos, lane } = gameState.entities;
+    const timeDeltaSec = 0.001 * timeDeltaMs;
+    for (const dreamerLane of gameState.lanes) {
+        const { dreamer, middlePos } = dreamerLane;
+        const playerIds = Object.keys(dreamerLane.playerLanes);
+        console.assert(playerIds.length == 2);
+        const playerCounts = {};
+        for (const pId of playerIds) {
+            playerCounts[pId] = 0;
+        }
+        forAllEntities(i => {
+            if (playerId[i] == NO_PLAYER_INDEX || !homeIsland[i]) {
+                return;
+            }
+            if (lane[i] != dreamerLane.playerLanes[playerId[i]]) {
+                return;
+            }
+            const toMiddle = vecSub(middlePos, pos[i]);
+            const toHome = vecSub(homeIsland[i].pos, pos[i]);
+            if (vecDot(toMiddle, toHome) > 0) {
+                playerCounts[playerId[i]]++;
+            }
+        });
+        let attackingPlayer = NO_PLAYER_INDEX;
+        if (playerCounts[playerIds[0]] > playerCounts[playerIds[1]]) {
+            attackingPlayer = playerIds[0];
+        } else if (playerCounts[playerIds[0]] < playerCounts[playerIds[1]]) {
+            attackingPlayer = playerIds[1];
+        }
+        dreamer.playerId = attackingPlayer;
+        if (attackingPlayer != NO_PLAYER_INDEX) {
+            dreamer.color = gameState.players[attackingPlayer].color;
+        } else {
+            dreamer.color = params.neutralColor;
+        }
+    }
+}
+
 function updatePlayerState(timeDeltaMs)
 {
     const timeDeltaSec = 0.001 * timeDeltaMs;
+    // compute gold per sec
+    for (const player of gameState.players) {
+        player.goldPerSec = params.startingGoldPerSec;
+    }
+    for (const { dreamer } of gameState.lanes) {
+        if (dreamer.playerId != NO_PLAYER_INDEX) {
+            gameState.players[dreamer.playerId].goldPerSec += params.dreamerGoldPerSec;
+        }
+    }
+    // add the income
     for (const player of gameState.players) {
         player.gold += player.goldPerSec * timeDeltaSec;
     }
@@ -764,6 +814,7 @@ function updateGame(timeDeltaMs)
         }
     };
 
+    updateDreamerState(timeDeltaMs); // should come before player state, since dreamer affects income
     updatePlayerState(timeDeltaMs);
 }
 

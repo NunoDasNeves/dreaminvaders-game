@@ -47,6 +47,7 @@ export const params = Object.freeze(
             pathColor: "#443322",
             lighthouseRadius: 50,
             islandRadius: 200,
+            neutralColor: "#dfdfdf",
             playerColors: [ "#ff9933", "#3399ff" ],
             hpBarTimeMs: 2000,
             hitFadeTimeMs: 300,
@@ -55,6 +56,7 @@ export const params = Object.freeze(
             fallSizeReduction: 0.75,
             startingGold: 10,
             startingGoldPerSec: 1,
+            dreamerGoldPerSec: 0.5,
         }
         obj.laneDistFromBase = obj.islandRadius - 15;
         obj.safePathDistFromBase = obj.laneDistFromBase - obj.laneWidth*0.5;

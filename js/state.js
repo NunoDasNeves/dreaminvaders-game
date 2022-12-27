@@ -204,7 +204,6 @@ export function initGameState()
             angle: [],
             angVel: [],
             target: [],
-            targettable: [],
             lane: [],
             aiState: [],
             atkState: [],
@@ -280,8 +279,16 @@ export function initGameState()
         bridgePoints.push(pLaneEnd);
         pathPoints.push(pLaneEnd);
         pathPoints.push(islandPos[1]);
-        const bridgePointsReversed = reverseToNewArray(bridgePoints);
+        let middlePos = null;
         // create the lanes
+        if (pathPoints.length & 1) {
+            middlePos = pathPoints[Math.floor(pathPoints.length/2)];
+        } else {
+            const left = pathPoints[Math.floor(pathPoints.length/2) - 1];
+            const right = pathPoints[Math.floor(pathPoints.length/2)];
+            middlePos = vecMul(vecAdd(left, right), 0.5);
+        }
+        const bridgePointsReversed = reverseToNewArray(bridgePoints);
         const p0Lane = {
             bridgePoints,
             spawnPos: pLaneStart,
@@ -296,9 +303,10 @@ export function initGameState()
         gameState.players[1].island.lanes.push(p1Lane);
         gameState.lanes.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
-            dreamer: { playerIdx: -1, color: params.neutralColor, timer: 0, },
-            pathPoints, // TODO these don't seem to be used rn
+            dreamer: { playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, },
+            pathPoints,
             bezierPoints,
+            middlePos,
         });
         // TODO probably don't need these
         islands[0].paths.push([vecClone(pLaneStart), islandPos[0]]);
