@@ -62,9 +62,9 @@ export const params = Object.freeze(
     }()
 );
 
-export const TEAM = Object.freeze({
-    NONE: 0,
-});
+export const NO_PLAYER_INDEX = -1;
+export const NO_TEAM_INDEX = -1;
+
 export const AISTATE = Object.freeze({
     DO_NOTHING: 0,
     PROCEED: 1,

@@ -856,7 +856,7 @@ function processLocalPlayerInput()
             if (keyPressed(key)) {
                 if (localPlayer.gold >= unit.goldCost) {
                     localPlayer.gold -= unit.goldCost;
-                    spawnEntityInLane(localPlayer.laneSelected, gameState.localPlayerIdx, unit);
+                    spawnEntityInLane(localPlayer.laneSelected, gameState.localPlayerId, unit);
                 }
             }
         }

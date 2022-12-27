@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units } from "./data.js";
+import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -55,9 +55,9 @@ export class EntityRef {
     }
 }
 
-export function spawnEntity(aPos, aTeam, aColorIdx, aUnit, aHomeIsland = null, aLane = null)
+export function spawnEntity(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLane = null)
 {
-    const { exists, freeable, id, nextFree, homeIsland, team, color, colorIdx, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
+    const { exists, freeable, id, nextFree, homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -81,9 +81,9 @@ export function spawnEntity(aPos, aTeam, aColorIdx, aUnit, aHomeIsland = null, a
     gameState.nextId++;
     nextFree[idx]   = INVALID_ENTITY_INDEX;
     homeIsland[idx] = aHomeIsland;
-    team[idx]       = aTeam;
-    color[idx]      = params.playerColors[aColorIdx];
-    colorIdx[idx]   = aColorIdx;
+    team[idx]       = aTeamId;
+    color[idx]      = aColor;
+    playerId[idx]   = aPlayerId;
     unit[idx]       = aUnit;
     hp[idx]         = aUnit.maxHp;
     pos[idx]        = vecClone(aPos);
@@ -133,42 +133,44 @@ export function spawnEntity(aPos, aTeam, aColorIdx, aUnit, aHomeIsland = null, a
     return idx;
 }
 
-export function spawnEntityForPlayer(pos, playerIdx, unit, lane=null)
+export function spawnEntityForPlayer(pos, playerId, unit, lane=null)
 {
-    const player = gameState.players[playerIdx];
-    const team = player.team;
-    const colorIdx = player.colorIdx;
+    const player = gameState.players[playerId];
+    const teamId = player.team;
+    const color = player.color;
     const island = player.island;
-    return spawnEntity(pos, team, colorIdx, unit, island, lane);
+    return spawnEntity(pos, teamId, playerId, color, unit, island, lane);
 }
 
-export function spawnEntityInLane(laneIdx, playerIdx, unit)
+export function spawnEntityInLane(laneIdx, playerId, unit)
 {
-    const player = gameState.players[playerIdx];
+    const player = gameState.players[playerId];
     const lane = player.island.lanes[laneIdx];
     const pos = lane.spawnPos;
     const randPos = vecAdd(pos, vecMulBy(vecRandDir(), params.laneWidth*0.5));
-    return spawnEntityForPlayer(randPos, playerIdx, unit, lane);
+    return spawnEntityForPlayer(randPos, playerId, unit, lane);
 }
 
 export function getLocalPlayer()
 {
-    return gameState.players[gameState.localPlayerIdx];
+    return gameState.players[gameState.localPlayerId];
 }
 
 export function cycleLocalPlayer()
 {
     const laneSelected = getLocalPlayer().laneSelected;
-    gameState.localPlayerIdx = (gameState.localPlayerIdx + 1) % gameState.players.length;
+    gameState.localPlayerId = (gameState.localPlayerId + 1) % gameState.players.length;
     getLocalPlayer().laneSelected = laneSelected;
 }
 
 function addPlayer(pos, team, colorIdx)
 {
+    const id = gameState.players.length;
     gameState.players.push({
         laneSelected: -1,
-        colorIdx,
+        id,
         color: params.playerColors[colorIdx],
+        colorIdx, // need this for sprites that use playerColors
         team,
         gold: params.startingGold,
         goldPerSec: params.startingGoldPerSec,
@@ -179,6 +181,7 @@ function addPlayer(pos, team, colorIdx)
             lanes: [],
         },
     });
+    return id;
 }
 
 export function initGameState()
@@ -192,7 +195,7 @@ export function initGameState()
             homeIsland: [],
             team: [],
             color: [],
-            colorIdx: [],
+            playerId: [],
             unit: [],
             hp: [],
             pos: [],
@@ -221,18 +224,21 @@ export function initGameState()
         players: [],
         islands: [],
         lanes: [],
-        localPlayerIdx: 0,
+        localPlayerId: 0,
         input: makeInput(),
         lastInput: makeInput(),
     };
 
-    addPlayer(vec(-600, 0), 1, 0);
-    addPlayer(vec(600, 0), 0, 1);
-    const islands = gameState.players.map(({ island }) => island);
-    gameState.islands = islands;
+    addPlayer(vec(-600, 0), 0, 0);
+    addPlayer(vec(600, 0), 1, 1);
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse
-    // NOTE: assumes 2 players, ordered left to right (orange -> blue)
+    // NOTE: assumes 2 players, PLAYER.ONE on the left, PLAYER.TWO on the right
+    const islands = [
+        gameState.players[0].island,
+        gameState.players[1].island,
+    ];
+    gameState.islands = islands;
     const islandPos = islands.map(island => island.pos);
     const islandToIsland = vecSub(islandPos[1], islandPos[0]);
     const centerPoint = vecAddTo(vecMul(islandToIsland, 0.5), islandPos[0]);
@@ -290,6 +296,7 @@ export function initGameState()
         gameState.players[1].island.lanes.push(p1Lane);
         gameState.lanes.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
+            dreamer: { playerIdx: -1, color: params.neutralColor, timer: 0, },
             pathPoints, // TODO these don't seem to be used rn
             bezierPoints,
         });
