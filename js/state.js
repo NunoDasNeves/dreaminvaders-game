@@ -147,7 +147,7 @@ export function spawnEntityInLane(laneIdx, playerId, unit)
     const player = gameState.players[playerId];
     const lane = player.island.lanes[laneIdx];
     const pos = lane.spawnPos;
-    const randPos = vecAdd(pos, vecMulBy(vecRandDir(), params.laneWidth*0.5));
+    const randPos = vecAdd(pos, vecMulBy(vecRand(), params.laneWidth*0.5));
     return spawnEntityForPlayer(randPos, playerId, unit, lane);
 }
 
