@@ -2,6 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 import { debug, SCREEN } from "./data.js";
 import { init as resetGame } from "./game.js";
+import { PLAYER_CONTROLLER } from "./state.js";
 
 export let state = null;
 
@@ -13,17 +14,17 @@ const elemData = [
     },
     {
         id: 'buttonStartLocalDebug',
-        fn: startGame,
+        fn: startGameDebug,
         screen: SCREEN.TITLE,
     },
     {
         id: 'buttonStartPvE',
-        fn: startGame,
+        fn: startGamePvE,
         screen: SCREEN.TITLE,
     },
     {
         id: 'buttonStartPvPLocal',
-        fn: startGame,
+        fn: startGamePvP,
         screen: SCREEN.TITLE,
     },
     // pause
@@ -85,27 +86,53 @@ export function init()
 
     changeScreen(SCREEN.TITLE);
     if (debug.skipAppMenu) {
-        changeScreen(SCREEN.GAME);
+        startGameDebug();
+    } else {
+        startGameEvE();
     }
 
     const appUIElem = document.getElementById("appUI");
     appUIElem.hidden = false;
 }
 
-export function startGame()
+function startGame()
 {
     changeScreen(SCREEN.GAME);
 }
 
+function startGamePvP()
+{
+    resetGame(PLAYER_CONTROLLER.LOCAL_HUMAN, PLAYER_CONTROLLER.LOCAL_HUMAN);
+    startGame();
+}
+
+function startGamePvE()
+{
+    resetGame(PLAYER_CONTROLLER.LOCAL_HUMAN, PLAYER_CONTROLLER.BOT);
+    startGame();
+}
+
+function startGameEvE()
+{
+    resetGame(PLAYER_CONTROLLER.BOT, PLAYER_CONTROLLER.BOT);
+    startGame();
+}
+
+function startGameDebug()
+{
+    debug.enableControls = true;
+    startGamePvP();
+}
+
 export function gameOver(winnerName, color)
 {
+    debug.enableControls = false;
     changeScreen(SCREEN.GAMEOVER);
 }
 
 function backToTitle()
 {
     changeScreen(SCREEN.TITLE);
-    resetGame();
 }
 
 export function pause()

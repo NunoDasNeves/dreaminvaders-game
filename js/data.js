@@ -40,7 +40,7 @@ export const params = Object.freeze(
             backgroundColor: "#1f1f1f",
             baseFadeColor: "#101010",
             laneColor: "#888888",
-            laneSelectedColor: "#cccccc",
+            laneHoveredColor: "#cccccc",
             laneWidth: 60,
             laneSelectDist: 80,
             pathWidth: 40,
@@ -259,9 +259,29 @@ export const units = Object.freeze({
     }
 });
 
-export const unitHotKeys = {
-    'q': units.chogoringu,
-    'w': units.tank,
+export const hotKeys = {
+    [0]: {
+        lanes: {
+            '1': 0,
+            '2': 1,
+            '3': 2,
+        },
+        units: {
+            'q': units.chogoringu,
+            'w': units.tank,
+        },
+    },
+    [1]: {
+        lanes: {
+            '8': 0,
+            '9': 1,
+            '0': 2,
+        },
+        units: {
+            'i': units.chogoringu,
+            'o': units.tank,
+        },
+    }
 };
 
 /* App stuff */

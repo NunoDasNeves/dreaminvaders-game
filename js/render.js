@@ -1,10 +1,11 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites, unitHotKeys, SCREEN  } from "./data.js";
+import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites, hotKeys, SCREEN  } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
 import { assets } from "./assets.js";
 import * as App from './app.js';
+import { debugHotKeys } from "./game.js"
 
 let canvas = null;
 let context = null;
@@ -439,17 +440,27 @@ function dotPoints(arr, radius, fillStyle)
     }
 }
 
-function drawLane(lane, selected)
+function drawLane(laneIdx, hovered)
 {
+    const lane = gameState.lanes[laneIdx];
     // lanes; bezier curves
     context.setLineDash([]);
     context.lineWidth = params.laneWidth / gameState.camera.scale;
-    context.strokeStyle = selected ? params.laneSelectedColor : params.laneColor;
+    context.strokeStyle = hovered ? params.laneHoveredColor : params.laneColor;
     context.beginPath();
     const bezPoints = lane.bezierPoints.map(v => worldVecToCamera(v));
     context.moveTo(bezPoints[0].x, bezPoints[0].y);
     context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
     context.stroke();
+
+    for (const [ pId, playerLane ] of Object.entries(lane.playerLanes)) {
+        const player = gameState.players[pId];
+        if (player.laneSelected == laneIdx) {
+            const pos = playerLane.bridgePoints[0];
+            const dir = vecSub(playerLane.bridgePoints[1], pos);
+            fillEquilateralTriangle(pos, vecToAngle(dir), 15, 20, player.color);
+        }
+    }
 
     if (debug.drawBezierPoints) {
         strokePoints(lane.bezierPoints, 3, "#00ff00");
@@ -480,7 +491,8 @@ function drawUI()
     const buttonXGap = 16;
     let xoff = 0;
     const player = getLocalPlayer();
-    for (const [key, unit] of Object.entries(unitHotKeys)) {
+    // TODO each local player
+    for (const [key, unit] of Object.entries(hotKeys[0].units)) {
         const pos = vec(
             buttonStart.x + xoff,
             buttonStart.y
@@ -526,7 +538,7 @@ export function draw(realTimeMs, timeDeltaMs)
     }
 
     for (let i = 0; i < gameState.lanes.length; ++i) {
-        drawLane(gameState.lanes[i], localPlayer.laneSelected == i);
+        drawLane(i, localPlayer.laneHovered == i);
     }
 
     const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
@@ -573,11 +585,11 @@ export function draw(realTimeMs, timeDeltaMs)
             debug.numUpdates = 0;
         }
         drawDebugUIText(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20), 'white');
-        drawDebugUIText(" '`'   debug pause", vec(10,45), 'white');
-        drawDebugUIText(" '.'   frame advance", vec(10,70), 'white');
-        drawDebugUIText(" 'Tab' switch player", vec(10,95), 'white');
-        drawDebugUIText(" 'm'   +100 gold", vec(10,120), 'white');
-        drawDebugUIText(" ']'   reset game", vec(10,145), 'white');
+        let yoff = 45;
+        for (const { key, text } of debugHotKeys) {
+            drawDebugUIText(` '${key}'  ${text}`, vec(10,yoff), 'white');
+            yoff += 25;
+        }
         if (debug.drawFPS) {
             const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
             drawDebugUIText(fpsStr, vec(canvas.width - 10,20), 'white', 'right');
@@ -586,7 +598,6 @@ export function draw(realTimeMs, timeDeltaMs)
             const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
             drawDebugUIText(updatesStr, vec(canvas.width - 10,40), 'white', 'right');
         }
-        drawDebugUIText("curr player (Tab to switch)", vec(10,200), localPlayer.color);
         for (let i = 0; i < gameState.players.length; ++i) {
             const player = gameState.players[i];
             drawDebugUIText(`$${Math.floor(player.gold)}`, vec(10, 220 + i*20), player.color);

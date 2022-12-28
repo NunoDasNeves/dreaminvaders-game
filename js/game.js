@@ -1,17 +1,17 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys, SCREEN, NO_PLAYER_INDEX, UNIT } from "./data.js";
-import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
+import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys } from "./data.js";
+import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER } from './state.js';
 import * as App from './app.js';
 
 /*
  * Game init and update functions
  */
 
-export function init()
+export function init(player0, player1)
 {
-    initGameState();
+    initGameState(player0, player1);
 }
 
 function forAllEntities(fn)
@@ -912,11 +912,52 @@ function tryBuildUnit(playerId, unit)
     return true;
 }
 
-function processLocalPlayerInput()
+
+function processHumanInput(player)
 {
+    for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
+        if (keyPressed(key)) {
+            player.laneSelected = laneIdx;
+        }
+    }
+    for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
+        if (keyPressed(key)) {
+            tryBuildUnit(player.id, unit);
+        }
+    }
+}
+
+function updateBotPlayer(player, timeDeltaMs)
+{
+
+}
+
+function doPlayerActions(player, timeDeltaMs)
+{
+    // TODO switch on player.controller
+    switch(player.controller) {
+        case PLAYER_CONTROLLER.LOCAL_HUMAN:
+            processHumanInput(player);
+            break;
+        case PLAYER_CONTROLLER.BOT:
+            updateBotPlayer(player, timeDeltaMs);
+            break;
+    }
+}
+
+function processMouseInput()
+{
+    // camera
+    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScrollDelta, 0.1, 5);
+    if (gameState.input.mouseMiddle) {
+        const delta = vecMul(vecSub(gameState.input.mouseScreenPos, gameState.lastInput.mouseScreenPos), gameState.camera.scale);
+        if (vecLen(delta)) {
+            vecSubFrom(gameState.camera.pos, delta);
+        }
+    }
     // select lane
     const localPlayer = getLocalPlayer();
-    localPlayer.laneSelected = -1;
+    localPlayer.laneHovered = -1;
     let minLane = 0;
     let minDist = Infinity;
     let minStuff = null;
@@ -929,38 +970,39 @@ function processLocalPlayerInput()
             minStuff = stuff;
         }
     }
-    if (minDist < params.laneSelectDist) {
-        localPlayer.laneSelected = minLane;
-    }
-    for (const [key, unit] of Object.entries(unitHotKeys)) {
-        if (keyPressed(key)) {
-            tryBuildUnit(gameState.localPlayerId, unit);
+    if (gameState.mouseSelectLane) {
+        if (minDist < params.laneSelectDist) {
+            localPlayer.laneHovered = minLane;
         }
     }
-    // camera controls
-    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScrollDelta, 0.1, 5);
-    if (gameState.input.mouseMiddle) {
-        const delta = vecMul(vecSub(gameState.input.mouseScreenPos, gameState.lastInput.mouseScreenPos), gameState.camera.scale);
-        if (vecLen(delta)) {
-            vecSubFrom(gameState.camera.pos, delta);
-        }
-    }
-
-    if (debug.enableControls) {
-        if (mouseLeftPressed()) {
-            debug.clickedPoint = vecClone(gameState.input.mousePos);
-            debug.closestLanePoint = minStuff.point;
+    if (mouseLeftPressed()) {
+        if (debug.enableControls) {
+                debug.clickedPoint = vecClone(gameState.input.mousePos);
+                debug.closestLanePoint = minStuff.point;
         }
     }
 }
 
-const debugHotKeys = {
+export const debugHotKeys = [
     // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
-    '`':    () => {debug.paused = !debug.paused},
-    ',':    () => {App.gameOver("DebugPlayer", params.playerColors[0])},
-    'm':    () => {getLocalPlayer().gold += 100},
-    'Tab':  () => {cycleLocalPlayer();},
-};
+    {
+        key: '`',
+        fn: () => {debug.paused = !debug.paused},
+        text: 'debug pause',
+    }, {
+        key: ',',
+        fn: () => {App.gameOver("DebugPlayer", params.playerColors[0])},
+        text: 'end game',
+    }, {
+        key: 'n',
+        fn: () => {gameState.players[0].gold += 100},
+        text: '+100 gold to player 0',
+    }, {
+        key: 'm',
+        fn: () => {gameState.players[1].gold += 100},
+        text: '+100 gold to player 1',
+    },
+];
 
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
 {
@@ -969,18 +1011,21 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
     }
 
     if (debug.enableControls) {
-        for (const [key, fn] of Object.entries(debugHotKeys)) {
+        for (const { key, fn } of debugHotKeys) {
             if (keyPressed(key)) {
                 fn();
                 break;
             }
         }
     }
-    if (keyPressed('p')) {
+    if (keyPressed('Escape')) {
         App.pause();
     } else {
+        processMouseInput();
         // keep getting input while debug paused
-        processLocalPlayerInput();
+        for (const player of gameState.players) {
+            doPlayerActions(player, timeDeltaMs);
+        }
         if (!debug.enableControls || !debug.paused || keyPressed('.')) {
             updateGame(timeDeltaMs);
         }

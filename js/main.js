@@ -72,7 +72,6 @@ function initEvents()
 function start()
 {
     App.init();
-    Game.init();
     Render.init();
     Assets.init();
     initEvents();

@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
+import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, debug } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -156,18 +156,18 @@ export function getLocalPlayer()
     return gameState.players[gameState.localPlayerId];
 }
 
-export function cycleLocalPlayer()
-{
-    const laneSelected = getLocalPlayer().laneSelected;
-    gameState.localPlayerId = (gameState.localPlayerId + 1) % gameState.players.length;
-    getLocalPlayer().laneSelected = laneSelected;
-}
+export const PLAYER_CONTROLLER = Object.freeze({
+    LOCAL_HUMAN: 0,
+    BOT: 1,
+});
 
-function addPlayer(pos, team, colorIdx)
+function addPlayer(controller, pos, team, colorIdx)
 {
     const id = gameState.players.length;
     gameState.players.push({
-        laneSelected: -1,
+        controller,
+        laneSelected: 0,
+        laneHovered: -1,
         id,
         color: params.playerColors[colorIdx],
         colorIdx, // need this for sprites that use playerColors
@@ -185,7 +185,7 @@ function addPlayer(pos, team, colorIdx)
     return id;
 }
 
-export function initGameState()
+export function initGameState(player0Controller, player1Controller)
 {
     gameState = {
         entities: {
@@ -225,12 +225,16 @@ export function initGameState()
         islands: [],
         lanes: [],
         localPlayerId: 0,
+        mouseSelectLane: true,
         input: makeInput(),
         lastInput: makeInput(),
     };
-
-    addPlayer(vec(-600, 0), 0, 0);
-    addPlayer(vec(600, 0), 1, 1);
+    if (player0Controller == PLAYER_CONTROLLER.LOCAL_HUMAN &&
+        player1Controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        gameState.mouseSelectLane = false;
+    }
+    addPlayer(player0Controller, vec(-600, 0), 0, 0);
+    addPlayer(player1Controller, vec(600, 0), 1, 1);
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse
     // NOTE: assumes 2 players, PLAYER.ONE on the left, PLAYER.TWO on the right
