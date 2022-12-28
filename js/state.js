@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units } from "./data.js";
+import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -180,6 +180,7 @@ function addPlayer(pos, team, colorIdx)
             paths: [],
             lanes: [],
         },
+        unitCds: Object.fromEntries(Object.values(units).map(({ id }) => [id, 0])),
     });
     return id;
 }

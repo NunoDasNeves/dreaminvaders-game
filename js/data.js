@@ -193,8 +193,15 @@ export const weapons = Object.freeze({
     },
 });
 
+export const UNIT = Object.freeze({
+    BASE: 0,
+    CHOGORINGU: 1,
+    TANK: 2,
+});
+
 export const units = Object.freeze({
     base: {
+        id: UNIT.BASE,
         weapon: weapons.none,
         maxSpeed: 0,
         accel: 0,
@@ -207,13 +214,15 @@ export const units = Object.freeze({
         defaultAiState: AISTATE.DO_NOTHING,
         lighthouseDamage: 0,
         goldCost: Infinity,
+        cdTimeMs: Infinity,
         draw: {
             image: "lighthouse",
         }
     },
     chogoringu: {
+        id: UNIT.CHOGORINGU,
         weapon: weapons.elbow,
-        maxSpeed: 3,
+        maxSpeed: 2,
         accel: 0.4,
         angSpeed: 1,
         maxHp: 3,
@@ -224,13 +233,15 @@ export const units = Object.freeze({
         defaultAiState: AISTATE.PROCEED,
         lighthouseDamage: 5,
         goldCost: 5,
+        cdTimeMs: 300,
         draw: {
             sprite: sprites.chogoringu,
         },
     },
     tank: {
+        id: UNIT.TANK,
         weapon: weapons.tentacle,
-        maxSpeed: 2,
+        maxSpeed: 1.5,
         accel: 0.1,
         angSpeed: 1,
         maxHp: 10,
@@ -241,6 +252,7 @@ export const units = Object.freeze({
         defaultAiState: AISTATE.PROCEED,
         lighthouseDamage: 5,
         goldCost: 20,
+        cdTimeMs: 1500,
         draw: {
             sprite: sprites.tank,
         },

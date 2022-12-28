@@ -479,7 +479,7 @@ function drawUI()
     const buttonStart = vec(32, canvas.height-32-buttonDims.y);
     const buttonXGap = 16;
     let xoff = 0;
-    const localPlayer = getLocalPlayer();
+    const player = getLocalPlayer();
     for (const [key, unit] of Object.entries(unitHotKeys)) {
         const pos = vec(
             buttonStart.x + xoff,
@@ -498,8 +498,12 @@ function drawUI()
         // draw cost
         drawDebugUIText(`[${key}]`, vec(pos.x + 32,pos.y + 20), 'white');
         // overlay if can't afford
-        if (localPlayer.gold < unit.goldCost) {
+        if (player.gold < unit.goldCost) {
             fillRectangleScreen(pos, buttonDims.x, buttonDims.y, "rgba(20,20,20,0.6)");
+        }
+        if (player.unitCds[unit.id] > 0) {
+            const f = (player.unitCds[unit.id] / unit.cdTimeMs);
+            fillRectangleScreen(pos, buttonDims.x, buttonDims.y * f, "rgba(20,20,20,0.6)");
         }
         xoff += buttonDims.x + buttonXGap;
     }

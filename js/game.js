@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys, SCREEN, NO_PLAYER_INDEX } from "./data.js";
+import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, unitHotKeys, SCREEN, NO_PLAYER_INDEX, UNIT } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, cycleLocalPlayer } from './state.js';
 import * as App from './app.js';
 
@@ -789,6 +789,10 @@ function updatePlayerState(timeDeltaMs)
     // add the income
     for (const player of gameState.players) {
         player.gold += player.goldPerSec * timeDeltaSec;
+        for (const unitId of Object.values(UNIT)) {
+            const newVal = player.unitCds[unitId] - timeDeltaMs;
+            player.unitCds[unitId] = Math.max(newVal, 0);
+        }
     }
 }
 
@@ -882,6 +886,23 @@ function pointNearLineSegs(point, lineSegs)
     return { baseIdx: minBaseIdx, point: minPoint, dir: minDir, dist: minDist };
 }
 
+function tryBuildUnit(playerId, unit)
+{
+    const player = gameState.players[playerId];
+    if (player.laneSelected < 0) {
+        return false;
+    }
+    if (player.gold < unit.goldCost) {
+        return false;
+    }
+    if (player.unitCds[unit.id] > 0) {
+        return false;
+    }
+    player.gold -= unit.goldCost;
+    player.unitCds[unit.id] = unit.cdTimeMs;
+    spawnEntityInLane(player.laneSelected, playerId, unit);
+}
+
 function processLocalPlayerInput()
 {
     // select lane
@@ -902,14 +923,9 @@ function processLocalPlayerInput()
     if (minDist < params.laneSelectDist) {
         localPlayer.laneSelected = minLane;
     }
-    if (localPlayer.laneSelected >= 0) {
-        for (const [key, unit] of Object.entries(unitHotKeys)) {
-            if (keyPressed(key)) {
-                if (localPlayer.gold >= unit.goldCost) {
-                    localPlayer.gold -= unit.goldCost;
-                    spawnEntityInLane(localPlayer.laneSelected, gameState.localPlayerId, unit);
-                }
-            }
+    for (const [key, unit] of Object.entries(unitHotKeys)) {
+        if (keyPressed(key)) {
+            tryBuildUnit(gameState.localPlayerId, unit);
         }
     }
     // camera controls
