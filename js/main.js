@@ -7,7 +7,7 @@ import { debug } from "./data.js";
 
 window.onload = start;
 
-const frameTime = 1000 / 60;
+const frameTimeMs = 1000 / 60;
 
 let timeSinceLastUpdate = 0;
 let previousTimeMs = 0;
@@ -22,15 +22,15 @@ function gameLoop(timeElapsed)
     previousTimeMs = timeElapsed;
 
     // if a lot of time has passed, just reset and do a single update
-    if (timeSinceLastUpdate > frameTime * 3) {
-        timeSinceLastUpdate = frameTime;
+    if (timeSinceLastUpdate > frameTimeMs * 3) {
+        timeSinceLastUpdate = frameTimeMs;
     }
 
-    while (timeSinceLastUpdate >= frameTime) {
-        timeSinceLastUpdate -= frameTime;
+    while (timeSinceLastUpdate >= frameTimeMs) {
+        timeSinceLastUpdate -= frameTimeMs;
         ticks++;
         debug.numUpdates++;
-        Game.update(timeElapsed, ticks * frameTime, frameTime);
+        Game.update(timeElapsed, ticks * frameTimeMs, frameTimeMs);
     }
     Render.draw(timeElapsed, timeDelta);
 }
