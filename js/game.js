@@ -898,9 +898,18 @@ function tryBuildUnit(playerId, unit)
     if (player.unitCds[unit.id] > 0) {
         return false;
     }
+    let id = INVALID_ENTITY_INDEX;
+    let iters = 100;
+    while (id == INVALID_ENTITY_INDEX && iters > 0) {
+        id = spawnEntityInLane(player.laneSelected, playerId, unit);
+        iters--;
+    }
+    if (id == INVALID_ENTITY_INDEX) {
+        return false;
+    }
     player.gold -= unit.goldCost;
     player.unitCds[unit.id] = unit.cdTimeMs;
-    spawnEntityInLane(player.laneSelected, playerId, unit);
+    return true;
 }
 
 function processLocalPlayerInput()
