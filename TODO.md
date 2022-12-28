@@ -1,16 +1,13 @@
 ## TODO
-- draw 2nd player hotkeys
-- draw lane select hotkeys
-- dont draw debug stuff on non-debug game
 - simple AI player (every couple seconds, pick a lane and spawn a random unit, or idle)\
 - menu titles (Paused, Game over etc...)
+- fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
 - more weapon types
     - AOE weapon
     - projectile weapon
     - visual effects (tracer, missed attack etc)
 - armor
 - animation - fix flicker on change to animation with different number of frames
-- fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
@@ -27,6 +24,9 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- draw lane select hotkeys
+- dont draw debug stuff on non-debug game
+- draw 2nd player hotkeys
 - support multiple player types - keeping in mind scenarios EvE, PvE, PvP (local)... (any maybe PvP remote)
 - per-unit cooldown
 - dreamer: most units past center of lane = lane control = increased gold rate
