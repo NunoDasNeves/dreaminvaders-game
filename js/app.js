@@ -120,12 +120,14 @@ function startGameEvE()
 
 function startGameDebug()
 {
+    debug.drawUI = true;
     debug.enableControls = true;
     startGamePvP();
 }
 
 export function gameOver(winnerName, color)
 {
+    debug.drawUI = false;
     debug.enableControls = false;
     changeScreen(SCREEN.GAMEOVER);
 }

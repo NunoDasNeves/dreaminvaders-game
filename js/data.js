@@ -7,8 +7,10 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 export const debug = {
     skipAppMenu: false, // launch straight into a game
-    enableControls: true,
+    enableControls: false,
     paused: false,
+    // debug drawing below here
+    drawUI: false, // all the debug UI below is dependent on this
     drawAiState: true,
     drawCollision: false,
     drawSightRange: false,

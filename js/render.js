@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites, hotKeys, SCREEN  } from "./data.js";
-import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer } from './state.js'
+import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer, PLAYER_CONTROLLER } from './state.js'
 import { assets } from "./assets.js";
 import * as App from './app.js';
 import { debugHotKeys } from "./game.js"
@@ -142,6 +142,9 @@ function drawUnit(i)
     }
     // don't draw debug stuff for base
     if (unit[i] == units.base) {
+        return;
+    }
+    if (!debug.drawUI) {
         return;
     }
     // all this stuff is debug only, later we wanna draw sprites
@@ -532,7 +535,9 @@ function drawUI()
 {
     for (let i = 0; i < gameState.players.length; ++i) {
         const player = gameState.players[i];
-        drawPlayerUI(player);
+        if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+            drawPlayerUI(player);
+        }
     }
 }
 
@@ -581,37 +586,40 @@ export function draw(realTimeMs, timeDeltaMs)
             }
             drawHpBar(i);
         }
-        if (debug.drawClickBridgeDebugArrow) {
-            drawArrow(
-                debug.closestLanePoint,
-                debug.clickedPoint,
-                1,
-                "#ff0000"
-            );
-        }
-        // compute fps and updates
-        debug.fpsTime += timeDeltaMs;
-        debug.fpsCounter++;
-        if (debug.fpsTime >= 1000) {
-            debug.fps = 1000*debug.fpsCounter/debug.fpsTime;
-            debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
-            debug.fpsTime = 0;
-            debug.fpsCounter = 0;
-            debug.numUpdates = 0;
-        }
-        drawDebugTextScreen(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20), 'white');
-        let yoff = 45;
-        for (const { key, text } of debugHotKeys) {
-            drawDebugTextScreen(` '${key}'  ${text}`, vec(10,yoff), 'white');
-            yoff += 25;
-        }
-        if (debug.drawFPS) {
-            const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
-            drawTextScreen(fpsStr, vec(canvas.width - 10,20), 20, 'white', true, 'right');
-        }
-        if (debug.drawNumUpdates) {
-            const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
-            drawTextScreen(updatesStr, vec(canvas.width - 10,40), 20, 'white', true, 'right');
+
+        if (debug.drawUI) {
+            if (debug.drawClickBridgeDebugArrow) {
+                drawArrow(
+                    debug.closestLanePoint,
+                    debug.clickedPoint,
+                    1,
+                    "#ff0000"
+                );
+            }
+            // compute fps and updates
+            debug.fpsTime += timeDeltaMs;
+            debug.fpsCounter++;
+            if (debug.fpsTime >= 1000) {
+                debug.fps = 1000*debug.fpsCounter/debug.fpsTime;
+                debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
+                debug.fpsTime = 0;
+                debug.fpsCounter = 0;
+                debug.numUpdates = 0;
+            }
+            drawDebugTextScreen(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20), 'white');
+            let yoff = 45;
+            for (const { key, text } of debugHotKeys) {
+                drawDebugTextScreen(` '${key}'  ${text}`, vec(10,yoff), 'white');
+                yoff += 25;
+            }
+            if (debug.drawFPS) {
+                const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
+                drawTextScreen(fpsStr, vec(canvas.width - 10,20), 20, 'white', true, 'right');
+            }
+            if (debug.drawNumUpdates) {
+                const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
+                drawTextScreen(updatesStr, vec(canvas.width - 10,40), 20, 'white', true, 'right');
+            }
         }
         drawUI();
     }
