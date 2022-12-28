@@ -484,15 +484,15 @@ export function getBoundingClientRect()
     return canvas.getBoundingClientRect();
 }
 
-function drawUI()
+function drawPlayerUI(player)
 {
+    const UIwidth = 64*4; // TODO compute this based on unit hotkeys n stuff
     const buttonDims = vec(64,64);
-    const buttonStart = vec(32, canvas.height-32-buttonDims.y);
+    const UIstartX = player.id == 0 ? 0 : canvas.width - UIwidth;
+    const buttonStart = vec(UIstartX + 32, canvas.height-32-buttonDims.y);
     const buttonXGap = 16;
     let xoff = 0;
-    const player = getLocalPlayer();
-    // TODO each local player
-    for (const [key, unit] of Object.entries(hotKeys[0].units)) {
+    for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
         const pos = vec(
             buttonStart.x + xoff,
             buttonStart.y
@@ -505,19 +505,31 @@ function drawUI()
             vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
             drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
         }
-        // draw key
-        drawDebugUIText(`$${unit.goldCost}`, vec(pos.x,pos.y + 58), '#ffdd22');
-        // draw cost
-        drawDebugUIText(`[${key}]`, vec(pos.x + 32,pos.y + 20), 'white');
+        // hotKey
+        drawTextScreen(`[${key}]`, vec(pos.x + buttonDims.x - 5, pos.y + 20), 20, 'white', true, 'right');
         // overlay if can't afford
+        let costColor = '#ffdd22';
         if (player.gold < unit.goldCost) {
             fillRectangleScreen(pos, buttonDims.x, buttonDims.y, "rgba(20,20,20,0.6)");
+            costColor = '#ff7744';
         }
         if (player.unitCds[unit.id] > 0) {
             const f = (player.unitCds[unit.id] / unit.cdTimeMs);
             fillRectangleScreen(pos, buttonDims.x, buttonDims.y * f, "rgba(20,20,20,0.6)");
         }
+        drawTextScreen(`$${unit.goldCost}`, vec(pos.x,pos.y + buttonDims.y), 20, costColor, true);
         xoff += buttonDims.x + buttonXGap;
+    }
+
+    const goldStart = vec(UIstartX + 32, canvas.height-32-buttonDims.y-32);
+    drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, 30, player.color, true);
+}
+
+function drawUI()
+{
+    for (let i = 0; i < gameState.players.length; ++i) {
+        const player = gameState.players[i];
+        drawPlayerUI(player);
     }
 }
 
@@ -584,40 +596,53 @@ export function draw(realTimeMs, timeDeltaMs)
             debug.fpsCounter = 0;
             debug.numUpdates = 0;
         }
-        drawDebugUIText(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20), 'white');
+        drawDebugTextScreen(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20), 'white');
         let yoff = 45;
         for (const { key, text } of debugHotKeys) {
-            drawDebugUIText(` '${key}'  ${text}`, vec(10,yoff), 'white');
+            drawDebugTextScreen(` '${key}'  ${text}`, vec(10,yoff), 'white');
             yoff += 25;
         }
         if (debug.drawFPS) {
             const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
-            drawDebugUIText(fpsStr, vec(canvas.width - 10,20), 'white', 'right');
+            drawTextScreen(fpsStr, vec(canvas.width - 10,20), 20, 'white', true, 'right');
         }
         if (debug.drawNumUpdates) {
             const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
-            drawDebugUIText(updatesStr, vec(canvas.width - 10,40), 'white', 'right');
+            drawTextScreen(updatesStr, vec(canvas.width - 10,40), 20, 'white', true, 'right');
         }
-        for (let i = 0; i < gameState.players.length; ++i) {
-            const player = gameState.players[i];
-            drawDebugUIText(`$${Math.floor(player.gold)}`, vec(10, 220 + i*20), player.color);
-        }
-
         drawUI();
     }
 }
 
-function drawDebugUIText(string, screenPos, fillStyle, align='left')
+function drawTextScreen(string, pos, sizePx, fillStyle, stroke=false, align='left')
 {
-    context.font = "20px sans-serif";
-    // draw stroke behind text so we can make a nice outline
-    context.strokeStyle = 'black';
-    context.setLineDash([]);
-    context.lineWidth = 3;
+    context.font = `${sizePx}px sans-serif`;
     context.textAlign = align;
-    context.strokeText(string, screenPos.x, screenPos.y);
+    if (stroke) {
+        context.strokeStyle = 'black';
+        context.setLineDash([]);
+        context.lineWidth = 3;
+        context.strokeText(string, pos.x, pos.y);
+    }
     context.fillStyle = fillStyle;
-    context.fillText(string, screenPos.x, screenPos.y);
+    context.fillText(string, pos.x, pos.y);
+}
+
+function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='center')
+{
+    const scaledSize = sizePx / gameState.camera.scale;
+    const coords = worldVecToCamera(worldPos);
+    drawTextScreen(string, coords, scaledSize, fillStyle, stroke, align);
+}
+
+function drawDebugTextScreen(string, pos)
+{
+    drawTextScreen(string, pos, 20, 'white', true, 'left');
+}
+
+function drawDebugText(string, worldPos)
+{
+    drawText(string, worldPos, 20, 'white', true, 'center');
 }
 
 export function init()
