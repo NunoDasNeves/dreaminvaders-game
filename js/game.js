@@ -954,6 +954,14 @@ function processLocalPlayerInput()
     }
 }
 
+const debugHotKeys = {
+    // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
+    '`':    () => {debug.paused = !debug.paused},
+    ',':    () => {App.gameOver("DebugPlayer", params.playerColors[0])},
+    'm':    () => {getLocalPlayer().gold += 100},
+    'Tab':  () => {cycleLocalPlayer();},
+};
+
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
 {
     if (App.state.screen != SCREEN.GAME) {
@@ -961,18 +969,11 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
     }
 
     if (debug.enableControls) {
-        // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
-        if (keyPressed('`')) {
-            debug.paused = !debug.paused;
-        }
-        if (keyPressed(']')) {
-            init();
-        }
-        if (keyPressed('Tab')) {
-            cycleLocalPlayer();
-        }
-        if (keyPressed('m')) {
-            getLocalPlayer().gold += 100;
+        for (const [key, fn] of Object.entries(debugHotKeys)) {
+            if (keyPressed(key)) {
+                fn();
+                break;
+            }
         }
     }
     if (keyPressed('p')) {
