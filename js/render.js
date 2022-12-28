@@ -453,15 +453,6 @@ function drawLane(laneIdx, hovered)
     context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
     context.stroke();
 
-    for (const [ pId, playerLane ] of Object.entries(lane.playerLanes)) {
-        const player = gameState.players[pId];
-        if (player.laneSelected == laneIdx) {
-            const pos = playerLane.bridgePoints[0];
-            const dir = vecSub(playerLane.bridgePoints[1], pos);
-            fillEquilateralTriangle(pos, vecToAngle(dir), 15, 20, player.color);
-        }
-    }
-
     if (debug.drawBezierPoints) {
         strokePoints(lane.bezierPoints, 3, "#00ff00");
     }
@@ -523,6 +514,18 @@ function drawPlayerUI(player)
 
     const goldStart = vec(UIstartX + 32, canvas.height-32-buttonDims.y-32);
     drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, 30, player.color, true);
+
+    for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
+        const lane = player.island.lanes[laneIdx];
+        const pos = lane.bridgePoints[0];
+        if (player.laneSelected == laneIdx) {
+            const dir = vecSub(lane.bridgePoints[1], pos);
+            fillEquilateralTriangle(pos, vecToAngle(dir), 15, 20, player.color);
+        } else {
+            // TODO maybe take away this scale hack and just let it scale
+            drawText(`[${key}]`, pos, 20 * gameState.camera.scale, 'white', true);
+        }
+    }
 }
 
 function drawUI()
