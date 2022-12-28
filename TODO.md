@@ -1,7 +1,4 @@
 ## TODO
-- dreamer: most units past center of lane = lane control = increased gold rate
-- design: producing units takes time
-- design: theres a production queue for each lane, 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
 - support multiple player types - keeping in mind scenarios EvE, PvE, PvP (local)... (any maybe PvP remote)
 - simple AI player (every couple seconds, pick a lane and spawn a random unit, or idle)
 - more weapon types
@@ -15,6 +12,7 @@
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
 - fix resolution; default camera scale should look the best
+- production queue for each lane? 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
 - units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - better collision or AI for collision
     - less jittering/bouncing
@@ -26,6 +24,8 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- per-unit cooldown
+- dreamer: most units past center of lane = lane control = increased gold rate
 - basic menu for initting game etc
 - reset game if a lighthouse is destroyed - i.e. complete the full game 'loop'
 - reset game function + debug hotkey
