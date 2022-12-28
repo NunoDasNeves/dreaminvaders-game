@@ -321,6 +321,11 @@ export function initGameState(player0Controller, player1Controller)
     // spawn lighthouses
     islands[0].idx = spawnEntityForPlayer(islandPos[0], 0, units.base);
     islands[1].idx = spawnEntityForPlayer(islandPos[1], 1, units.base);
+
+    // select middle lane by default
+    for (const player of gameState.players) {
+        player.laneSelected = Math.floor(player.island.lanes.length/2);
+    }
 }
 
 function makeInput()
