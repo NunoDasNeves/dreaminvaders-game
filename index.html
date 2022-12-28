@@ -17,6 +17,7 @@ html, body {
   overflow: hidden;
   /* No floating content on sides */
   display: block;
+  font-family: sans-serif;
 }
 #gamecanvas {
     position: absolute;
@@ -48,26 +49,38 @@ html, body {
     margin: auto;
     border-radius: 20px;
 }
-.menuCenter > input {
+.menuCenter > * {
     display: block;
     margin: 40px 40px 0 40px;
     padding: 0 70px;
     height: 90px;
+    color: white;
+}
+.menuCenter > *:last-child {
+    margin-bottom: 40px;
+}
+.menuCenter > input[type=button] {
     border-radius: 10px;
     border: none;
     background-color: floralwhite;
+    color: black;
 }
-.menuCenter > input:last-child {
-    margin-bottom: 40px;
-}
-.menuCenter > input:hover {
+.menuCenter > input[type=button]:hover {
     background-color: cornsilk;
 }
-.menuCenter > input:active {
+.menuCenter > input[type=button]:active {
     background-color:bisque;
 }
-.menuCenter > input:disabled {
+.menuCenter > input[type=button]:disabled {
     background-color: gainsboro;
+}
+.menuBox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+h2 {
+    color: white;
 }
     </style>
 </head>
@@ -77,11 +90,18 @@ html, body {
     </div>
     <div id="appUI" hidden>
         <div id="titleMenu" class="menuCenter">
-            <input id="buttonStartLocalDebug" type="button" value="Debug mode">
-            <input id="buttonStartPvE" type="button" value="1 Player" disabled>
+            <div class="menuBox">
+                <div>
+                    Enable debug: <input id="checkboxEnableDebug" type="checkbox">
+                </div>
+            </div>
+            <input id="buttonStartPvE" type="button" value="1 Player">
             <input id="buttonStartPvPLocal" type="button" value="2 Player (local)">
         </div>
         <div id="pauseMenu" class="menuCenter">
+            <div class="menuBox">
+                <h2>Paused</h2>
+            </div>
             <input id="buttonContinue" type="button" value="Continue">
         </div>
         <div id="gameOverMenu" class="menuCenter">

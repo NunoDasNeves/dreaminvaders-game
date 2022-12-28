@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 import { debug, SCREEN } from "./data.js";
-import { init as resetGame } from "./game.js";
+import { init as resetGame, update } from "./game.js";
 import { PLAYER_CONTROLLER } from "./state.js";
 
 export let state = null;
@@ -13,8 +13,7 @@ const elemData = [
         screen: SCREEN.TITLE,
     },
     {
-        id: 'buttonStartLocalDebug',
-        fn: startGameDebug,
+        id: 'checkboxEnableDebug',
         screen: SCREEN.TITLE,
     },
     {
@@ -50,6 +49,7 @@ const elemData = [
 ];
 
 const screenElems = {};
+const elemById = {};
 
 function changeScreen(screen)
 {
@@ -82,21 +82,41 @@ export function init()
         // hide em all by default
         elem.hidden = true;
         screenElems[screen].push(elem);
+        elemById[id] = elem;
     }
 
-    changeScreen(SCREEN.TITLE);
     if (debug.skipAppMenu) {
-        startGameDebug();
+        updateDebugCheckbox(true);
+        startGamePvP();
     } else {
         startGameEvE();
+        changeScreen(SCREEN.TITLE);
     }
 
     const appUIElem = document.getElementById("appUI");
     appUIElem.hidden = false;
 }
 
+function updateDebugCheckbox(checked)
+{
+    const elem = elemById['checkboxEnableDebug'];
+    elem.checked = checked;
+}
+
+function updateDebug()
+{
+    const elem = elemById['checkboxEnableDebug'];
+    let enable = false;
+    if (elem.checked) {
+        enable = true;
+    }
+    debug.drawUI = enable;
+    debug.enableControls = enable;
+}
+
 function startGame()
 {
+    updateDebug();
     changeScreen(SCREEN.GAME);
 }
 
@@ -116,13 +136,6 @@ function startGameEvE()
 {
     resetGame(PLAYER_CONTROLLER.BOT, PLAYER_CONTROLLER.BOT);
     startGame();
-}
-
-function startGameDebug()
-{
-    debug.drawUI = true;
-    debug.enableControls = true;
-    startGamePvP();
 }
 
 export function gameOver(winnerName, color)
