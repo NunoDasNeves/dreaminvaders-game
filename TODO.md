@@ -1,6 +1,9 @@
 ## TODO
-- support multiple player types - keeping in mind scenarios EvE, PvE, PvP (local)... (any maybe PvP remote)
-- simple AI player (every couple seconds, pick a lane and spawn a random unit, or idle)
+- draw 2nd player hotkeys
+- draw lane select hotkeys
+- dont draw debug stuff on non-debug game
+- simple AI player (every couple seconds, pick a lane and spawn a random unit, or idle)\
+- menu titles (Paused, Game over etc...)
 - more weapon types
     - AOE weapon
     - projectile weapon
@@ -24,6 +27,7 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- support multiple player types - keeping in mind scenarios EvE, PvE, PvP (local)... (any maybe PvP remote)
 - per-unit cooldown
 - dreamer: most units past center of lane = lane control = increased gold rate
 - basic menu for initting game etc
