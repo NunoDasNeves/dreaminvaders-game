@@ -929,7 +929,15 @@ function processHumanInput(player)
 
 function updateBotPlayer(player, timeDeltaMs)
 {
-
+    player.botState.actionTimer -= timeDeltaMs;
+    if (player.botState.actionTimer > 0) {
+        return;
+    }
+    player.botState.actionTimer += params.botActionTimeMs;
+    player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
+    const units = Object.values(hotKeys[player.id].units);
+    const unit = units[Math.floor(Math.random(units.length))];
+    tryBuildUnit(player.id, unit);
 }
 
 function doPlayerActions(player, timeDeltaMs)

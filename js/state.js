@@ -181,6 +181,9 @@ function addPlayer(controller, pos, team, colorIdx)
             lanes: [],
         },
         unitCds: Object.fromEntries(Object.values(units).map(({ id }) => [id, 0])),
+        botState: {
+            actionTimer: 0,
+        },
     });
     return id;
 }

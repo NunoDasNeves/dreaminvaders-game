@@ -59,6 +59,7 @@ export const params = Object.freeze(
             startingGold: 10,
             startingGoldPerSec: 1,
             dreamerGoldPerSec: 0.5,
+            botActionTimeMs: 2000,
         }
         obj.laneDistFromBase = obj.islandRadius - 15;
         obj.safePathDistFromBase = obj.laneDistFromBase - obj.laneWidth*0.5;
