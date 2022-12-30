@@ -6,7 +6,14 @@ import { sprites } from "./data.js";
 // all the images (and other assets later) will live here
 export const assets = {
     images: {},
+    music: {},
+    sfx: {}, // TODO
 };
+
+function getAssetPath(filename)
+{
+    return `assets/${filename}`;
+}
 
 // these images are non-sprite images... see sprites in data for that.
 const imageData = {
@@ -17,6 +24,30 @@ const imageData = {
         centerOffset: vec(0, 74)
     },
 };
+
+const musicData = {
+    menu: {
+        filename: 'menu.mp3',
+        loop: true,
+    },
+};
+
+function loadAudioAsset(filename, loop = false)
+{
+    const sound = new Audio();
+
+    const audioAsset = { sound, loaded: false } ;
+
+    sound.addEventListener("canplaythrough", function() {
+        audioAsset.loaded = true;
+    });
+
+    sound.loop = loop;
+    sound.src = getAssetPath(filename);
+    sound.load();
+
+    return audioAsset;
+}
 
 // width and height are not really needed; the real width/height will be used after loading
 function loadImageAsset(filename, width=50, height=50, centerOffset=vec())
@@ -33,7 +64,7 @@ function loadImageAsset(filename, width=50, height=50, centerOffset=vec())
     };
 
     // this actually makes it start loading the image
-    img.src = `assets/${filename}`;
+    img.src = getAssetPath(filename);
 
     return imageAsset;
 }
@@ -53,5 +84,10 @@ export function init()
             assets.images[name] = asset;
         }
         sprite.imgAsset = assets.images[name];
+    }
+    for (const [name, data] of Object.entries(musicData)) {
+        const { filename } = data;
+        const asset = loadAudioAsset(filename, data.loop ? true : false);
+        assets.music[name] = asset;
     }
 }

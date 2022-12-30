@@ -2,50 +2,47 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 import { debug, SCREEN } from "./data.js";
 import { init as resetGame, update } from "./game.js";
-import { PLAYER_CONTROLLER, makeGameConfig } from "./state.js";
+import { PLAYER_CONTROLLER, makeGameConfig, updateMouseClick } from "./state.js";
+import * as Music from "./music.js";
 
 export let state = null;
 
 const elemData = [
-    // title
     {
+    // title
         id: 'titleMenu',
         screen: SCREEN.TITLE,
-    },
-    {
+    },{
         id: 'checkboxEnableDebug',
         screen: SCREEN.TITLE,
-    },
-    {
+    },{
+        id: 'checkboxEnableMusic',
+        screen: SCREEN.TITLE,
+        fn: updateMusic,
+    },{
         id: 'buttonStartPvE',
         fn: startGamePvE,
         screen: SCREEN.TITLE,
-    },
-    {
+    },{
         id: 'buttonStartPvPLocal',
         fn: startGamePvP,
         screen: SCREEN.TITLE,
-    },
+    },{
     // pause
-    {
         id: 'pauseMenu',
         screen: SCREEN.PAUSE,
-    },
-    {
+    },{
         id: 'buttonContinue',
         fn: unpause,
         screen: SCREEN.PAUSE,
-    },
+    },{
     // game over
-    {
         id: 'gameOverMenu',
         screen: SCREEN.GAMEOVER,
-    },
-    {
+    },{
         id: 'gameOverText',
         screen: SCREEN.GAMEOVER,
-    },
-    {
+    },{
         id: 'buttonBackToTitle',
         fn: backToTitle,
         screen: SCREEN.GAMEOVER,
@@ -80,8 +77,12 @@ export function init()
     for (const data of elemData) {
         const { id, screen } = data;
         const elem = document.getElementById(id);
-        if (elem.nodeName == 'INPUT' && elem.type == 'button') {
-            elem.onclick = data.fn;
+        if (elem.nodeName == 'INPUT')
+            switch (elem.type) {
+                case 'button':
+                case 'checkbox':
+                    elem.onclick = data.fn;
+                    break;
         }
         // hide em all by default
         elem.hidden = true;
@@ -110,12 +111,20 @@ function updateDebugCheckbox(checked)
 function updateDebug()
 {
     const elem = elemById['checkboxEnableDebug'];
-    let enable = false;
-    if (elem.checked) {
-        enable = true;
-    }
+    const enable = elem.checked;
     debug.drawUI = enable;
     debug.enableControls = enable;
+}
+
+function updateMusic()
+{
+    const elem = elemById['checkboxEnableMusic'];
+    const enable = elem.checked;
+    if (enable) {
+        Music.start();
+    } else {
+        Music.stop();
+    }
 }
 
 function startGame()

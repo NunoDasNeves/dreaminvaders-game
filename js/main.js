@@ -71,10 +71,10 @@ function initEvents()
 
 function start()
 {
-    App.init();
-    Render.init();
     Assets.init();
+    Render.init();
     initEvents();
+    App.init();
 
     window.requestAnimationFrame(gameLoop);
 }
