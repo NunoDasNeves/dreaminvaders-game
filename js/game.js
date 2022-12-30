@@ -708,6 +708,7 @@ function updateAnimState(timeDeltaMs)
         }
         aState.timer -= timeDeltaMs;
         // TODO this properly... this is all placeholder
+        const oldAnimName = aState.anim;
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             case AISTATE.CHASE:
@@ -717,7 +718,28 @@ function updateAnimState(timeDeltaMs)
             }
             case AISTATE.ATTACK:
             {
-                aState.anim = ANIM.IDLE;
+                aState.anim = ANIM.ATK_AIM;
+                switch (atkState[i].state) {
+                    case ATKSTATE.NONE:
+                    {
+                        break;
+                    }
+                    case ATKSTATE.AIM:
+                    {
+                        aState.anim = ANIM.ATK_AIM;
+                        break;
+                    }
+                    case ATKSTATE.SWING:
+                    {
+                        aState.anim = ANIM.ATK_SWING;
+                        break;
+                    }
+                    case ATKSTATE.RECOVER:
+                    {
+                        aState.anim = ANIM.ATK_RECOVER;
+                        break;
+                    }
+                }
                 break;
             }
             default:
@@ -727,6 +749,10 @@ function updateAnimState(timeDeltaMs)
             }
         }
         const anim = sprite.anims[aState.anim];
+        if (oldAnimName != aState.anim) {
+            aState.frame = 0;
+            aState.timer = anim.frameDur;
+        }
         if (aState.timer <= 0) {
             aState.timer += anim.frameDur;
             aState.frame = (aState.frame + 1) % anim.frames;
