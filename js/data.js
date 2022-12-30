@@ -244,7 +244,7 @@ export const units = Object.freeze({
     tank: {
         id: UNIT.TANK,
         weapon: weapons.tentacle,
-        maxSpeed: 1.5,
+        maxSpeed: 1,
         accel: 0.1,
         angSpeed: 1,
         maxHp: 10,
