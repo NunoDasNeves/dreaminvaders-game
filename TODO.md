@@ -1,19 +1,21 @@
 ## TODO
-- simple AI player (every couple seconds, pick a lane and spawn a random unit, or idle)\
-- menu titles (Paused, Game over etc...)
-- fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
+- weapons: cleaner handling of different types and associated logic
+- weapons: compute hit at start of swing state and store it - so renderer can use it during swing
+- weapons: have a 'hit' time, instead of having to be at end of swing
+- make animations optionally loop or not loop; gives some flexibility for pausing at end of swing state, recover, etc...
+- better handling of weapon animations - some kinda particle object or entity so it has its own lifetime
 - more weapon types
-    - AOE weapon
     - projectile weapon
-    - visual effects (tracer, missed attack etc)
 - armor
-- animation - fix flicker on change to animation with different number of frames
+- for 1 player, make UI stuff into buttons, make lanes clickable
+- fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
+- round spawning areas at end of each lane (on the island)
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
 - fix resolution; default camera scale should look the best
 - production queue for each lane? 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
-- units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
+- make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - better collision or AI for collision
     - less jittering/bouncing
     - support pushing (when we want it) - use unit mass or something
@@ -24,6 +26,13 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- AOE weapon with basic visual effect
+- add a 3rd unit type - AOE ranged attacker
+- animation - fix flicker on change to animation with different number of frames
+- Keep lighthouse healthbars in UI on bottom of screen
+- In debug mode draw AI player UI
+- basic menu titles (Title, Paused, Game over etc...)
+- simple AI player (every couple seconds, pick a lane and spawn a random unit, or idle)\
 - draw lane select hotkeys
 - dont draw debug stuff on non-debug game
 - draw 2nd player hotkeys
