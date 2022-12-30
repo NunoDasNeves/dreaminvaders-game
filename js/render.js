@@ -140,6 +140,7 @@ function drawUnit(i)
         }
         drawUnitAnim(i, alpha, colorOverlay);
     }
+    drawWeapon(i);
     // don't draw debug stuff for base
     if (unit[i] == units.base) {
         return;
@@ -185,7 +186,6 @@ function drawUnit(i)
         const off = vecMulBy(vecFromAngle(angle[i]), -unit[i].radius*0.75);
         fillCircle(vecAdd(pos[i], off), unit[i].radius/3, color);
     }
-    drawWeapon(i);
 }
 
 function drawLine(posFrom, posTo, width, strokeStyle) {
@@ -237,7 +237,7 @@ function drawWeapon(i)
         }
         default:
         {
-            if (!debug.drawSwing) {
+            if (!debug.drawUI || !debug.drawSwing) {
                 break;
             }
             const t = target[i].getIndex();
