@@ -370,7 +370,7 @@ function updateAiState()
                  * If we can't attack the current target, target[i] is invalid;
                  * Try to pick a new target, or start chasing
                  */
-                if (!target[i].isValid()) {
+                if (!target[i].isValid() && atkState[i].state != ATKSTATE.RECOVER) {
                     if (nearestAtkTarget.isValid()) {
                         target[i] = nearestAtkTarget;
                         atkState[i].timer = unit[i].weapon.aimMs;
@@ -466,7 +466,7 @@ function updateAiState()
             case AISTATE.ATTACK:
             {
                 const t = target[i].getIndex();
-                console.assert(t != INVALID_ENTITY_INDEX);
+                console.assert(t != INVALID_ENTITY_INDEX || atkState[i].state == ATKSTATE.RECOVER);
                 decel(i); // stand still
             }
             break;
