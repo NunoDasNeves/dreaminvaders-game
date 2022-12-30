@@ -936,13 +936,12 @@ function updateBotPlayer(player, timeDeltaMs)
     player.botState.actionTimer += params.botActionTimeMs;
     player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
     const units = Object.values(hotKeys[player.id].units);
-    const unit = units[Math.floor(Math.random(units.length))];
+    const unit = units[Math.floor(Math.random()*units.length)];
     tryBuildUnit(player.id, unit);
 }
 
 function doPlayerActions(player, timeDeltaMs)
 {
-    // TODO switch on player.controller
     switch(player.controller) {
         case PLAYER_CONTROLLER.LOCAL_HUMAN:
             processHumanInput(player);
