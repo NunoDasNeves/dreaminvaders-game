@@ -130,6 +130,40 @@ const obj = {
             },
         },
     },
+    bigeye: {
+        filename: "bigeye.png",
+        width: 32,
+        height: 32,
+        centerOffset: vec(0,3),
+        rows: 2,
+        playerColors: true,
+        anims: {
+            [ANIM.IDLE]: {
+                frames: 2,
+                frameDur: 300,
+            },
+            [ANIM.WALK]: {
+                frames: 2,
+                frameDur: 300,
+            },
+            [ANIM.ATK_AIM]: {
+                row: 1,
+                frames: 1,
+                frameDur: 200,
+            },
+            [ANIM.ATK_SWING]: {
+                row: 1,
+                frames: 4,
+                frameDur: 100,
+            },
+            [ANIM.ATK_RECOVER]: {
+                row: 1,
+                col: 3, // same frame as end of swing; i.e. double the length of that frame in anim
+                frames: 4,
+                frameDur: 100,
+            },
+        },
+    },
     tank: {
         filename: "tank.png",
         width: 64,
@@ -186,6 +220,15 @@ export const weapons = Object.freeze({
         damage: 1,
         missChance: 0.3,
     },
+    bigeyeBeam: {
+        range: 80,
+        aimMs: 300,
+        swingMs: 400,
+        recoverMs: 400,
+        damage: 2,
+        missChance: 0, // TODO can miss aoe shot
+        aoeRadius: 15, // TODO do aoe attack
+    },
     tentacle: {
         range: 30,
         aimMs: 300,
@@ -199,7 +242,8 @@ export const weapons = Object.freeze({
 export const UNIT = Object.freeze({
     BASE: 0,
     CHOGORINGU: 1,
-    TANK: 2,
+    BIGEYE: 2,
+    TANK: 3,
 });
 
 export const units = Object.freeze({
@@ -241,6 +285,25 @@ export const units = Object.freeze({
             sprite: sprites.chogoringu,
         },
     },
+    bigeye: {
+        id: UNIT.BIGEYE,
+        weapon: weapons.bigeyeBeam,
+        maxSpeed: 1.5,
+        accel: 0.3,
+        angSpeed: 1,
+        maxHp: 4,
+        sightRange: 120,
+        radius: 15,
+        collides: true,
+        canFall: true,
+        defaultAiState: AISTATE.PROCEED,
+        lighthouseDamage: 8,
+        goldCost: 10,
+        cdTimeMs: 300,
+        draw: {
+            sprite: sprites.bigeye,
+        },
+    },
     tank: {
         id: UNIT.TANK,
         weapon: weapons.tentacle,
@@ -271,7 +334,8 @@ export const hotKeys = {
         },
         units: {
             'q': units.chogoringu,
-            'w': units.tank,
+            'w': units.bigeye,
+            'e': units.tank,
         },
     },
     [1]: {
@@ -282,7 +346,8 @@ export const hotKeys = {
         },
         units: {
             'i': units.chogoringu,
-            'o': units.tank,
+            'o': units.bigeye,
+            'p': units.tank,
         },
     }
 };
