@@ -535,7 +535,7 @@ function drawUI()
 {
     for (let i = 0; i < gameState.players.length; ++i) {
         const player = gameState.players[i];
-        if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN || debug.drawUI) {
             drawPlayerUI(player);
         }
     }
