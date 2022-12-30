@@ -185,14 +185,69 @@ function drawUnit(i)
         const off = vecMulBy(vecFromAngle(angle[i]), -unit[i].radius*0.75);
         fillCircle(vecAdd(pos[i], off), unit[i].radius/3, color);
     }
-    if (debug.drawSwing) {
-        const t = target[i].getIndex();
-        if (unit[i].weapon != weapons.none && atkState[i].state != ATKSTATE.NONE && t != INVALID_ENTITY_INDEX) {
+    drawWeapon(i);
+}
+
+function drawLine(posFrom, posTo, width, strokeStyle) {
+    const posFromScreen = worldVecToCamera(posFrom);
+    const posToScreen = worldVecToCamera(posTo);
+    context.strokeStyle = strokeStyle;
+    context.setLineDash([]);
+    context.lineWidth = width / gameState.camera.scale;
+    context.beginPath();
+    context.moveTo(posFromScreen.x, posFromScreen.y);
+    context.lineTo(posToScreen.x, posToScreen.y);
+    context.stroke();
+}
+
+function drawWeapon(i)
+{
+    const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
+    const weapon = unit[i].weapon;
+    if (atkState[i] == ATKSTATE.NONE || weapon == weapons.none) {
+        return;
+    }
+
+    switch(weapon) {
+        case (weapons.bigeyeBeam):
+        {
+            switch(atkState[i].state) {
+                case ATKSTATE.AIM:
+                    break;
+                case ATKSTATE.SWING:
+                {
+                    break;
+                }
+                case ATKSTATE.RECOVER:
+                {
+                    const hitPos = atkState[i].lastHitPos;
+                    const f = clamp(atkState[i].timer / unit[i].weapon.recoverMs, 0, 1);
+                    const colorLaser = `rgb(255,${255*f},255)`;
+                    const colorBoom = `rgba(${55+200*f},${200*f},0,${clamp(f*2,0,1)}`;
+                    // boom
+                    fillCircle(hitPos, weapon.aoeRadius, colorBoom);
+                    // laser
+                    drawLine(pos[i], hitPos, weapon.aoeRadius/2, colorLaser);
+                    fillCircle(pos[i], weapon.aoeRadius/4, colorLaser);
+                    fillCircle(hitPos, weapon.aoeRadius/3, colorLaser);
+                    break;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            if (!debug.drawSwing) {
+                break;
+            }
+            const t = target[i].getIndex();
+            if (t == INVALID_ENTITY_INDEX) {
+                break;
+            }
             const dir = vecNormalize(vecSub(pos[t], pos[i]));
             const tangent = vecTangentRight(dir);
             const offTangent = vecMul(tangent, unit[i].radius*0.5);
             const off = vecMul(dir, unit[i].radius*0.75);
-            let f = 0;
             let color = 'rgb(100,20,20)';
             vecAddTo(off, offTangent);
             const finalPos = vecAdd(pos[i], off);
@@ -216,6 +271,7 @@ function drawUnit(i)
                 }
             }
             fillEquilateralTriangle(finalPos, vecToAngle(dir), 5, 8, color);
+            break;
         }
     }
 }
@@ -301,17 +357,23 @@ function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
     strokeCapsule(worldPos, length - radius, radius, angle, width, strokeStyle, true);
 }
 
-function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle)
+function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle, fromCenter=true)
 {
     const coords = worldToCamera(worldPos.x, worldPos.y);
     const scaledBase = base / gameState.camera.scale;
     const scaledHeight = height / gameState.camera.scale;
     // points right - so angle == 0
-    const triPoints = [
-        vec(-scaledHeight/2, -scaledBase/2),
-        vec(scaledHeight/2, 0),
-        vec(-scaledHeight/2, scaledBase/2),
-    ];
+    const triPoints = fromCenter ?
+        [
+            vec(-scaledHeight/2, -scaledBase/2),
+            vec(scaledHeight/2, 0),
+            vec(-scaledHeight/2, scaledBase/2),
+        ] :
+        [
+            vec(0, -scaledBase/2),
+            vec(scaledHeight, 0),
+            vec(0, scaledBase/2),
+        ];
 
     // rotate to angle
     triPoints.forEach((v) => vecRotateBy(v, angle));

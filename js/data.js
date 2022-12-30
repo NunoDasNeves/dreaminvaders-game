@@ -226,8 +226,9 @@ export const weapons = Object.freeze({
         swingMs: 400,
         recoverMs: 400,
         damage: 2,
-        missChance: 0, // TODO can miss aoe shot
-        aoeRadius: 15, // TODO do aoe attack
+        aoeRadius: 20, // radius around the hit point
+        aoeMissRadius: 30, // how far away from target we might hit
+        aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
     },
     tentacle: {
         range: 30,

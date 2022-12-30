@@ -437,7 +437,7 @@ export function updateMouseWheel(y)
     gameState.input.mouseScrollDelta = y;
 }
 
-function getCollidingWithCircle(aPos, aRadius)
+export function getCollidingWithCircle(aPos, aRadius)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     const colls = [];

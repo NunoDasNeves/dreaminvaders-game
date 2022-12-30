@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys } from "./data.js";
-import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER } from './state.js';
+import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER, getCollidingWithCircle } from './state.js';
 import * as App from './app.js';
 
 /*
@@ -368,7 +368,7 @@ function updateAiState()
                 }
                 /*
                  * If we can't attack the current target, target[i] is invalid;
-                 * Try to pick a new target, or start chasing
+                 * let recovery animation play, then pick a new target or chase
                  */
                 if (!target[i].isValid() && atkState[i].state != ATKSTATE.RECOVER) {
                     if (nearestAtkTarget.isValid()) {
@@ -651,6 +651,36 @@ function updateHitState(timeDeltaMs)
     });
 }
 
+function tryHitTarget(i)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    const weapon = unit[i].weapon;
+
+    const t = target[i].getIndex();
+    console.assert(t != INVALID_ENTITY_INDEX);
+    // AOE
+    if (weapon.aoeRadius) {
+        const targetPos = pos[t];
+        // how far off target are we? 0 == completely on-target, 1 == completely off-target
+        const offTarget = Math.random() * (1 - weapon.aoeAccuracy);
+        const offVec = vecMulBy(vecMulBy(vecRandDir(), offTarget), weapon.aoeMissRadius);
+        const hitPos = vecAdd(targetPos, offVec);
+        for (const j of getCollidingWithCircle(hitPos, weapon.aoeRadius)) {
+            if (team[i] != team[j]) {
+                hitEntity(j, weapon.damage);
+            }
+        }
+        // TODO this better
+        atkState[i].lastHitPos = vecClone(hitPos);
+        return;
+    }
+
+    // single target
+    if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
+        hitEntity(t, unit[i].weapon.damage);
+    } else {} // otherwise miss
+}
+
 function updateAtkState(timeDeltaMs)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
@@ -678,12 +708,7 @@ function updateAtkState(timeDeltaMs)
             {
                 atkState[i].state = ATKSTATE.RECOVER;
                 atkState[i].timer = newTime + unit[i].weapon.recoverMs;
-                // hit!
-                if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
-                    const t = target[i].getIndex();
-                    console.assert(t != INVALID_ENTITY_INDEX);
-                    hitEntity(t, unit[i].weapon.damage);
-                }
+                tryHitTarget(i);
                 break;
             }
             case ATKSTATE.RECOVER:
