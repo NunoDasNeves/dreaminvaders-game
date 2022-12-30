@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 import { debug, SCREEN } from "./data.js";
 import { init as resetGame, update } from "./game.js";
-import { PLAYER_CONTROLLER } from "./state.js";
+import { PLAYER_CONTROLLER, makeGameConfig } from "./state.js";
 
 export let state = null;
 
@@ -39,6 +39,10 @@ const elemData = [
     // game over
     {
         id: 'gameOverMenu',
+        screen: SCREEN.GAMEOVER,
+    },
+    {
+        id: 'gameOverText',
         screen: SCREEN.GAMEOVER,
     },
     {
@@ -122,24 +126,28 @@ function startGame()
 
 function startGamePvP()
 {
-    resetGame(PLAYER_CONTROLLER.LOCAL_HUMAN, PLAYER_CONTROLLER.LOCAL_HUMAN);
+    resetGame(makeGameConfig("Player 0", PLAYER_CONTROLLER.LOCAL_HUMAN, "Player 1", PLAYER_CONTROLLER.LOCAL_HUMAN));
     startGame();
 }
 
 function startGamePvE()
 {
-    resetGame(PLAYER_CONTROLLER.LOCAL_HUMAN, PLAYER_CONTROLLER.BOT);
+    resetGame(makeGameConfig("Player 0", PLAYER_CONTROLLER.LOCAL_HUMAN, "Bot 1", PLAYER_CONTROLLER.BOT));
     startGame();
 }
 
 function startGameEvE()
 {
-    resetGame(PLAYER_CONTROLLER.BOT, PLAYER_CONTROLLER.BOT);
+    resetGame(makeGameConfig("Bot 0", PLAYER_CONTROLLER.BOT, "Bot 1", PLAYER_CONTROLLER.BOT));
     startGame();
 }
 
 export function gameOver(winnerName, color)
 {
+    const elem = elemById['gameOverText'];
+    elem.innerHTML = `${winnerName} won!`;
+    elem.style.color = color;
+
     debug.drawUI = false;
     debug.enableControls = false;
     changeScreen(SCREEN.GAMEOVER);

@@ -9,9 +9,9 @@ import * as App from './app.js';
  * Game init and update functions
  */
 
-export function init(player0, player1)
+export function init(config)
 {
-    initGameState(player0, player1);
+    initGameState(config);
 }
 
 function forAllEntities(fn)
@@ -576,7 +576,7 @@ function isOnIsland(i)
 
 function updateHitState(timeDeltaMs)
 {
-    const { freeable, unit, color, pos, vel, accel, hp, lane, team, aiState, atkState, hitState, physState } = gameState.entities;
+    const { freeable, unit, color, pos, vel, accel, hp, lane, team, playerId, aiState, atkState, hitState, physState } = gameState.entities;
     forAllEntities((i) => {
         hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
@@ -627,7 +627,7 @@ function updateHitState(timeDeltaMs)
                         if (onIsland && getDist(pos[i], enemyLighthouse.pos) < params.lighthouseRadius) {
                             hitEntity(enemyLighthouse.idx, unit[i].lighthouseDamage);
                             if ( hp[enemyLighthouse.idx] <= 0 ) {
-                                App.gameOver(team[i], color[i]);
+                                App.gameOver(gameState.players[playerId[i]].name, color[i]);
                             }
                             // instantly disappear this frame
                             freeable[i] = true;
@@ -999,7 +999,7 @@ export const debugHotKeys = [
         text: 'debug pause',
     }, {
         key: ',',
-        fn: () => {App.gameOver("DebugPlayer", params.playerColors[0])},
+        fn: () => {App.gameOver(getLocalPlayer().name, params.playerColors[0])},
         text: 'end game',
     }, {
         key: 'n',

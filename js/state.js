@@ -161,10 +161,11 @@ export const PLAYER_CONTROLLER = Object.freeze({
     BOT: 1,
 });
 
-function addPlayer(controller, pos, team, colorIdx)
+function addPlayer(name, controller, pos, team, colorIdx)
 {
     const id = gameState.players.length;
     gameState.players.push({
+        name,
         controller,
         laneSelected: 0,
         laneHovered: -1,
@@ -188,7 +189,22 @@ function addPlayer(controller, pos, team, colorIdx)
     return id;
 }
 
-export function initGameState(player0Controller, player1Controller)
+export function makeGameConfig(p0name, p0controller, p1name, p1controller)
+{
+    return {
+        players: [
+            {
+                name: p0name,
+                controller: p0controller,
+            }, {
+                name: p1name,
+                controller: p1controller,
+            }
+        ]
+    }
+}
+
+export function initGameState(gameConfig)
 {
     gameState = {
         entities: {
@@ -232,12 +248,12 @@ export function initGameState(player0Controller, player1Controller)
         input: makeInput(),
         lastInput: makeInput(),
     };
-    if (player0Controller == PLAYER_CONTROLLER.LOCAL_HUMAN &&
-        player1Controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+    if (gameConfig.players[0].controller == PLAYER_CONTROLLER.LOCAL_HUMAN &&
+        gameConfig.players[1].controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         gameState.mouseSelectLane = false;
     }
-    addPlayer(player0Controller, vec(-600, 0), 0, 0);
-    addPlayer(player1Controller, vec(600, 0), 1, 1);
+    addPlayer(gameConfig.players[0].name, gameConfig.players[0].controller, vec(-600, 0), 0, 0);
+    addPlayer(gameConfig.players[1].name, gameConfig.players[1].controller, vec(600, 0), 1, 1);
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse
     // NOTE: assumes 2 players, PLAYER.ONE on the left, PLAYER.TWO on the right
