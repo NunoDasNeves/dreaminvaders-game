@@ -480,12 +480,13 @@ export function getBoundingClientRect()
 
 function drawPlayerUI(player)
 {
-    const UIwidth = 64*4; // TODO compute this based on unit hotkeys n stuff
+    const UIwidth = canvas.width/3 + 64; // TODO compute this based on unit hotkeys n stuff - currently based on lighthouse HP bars
     const buttonDims = vec(64,64);
     const UIstartX = player.id == 0 ? 0 : canvas.width - UIwidth;
-    const buttonStart = vec(UIstartX + 32, canvas.height-32-buttonDims.y);
+    const buttonStart = vec(UIstartX + 32, canvas.height-48-buttonDims.y);
     const buttonXGap = 16;
     let xoff = 0;
+    // unit buttons and hotkeys
     for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
         const pos = vec(
             buttonStart.x + xoff,
@@ -500,7 +501,9 @@ function drawPlayerUI(player)
             drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
         }
         // hotKey
-        drawTextScreen(`[${key}]`, vec(pos.x + buttonDims.x - 5, pos.y + 20), 20, 'white', true, 'right');
+        if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+            drawTextScreen(`[${key}]`, vec(pos.x + buttonDims.x - 5, pos.y + 20), 20, 'white', true, 'right');
+        }
         // overlay if can't afford
         let costColor = '#ffdd22';
         if (player.gold < unit.goldCost) {
@@ -515,9 +518,11 @@ function drawPlayerUI(player)
         xoff += buttonDims.x + buttonXGap;
     }
 
+    // gold
     const goldStart = vec(UIstartX + 32, canvas.height-32-buttonDims.y-32);
     drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, 30, player.color, true);
 
+    // lane indicators and hotkeys
     for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
         const lane = player.island.lanes[laneIdx];
         const pos = lane.bridgePoints[0];
@@ -529,15 +534,26 @@ function drawPlayerUI(player)
             drawText(`[${key}]`, pos, 20 * gameState.camera.scale, 'white', true);
         }
     }
+
+    // lighthouse health bars
+    const { unit, hp } = gameState.entities;
+    const lighthouseHp = hp[player.island.idx];
+    const f = lighthouseHp / unit[player.island.idx].maxHp;
+    const maxWidth = canvas.width / 3;
+    const barStartX = UIstartX + 32;
+    const barY = canvas.height - 32;
+    const greenWidth = maxWidth * f;
+    const redStartX = barStartX + greenWidth;
+    const redWidth = maxWidth * (1 - f);
+    fillRectangleScreen(vec(barStartX, barY), greenWidth, 16, '#00ff00');
+    fillRectangleScreen(vec(redStartX, barY), redWidth, 16, '#ff0000');
 }
 
 function drawUI()
 {
     for (let i = 0; i < gameState.players.length; ++i) {
         const player = gameState.players[i];
-        if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN || debug.drawUI) {
-            drawPlayerUI(player);
-        }
+        drawPlayerUI(player);
     }
 }
 
