@@ -182,19 +182,19 @@ const defaultAnim = {
 };
 for (const sprite of Object.values(obj)) {
     sprite.imgAsset = null;
-    if (!sprite.playerColors) {
+    if (!('playerColors' in sprite)) {
         sprite.playerColors = false;
     }
     // add all the missing anims
     for (const animName of Object.values(ANIM)) {
-        if (!sprite.anims[animName]) {
+        if (!(animName in sprite.anims)) {
             sprite.anims[animName] = {};
         }
     }
     // add all the missing anim properties
     for (const anim of Object.values(sprite.anims)) {
         for (const [key, defaultVal] of Object.entries(defaultAnim)) {
-            if (!anim[key]) {
+            if (!(key in anim)) {
                 anim[key] = defaultVal;
             }
         }
@@ -203,24 +203,36 @@ for (const sprite of Object.values(obj)) {
 return obj;
 })();
 
-export const weapons = Object.freeze({
-    none: {
-        range: 0,
-        aimMs: Infinity,
-        swingMs: Infinity,
-        recoverMs: Infinity,
-        damage: 0,
-        missChance: 1,
-    },
-    elbow: {
+export const UNIT = Object.freeze({
+    INVALID: 0,
+    BASE: 1,
+    CHOGORINGU: 2,
+    BIGEYE: 3,
+    TANK: 4,
+});
+
+const weaponDefaults = Object.freeze({
+    range: 0,
+    aimMs: Infinity,
+    swingMs: Infinity,
+    recoverMs: Infinity,
+    damage: 0,
+    missChance: 1,
+});
+
+const weaponData = [
+    {
+        id: UNIT.BASE,
+    },{
+        id: UNIT.CHOGORINGU,
         range: 10,       // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
         aimMs: 300,      // time from deciding to attack until starting attack
         swingMs: 200,    // time from starting attack til attack hits
         recoverMs: 400,  // time after attack hits til can attack again
         damage: 1,
         missChance: 0.3,
-    },
-    bigeyeBeam: {
+    },{
+        id: UNIT.BIGEYE,
         range: 80,
         aimMs: 300,
         swingMs: 400,
@@ -229,8 +241,8 @@ export const weapons = Object.freeze({
         aoeRadius: 20, // radius around the hit point
         aoeMissRadius: 30, // how far away from target we might hit
         aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
-    },
-    tentacle: {
+    },{
+        id: UNIT.TANK,
         range: 30,
         aimMs: 300,
         swingMs: 300,
@@ -238,38 +250,36 @@ export const weapons = Object.freeze({
         damage: 3,
         missChance: 0.25,
     },
+];
+
+const unitDefaults = Object.freeze({
+    maxSpeed: 0,
+    accel: 0,
+    angSpeed: 0,
+    maxHp: 1,
+    sightRange: 0,
+    radius: 10,
+    collides: true,
+    canFall: true,
+    defaultAiState: AISTATE.DO_NOTHING,
+    lighthouseDamage: 0,
+    goldCost: Infinity,
+    cdTimeMs: Infinity,
+    draw: {},
 });
 
-export const UNIT = Object.freeze({
-    BASE: 0,
-    CHOGORINGU: 1,
-    BIGEYE: 2,
-    TANK: 3,
-});
-
-export const units = Object.freeze({
-    base: {
+const unitData = [
+    {
         id: UNIT.BASE,
-        weapon: weapons.none,
-        maxSpeed: 0,
-        accel: 0,
-        angSpeed: 0,
         maxHp: 50,
-        sightRange: 0,
         radius: params.lighthouseRadius,
         collides: false,
         canFall: false,
-        defaultAiState: AISTATE.DO_NOTHING,
-        lighthouseDamage: 0,
-        goldCost: Infinity,
-        cdTimeMs: Infinity,
         draw: {
             image: "lighthouse",
         }
-    },
-    chogoringu: {
+    },{
         id: UNIT.CHOGORINGU,
-        weapon: weapons.elbow,
         maxSpeed: 2,
         accel: 0.4,
         angSpeed: 1,
@@ -285,10 +295,8 @@ export const units = Object.freeze({
         draw: {
             sprite: sprites.chogoringu,
         },
-    },
-    bigeye: {
+    },{
         id: UNIT.BIGEYE,
-        weapon: weapons.bigeyeBeam,
         maxSpeed: 1.5,
         accel: 0.3,
         angSpeed: 1,
@@ -304,10 +312,8 @@ export const units = Object.freeze({
         draw: {
             sprite: sprites.bigeye,
         },
-    },
-    tank: {
+    },{
         id: UNIT.TANK,
-        weapon: weapons.tentacle,
         maxSpeed: 1,
         accel: 0.1,
         angSpeed: 1,
@@ -324,7 +330,33 @@ export const units = Object.freeze({
             sprite: sprites.tank,
         },
     }
-});
+];
+
+function makeFromDefaults(name, data, defaults) {
+    return Object.freeze(
+        data.reduce((acc, item) => {
+            if (!('id' in item)) {
+                console.error(`Invalid ${name} data: missing id`);
+                return acc;
+            }
+            for (const [key, val] of Object.entries(defaults)) {
+                if (!(key in item)) {
+                    item[key] = val;
+                }
+            }
+            acc[item.id] = item;
+            return acc;
+        }, {})
+    );
+}
+
+export const weapons = makeFromDefaults("weapon", weaponData, weaponDefaults);
+export const units = makeFromDefaults("unit", unitData, unitDefaults);
+
+export function getUnitWeapon(unit)
+{
+    return weapons[unit.id];
+}
 
 export const hotKeys = {
     [0]: {
@@ -334,9 +366,9 @@ export const hotKeys = {
             '3': 2,
         },
         units: {
-            'q': units.chogoringu,
-            'w': units.bigeye,
-            'e': units.tank,
+            'q': units[UNIT.CHOGORINGU],
+            'w': units[UNIT.BIGEYE],
+            'e': units[UNIT.TANK],
         },
     },
     [1]: {
@@ -346,9 +378,9 @@ export const hotKeys = {
             '0': 2,
         },
         units: {
-            'i': units.chogoringu,
-            'o': units.bigeye,
-            'p': units.tank,
+            'i': units[UNIT.CHOGORINGU],
+            'o': units[UNIT.BIGEYE],
+            'p': units[UNIT.TANK],
         },
     }
 };

@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys } from "./data.js";
+import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys, getUnitWeapon } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER, getCollidingWithCircle } from './state.js';
 import * as App from './app.js';
 
@@ -59,7 +59,7 @@ function canChaseOrAttack(myIdx, theirIdx)
         return false;
     }
     // ignore bases
-    if (unit[theirIdx] == units.base) {
+    if (unit[theirIdx].id == UNIT.BASE) {
         return false;
     }
     // ignore if they're already too far into our island
@@ -78,7 +78,7 @@ function nearestEnemyInSightRange(i)
 function nearestEnemyInAttackRange(i)
 {
     const { unit } = gameState.entities;
-    return nearestUnit(i, unit[i].weapon.range, canChaseOrAttack);
+    return nearestUnit(i, getUnitWeapon(unit[i]).range, canChaseOrAttack);
 }
 
 // is unit i in range to attack unit j
@@ -88,7 +88,7 @@ function isInAttackRange(i, j)
     const toUnit = vecSub(pos[j], pos[i]);
     const distToUnit = vecLen(toUnit);
     const distForAttacking = Math.max(distToUnit - unit[j].radius - unit[i].radius, 0);
-    return distForAttacking < unit[i].weapon.range;
+    return distForAttacking < getUnitWeapon(unit[i]).range;
 }
 
 function canAttackTarget(i)
@@ -177,7 +177,7 @@ function getAvoidanceForce(i, seekForce)
         if (!exists[j]) {
             continue;
         }
-        if (unit[j] != units.boid) {
+        if (unit[j].id != UNIT.BOID) {
             continue;
         }
         if (i == j) {
@@ -319,6 +319,7 @@ function updateAiState()
         const distToEnemyBase = vecLen(toEnemyBase);
         const nearestAtkTarget = nearestEnemyInAttackRange(i);
         const nearestChaseTarget = nearestEnemyInSightRange(i);
+        const weapon = getUnitWeapon(unit[i]);
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             {
@@ -347,7 +348,7 @@ function updateAiState()
                 if (nearestAtkTarget.isValid() && mostlyStopped) {
                     aiState[i].state = AISTATE.ATTACK;
                     target[i] = nearestAtkTarget;
-                    atkState[i].timer = unit[i].weapon.aimMs;
+                    atkState[i].timer = weapon.aimMs;
                     atkState[i].state = ATKSTATE.AIM;
 
                 // otherwise always chase nearest
@@ -373,7 +374,7 @@ function updateAiState()
                 if (!target[i].isValid() && atkState[i].state != ATKSTATE.RECOVER) {
                     if (nearestAtkTarget.isValid()) {
                         target[i] = nearestAtkTarget;
-                        atkState[i].timer = unit[i].weapon.aimMs;
+                        atkState[i].timer = weapon.aimMs;
                         atkState[i].state = ATKSTATE.AIM;
 
                     } else if (nearestChaseTarget.isValid()) {
@@ -438,7 +439,7 @@ function updateAiState()
                     break;
                 }
                 const rangeToTarget = distToTarget - unit[i].radius - unit[t].radius;
-                const desiredRange = unit[i].weapon.range;
+                const desiredRange = weapon.range;
                 const distToDesired = rangeToTarget - desiredRange;
                 if (distToDesired < 0) {
                     decel(i);
@@ -654,7 +655,7 @@ function updateHitState(timeDeltaMs)
 function tryHitTarget(i)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
-    const weapon = unit[i].weapon;
+    const weapon = getUnitWeapon(unit[i]);
 
     const t = target[i].getIndex();
     console.assert(t != INVALID_ENTITY_INDEX);
@@ -676,8 +677,8 @@ function tryHitTarget(i)
     }
 
     // single target
-    if (canAttackTarget(i) && Math.random() > unit[i].weapon.missChance) {
-        hitEntity(t, unit[i].weapon.damage);
+    if (canAttackTarget(i) && Math.random() > weapon.missChance) {
+        hitEntity(t, weapon.damage);
     } else {} // otherwise miss
 }
 
@@ -691,6 +692,7 @@ function updateAtkState(timeDeltaMs)
             atkState[i].timer = newTime;
             return;
         }
+        const weapon = getUnitWeapon(unit[i]);
         // timer has expired
         switch (atkState[i].state) {
             case ATKSTATE.NONE:
@@ -701,20 +703,20 @@ function updateAtkState(timeDeltaMs)
             case ATKSTATE.AIM:
             {
                 atkState[i].state = ATKSTATE.SWING;
-                atkState[i].timer = newTime + unit[i].weapon.swingMs; // there may be remaining negative time; remove that from the timer by adding here
+                atkState[i].timer = newTime + weapon.swingMs; // there may be remaining negative time; remove that from the timer by adding here
                 break;
             }
             case ATKSTATE.SWING:
             {
                 atkState[i].state = ATKSTATE.RECOVER;
-                atkState[i].timer = newTime + unit[i].weapon.recoverMs;
+                atkState[i].timer = newTime + weapon.recoverMs;
                 tryHitTarget(i);
                 break;
             }
             case ATKSTATE.RECOVER:
             {
                 atkState[i].state = ATKSTATE.AIM;
-                atkState[i].timer = newTime + unit[i].weapon.aimMs;
+                atkState[i].timer = newTime + weapon.aimMs;
                 break;
             }
         }

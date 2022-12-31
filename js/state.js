@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, debug } from "./data.js";
+import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, UNIT, weapons, units, debug } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -338,8 +338,8 @@ export function initGameState(gameConfig)
     }
 
     // spawn lighthouses
-    islands[0].idx = spawnEntityForPlayer(islandPos[0], 0, units.base);
-    islands[1].idx = spawnEntityForPlayer(islandPos[1], 1, units.base);
+    islands[0].idx = spawnEntityForPlayer(islandPos[0], 0, units[UNIT.BASE]);
+    islands[1].idx = spawnEntityForPlayer(islandPos[1], 1, units[UNIT.BASE]);
 
     // select middle lane by default
     for (const player of gameState.players) {

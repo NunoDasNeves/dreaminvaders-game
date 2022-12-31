@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, ATKSTATE, weapons, units, HITSTATE, sprites, hotKeys, SCREEN  } from "./data.js";
+import { debug, params, AISTATE, ATKSTATE, UNIT, weapons, units, HITSTATE, sprites, hotKeys, SCREEN, getUnitWeapon } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer, PLAYER_CONTROLLER } from './state.js'
 import { assets } from "./assets.js";
 import * as App from './app.js';
@@ -142,7 +142,7 @@ function drawUnit(i)
     }
     drawWeapon(i);
     // don't draw debug stuff for base
-    if (unit[i] == units.base) {
+    if (unit[i].id == UNIT.BASE) {
         return;
     }
     if (!debug.drawUI) {
@@ -155,10 +155,6 @@ function drawUnit(i)
     if (debug.drawSightRange && unit[i].sightRange > 0)
     {
         strokeCircle(pos[i], unit[i].sightRange + unit[i].radius, 1, 'yellow');
-    }
-    if (debug.drawWeaponRange && unit[i].weapon.range > 0)
-    {
-        strokeCircle(pos[i], unit[i].weapon.range + unit[i].radius, 1, 'red');
     }
     // TODO remove
     if (debugState[i].velPreColl) {
@@ -203,13 +199,13 @@ function drawLine(posFrom, posTo, width, strokeStyle) {
 function drawWeapon(i)
 {
     const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
-    const weapon = unit[i].weapon;
-    if (atkState[i] == ATKSTATE.NONE || weapon == weapons.none) {
+    const weapon = getUnitWeapon(unit[i]);
+    if (atkState[i] == ATKSTATE.NONE || weapon.id <= UNIT.BASE) {
         return;
     }
 
-    switch(weapon) {
-        case (weapons.bigeyeBeam):
+    switch(weapon.id) {
+        case (UNIT.BIGEYE):
         {
             switch(atkState[i].state) {
                 case ATKSTATE.AIM:
@@ -221,7 +217,7 @@ function drawWeapon(i)
                 case ATKSTATE.RECOVER:
                 {
                     const hitPos = atkState[i].lastHitPos;
-                    const f = clamp(atkState[i].timer / unit[i].weapon.recoverMs, 0, 1);
+                    const f = clamp(atkState[i].timer / weapon.recoverMs, 0, 1);
                     const colorLaser = `rgb(255,${255*f},255)`;
                     const colorBoom = `rgba(${55+200*f},${200*f},0,${clamp(f*2,0,1)}`;
                     // boom
@@ -256,16 +252,16 @@ function drawWeapon(i)
                     break;
                 case ATKSTATE.SWING:
                 {
-                    const f = clamp(1 - atkState[i].timer / unit[i].weapon.swingMs, 0, 1);
-                    const forwardOff = vecMul(dir, f*unit[i].weapon.range);
+                    const f = clamp(1 - atkState[i].timer / weapon.swingMs, 0, 1);
+                    const forwardOff = vecMul(dir, f*weapon.range);
                     vecAddTo(finalPos, forwardOff);
                     color = `rgb(${100 + 155*f}, 20, 20)`;
                     break;
                 }
                 case ATKSTATE.RECOVER:
                 {
-                    const f = clamp(atkState[i].timer / unit[i].weapon.recoverMs, 0, 1);
-                    const forwardOff = vecMul(dir, f*unit[i].weapon.range);
+                    const f = clamp(atkState[i].timer / weapon.recoverMs, 0, 1);
+                    const forwardOff = vecMul(dir, f*weapon.range);
                     vecAddTo(finalPos, forwardOff);
                     break;
                 }
@@ -273,6 +269,10 @@ function drawWeapon(i)
             fillEquilateralTriangle(finalPos, vecToAngle(dir), 5, 8, color);
             break;
         }
+    }
+    if (debug.drawWeaponRange && weapon.range > 0)
+    {
+        strokeCircle(pos[i], weapon.range + unit[i].radius, 1, 'red');
     }
 }
 
