@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys, getUnitWeapon } from "./data.js";
+import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys, getUnitWeapon, unitSprites } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER, getCollidingWithCircle } from './state.js';
 import * as App from './app.js';
 
@@ -729,7 +729,7 @@ function updateAnimState(timeDeltaMs)
 
     forAllEntities((i) => {
         const aState = animState[i];
-        const sprite = unit[i].draw.sprite;
+        const sprite = unitSprites[unit[i].id];
         if (!sprite) {
             return;
         }

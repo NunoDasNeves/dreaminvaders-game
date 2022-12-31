@@ -86,6 +86,9 @@ export const HITSTATE = Object.freeze({
     ALIVE: 0,
     DEAD: 1,
 });
+
+/* Unit data */
+
 export const ANIM = Object.freeze({
     IDLE: 0,
     WALK: 1,
@@ -95,11 +98,37 @@ export const ANIM = Object.freeze({
     DIE: 5,
     FALL: 6,
 });
+export const UNIT = Object.freeze({
+    INVALID: 0,
+    BASE: 1,
+    CHOGORINGU: 2,
+    BIGEYE: 3,
+    TANK: 4,
+});
 
-// not frozen because it'll get updated when assets are loaded
-export const sprites = (()=>{
-const obj = {
-    chogoringu: {
+const unitSpriteRequired = ['id', 'filename', 'width', 'height'];
+const unitSpriteDefaults = Object.freeze({
+    imgAsset: null,
+    centerOffset: vec(),
+    rows: 1,
+});
+const unitAnimDefaults = Object.freeze({
+    row: 0,
+    col: 0,
+    frames: 1,
+    frameDur: 1000,
+});
+
+const unitSpriteData = [
+    {
+        id: UNIT.BASE,
+        filename: "lighthouse.png",
+        width: 128,
+        height: 256,
+        centerOffset: vec(0,74),
+    },
+    {
+        id: UNIT.CHOGORINGU,
         filename: "chogoringu.png",
         imgAsset: null, // not really needed here; populated by assets.js
         // dimensions of one frame of animation
@@ -129,8 +158,8 @@ const obj = {
                 frameDur: 400,
             },
         },
-    },
-    bigeye: {
+    },{
+        id: UNIT.BIGEYE,
         filename: "bigeye.png",
         width: 32,
         height: 32,
@@ -163,8 +192,8 @@ const obj = {
                 frameDur: 100,
             },
         },
-    },
-    tank: {
+    },{
+        id: UNIT.TANK,
         filename: "tank.png",
         width: 64,
         height: 64,
@@ -172,45 +201,9 @@ const obj = {
         rows: 1,
         anims: { /* use defaults; see above */ },
     },
-};
-// put in the default anims and stuff
-const defaultAnim = {
-    row: 0,
-    col: 0,
-    frames: 1,
-    frameDur: 1000,
-};
-for (const sprite of Object.values(obj)) {
-    sprite.imgAsset = null;
-    if (!('playerColors' in sprite)) {
-        sprite.playerColors = false;
-    }
-    // add all the missing anims
-    for (const animName of Object.values(ANIM)) {
-        if (!(animName in sprite.anims)) {
-            sprite.anims[animName] = {};
-        }
-    }
-    // add all the missing anim properties
-    for (const anim of Object.values(sprite.anims)) {
-        for (const [key, defaultVal] of Object.entries(defaultAnim)) {
-            if (!(key in anim)) {
-                anim[key] = defaultVal;
-            }
-        }
-    }
-}
-return obj;
-})();
+];
 
-export const UNIT = Object.freeze({
-    INVALID: 0,
-    BASE: 1,
-    CHOGORINGU: 2,
-    BIGEYE: 3,
-    TANK: 4,
-});
-
+const weaponRequired = ['id'];
 const weaponDefaults = Object.freeze({
     range: 0,
     aimMs: Infinity,
@@ -252,6 +245,7 @@ const weaponData = [
     },
 ];
 
+const unitRequired = ['id'];
 const unitDefaults = Object.freeze({
     maxSpeed: 0,
     accel: 0,
@@ -275,9 +269,6 @@ const unitData = [
         radius: params.lighthouseRadius,
         collides: false,
         canFall: false,
-        draw: {
-            image: "lighthouse",
-        }
     },{
         id: UNIT.CHOGORINGU,
         maxSpeed: 2,
@@ -292,9 +283,6 @@ const unitData = [
         lighthouseDamage: 5,
         goldCost: 5,
         cdTimeMs: 300,
-        draw: {
-            sprite: sprites.chogoringu,
-        },
     },{
         id: UNIT.BIGEYE,
         maxSpeed: 1.5,
@@ -309,9 +297,6 @@ const unitData = [
         lighthouseDamage: 8,
         goldCost: 10,
         cdTimeMs: 300,
-        draw: {
-            sprite: sprites.bigeye,
-        },
     },{
         id: UNIT.TANK,
         maxSpeed: 1,
@@ -326,18 +311,17 @@ const unitData = [
         lighthouseDamage: 5,
         goldCost: 20,
         cdTimeMs: 1500,
-        draw: {
-            sprite: sprites.tank,
-        },
     }
 ];
 
-function makeFromDefaults(name, data, defaults) {
+function makeFromDefaults(name, data, defaults, required) {
     return Object.freeze(
         data.reduce((acc, item) => {
-            if (!('id' in item)) {
-                console.error(`Invalid ${name} data: missing id`);
-                return acc;
+            for (const key of required) {
+                if (!(key in item)) {
+                    console.error(`Required property ${key} missing from an item in ${name} data`);
+                    return acc;
+                }
             }
             for (const [key, val] of Object.entries(defaults)) {
                 if (!(key in item)) {
@@ -350,8 +334,30 @@ function makeFromDefaults(name, data, defaults) {
     );
 }
 
-export const weapons = makeFromDefaults("weapon", weaponData, weaponDefaults);
-export const units = makeFromDefaults("unit", unitData, unitDefaults);
+export const unitSprites = makeFromDefaults("unit sprite", unitSpriteData,
+                                            unitSpriteDefaults, unitSpriteRequired);
+
+for (const sprite of Object.values(unitSprites)) {
+    if (!('anims' in sprite)) {
+        sprite.anims = {};
+    }
+    // add all the missing anims
+    for (const animName of Object.values(ANIM)) {
+        if (!(animName in sprite.anims)) {
+            sprite.anims[animName] = {};
+        }
+        // add all the missing anim properties
+        const anim = sprite.anims[animName];
+        for (const [key, defaultVal] of Object.entries(unitAnimDefaults)) {
+            if (!(key in anim)) {
+                anim[key] = defaultVal;
+            }
+        }
+    }
+}
+
+export const weapons = makeFromDefaults("weapon", weaponData, weaponDefaults, weaponRequired);
+export const units = makeFromDefaults("unit", unitData, unitDefaults, weaponRequired);
 
 export function getUnitWeapon(unit)
 {

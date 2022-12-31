@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { sprites } from "./data.js";
+import { unitSprites } from "./data.js";
 
 // all the images (and other assets later) will live here
 export const assets = {
@@ -76,7 +76,7 @@ export function init()
         const asset = loadImageAsset(filename, width, height, centerOffset);
         assets.images[name] = asset;
     }
-    for (const [name, sprite] of Object.entries(sprites)) {
+    for (const [name, sprite] of Object.entries(unitSprites)) {
         const { filename, width, height, centerOffset } = sprite;
         // probably not super needed but in case any sprites reuse the same image, don't load it twice
         if (!assets.images[name]) {

@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { debug, params, AISTATE, ATKSTATE, UNIT, weapons, units, HITSTATE, sprites, hotKeys, SCREEN, getUnitWeapon } from "./data.js";
+import { debug, params, AISTATE, ATKSTATE, UNIT, weapons, units, HITSTATE, unitSprites, hotKeys, SCREEN, getUnitWeapon } from "./data.js";
 import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer, PLAYER_CONTROLLER } from './state.js'
 import { assets } from "./assets.js";
 import * as App from './app.js';
@@ -91,7 +91,7 @@ function drawUnitAnim(i, alpha, colorOverlay)
     if (vecFromAngle(angle[i]).x < 0) {
         flip = true;
     }
-    const sprite = unit[i].draw.sprite;
+    const sprite = unitSprites[unit[i].id];
     const animObj = sprite.anims[anim];
     const col = animObj.col + frame;
     const flipOffset = flip ? sprite.rows : 0;
@@ -114,32 +114,23 @@ function drawUnit(i)
 {
     const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
 
-    if (unit[i].draw.image) {
-        const asset = assets.images[unit[i].draw.image];
-        const drawUnitPos = getDrawUnitPos(pos[i], asset.width, asset.height, asset.centerOffset);
-        drawImage(asset, drawUnitPos);
-        return;
-    }
-
-    if (unit[i].draw.sprite) {
-        let alpha = 1;
-        let colorOverlay = null;
-        if (hitState[i].state == HITSTATE.DEAD) {
-            const f = hitState[i].deadTimer / params.deathTimeMs;
-            alpha = f;
-            if (hitState[i].fallTimer > 0) {
-                //unitScale = (1 - params.fallSizeReduction) + (hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction;
-            }
-        } else {
-            strokeCircle(pos[i], unit[i].radius, 1, color[i]);
+    let alpha = 1;
+    let colorOverlay = null;
+    if (hitState[i].state == HITSTATE.DEAD) {
+        const f = hitState[i].deadTimer / params.deathTimeMs;
+        alpha = f;
+        if (hitState[i].fallTimer > 0) {
+            //unitScale = (1 - params.fallSizeReduction) + (hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction;
         }
-        // flash red when hit
-        if (hitState[i].hitTimer > 0) {
-            const f = clamp(hitState[i].hitTimer / params.hitFadeTimeMs, 0, 1);
-            colorOverlay = `rgba(255, 0, 0, ${f})`
-        }
-        drawUnitAnim(i, alpha, colorOverlay);
+    } else {
+        strokeCircle(pos[i], unit[i].radius, 1, color[i]);
     }
+    // flash red when hit
+    if (hitState[i].hitTimer > 0) {
+        const f = clamp(hitState[i].hitTimer / params.hitFadeTimeMs, 0, 1);
+        colorOverlay = `rgba(255, 0, 0, ${f})`
+    }
+    drawUnitAnim(i, alpha, colorOverlay);
     drawWeapon(i);
     // don't draw debug stuff for base
     if (unit[i].id == UNIT.BASE) {
