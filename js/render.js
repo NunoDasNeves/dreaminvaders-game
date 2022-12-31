@@ -640,14 +640,14 @@ export function draw(realTimeMs, timeDeltaMs)
     // TODO bit of hack to draw alive units on top of dead ones
     // draw dead
     for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i] || (hitState[i].state != HITSTATE.DEAD)) {
+        if (!entityExists(i, ENTITY.UNIT) || (hitState[i].state != HITSTATE.DEAD)) {
             continue;
         }
         drawUnit(i);
     }
     //draw alive
     for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i] || (hitState[i].state != HITSTATE.ALIVE)) {
+        if (!entityExists(i, ENTITY.UNIT) || (hitState[i].state != HITSTATE.ALIVE)) {
             continue;
         }
         drawUnit(i);
@@ -656,7 +656,7 @@ export function draw(realTimeMs, timeDeltaMs)
     if (App.state.screen == SCREEN.GAME) {
         // health bars on top!
         for (let i = 0; i < exists.length; ++i) {
-            if (!exists[i]) {
+            if (!entityExists(i, ENTITY.UNIT)) {
                 continue;
             }
             drawHpBar(i);

@@ -17,7 +17,7 @@ export function init(config)
 
 function forAllUnits(fn)
 {
-    const { exists, type } = gameState.entities;
+    const { exists } = gameState.entities;
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.UNIT)) {
             continue;

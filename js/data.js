@@ -106,6 +106,10 @@ export const UNIT = Object.freeze({
     BIGEYE: 3,
     TANK: 4,
 });
+export const VFX = Object.freeze({
+    EXPLOSION: 1,
+    BIGEYE_BEAM: 2,
+});
 
 const unitSpriteRequired = ['id', 'filename', 'width', 'height'];
 const unitSpriteDefaults = Object.freeze({

@@ -61,6 +61,7 @@ export class EntityRef {
 export const ENTITY = Object.freeze({
     NONE: 0,
     UNIT: 1,
+    VFX: 2,
 });
 
 const entityDefaults = Object.freeze({
@@ -102,6 +103,8 @@ const entityDefaults = Object.freeze({
     physState: null,
     hitState: null,
     animState: null,
+    vfxState: null,
+    parent: null,
     debugState: null,
 });
 
@@ -150,6 +153,34 @@ export function createEntity(eType)
     type[idx]       = eType;
 
     return idx;
+}
+
+export function spawnVFXBigEyeBeam(i, hitPos)
+{
+    const { pos, vfxState, parent } = gameState.entities;
+    const idx = createEntity(ENTITY.VFX);
+    pos[idx] = pos[i];
+    parent[idx] = new EntityRef(i);
+    vfxState[idx] = {
+        type: VFX.BIGEYE_BEAM,
+        hitPos,
+        timeMs: 600,
+        totalTimeMs: 600,
+    };
+}
+
+export function spawnVFXExplosion(aPos, radius, timeMs)
+{
+    const { pos, vfxState, parent } = gameState.entities;
+    const idx = createEntity(ENTITY.VFX);
+    pos[idx] = aPos;
+    parent[idx] = new EntityRef(INVALID_ENTITY_INDEX);
+    vfxState[idx] = {
+        type: VFX.EXPLOSION,
+        timeMs,
+        totalTimeMs: timeMs,
+        radius,
+    };
 }
 
 export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLane = null)
@@ -496,7 +527,7 @@ export function getCollidingWithCircle(aPos, aRadius)
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     const colls = [];
     for (let j = 0; j < exists.length; ++j) {
-        if (!exists[j]) {
+        if (!entityExists(j, ENTITY.UNIT)) {
             continue;
         }
         if (!unit[j].collides) {
