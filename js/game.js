@@ -2,7 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys, getUnitWeapon, unitSprites } from "./data.js";
-import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnEntity, spawnEntityInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER, getCollidingWithCircle } from './state.js';
+import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnUnit, spawnUnitInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER, getCollidingWithCircle } from './state.js';
 import * as App from './app.js';
 
 /*
@@ -969,7 +969,7 @@ function tryBuildUnit(playerId, unit)
     let id = INVALID_ENTITY_INDEX;
     let iters = 100;
     while (id == INVALID_ENTITY_INDEX && iters > 0) {
-        id = spawnEntityInLane(player.laneSelected, playerId, unit);
+        id = spawnUnitInLane(player.laneSelected, playerId, unit);
         iters--;
     }
     if (id == INVALID_ENTITY_INDEX) {

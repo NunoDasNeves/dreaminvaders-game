@@ -55,15 +55,9 @@ export class EntityRef {
     }
 }
 
-export function spawnEntity(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLane = null)
+export function createEntity()
 {
-    const { exists, freeable, id, nextFree, homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
-
-    if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
-        console.warn("Can't spawn entity there");
-        return INVALID_ENTITY_INDEX;
-    }
-
+    const { exists, id, nextFree, freeable, pos } = gameState.entities;
     const len = exists.length;
     if (gameState.freeSlot == INVALID_ENTITY_INDEX) {
         for (const [key, arr] of Object.entries(gameState.entities)) {
@@ -72,7 +66,7 @@ export function spawnEntity(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland
         nextFree[len] = INVALID_ENTITY_INDEX;
         gameState.freeSlot = len;
     }
-    let idx = gameState.freeSlot;
+    const idx = gameState.freeSlot;
     gameState.freeSlot = nextFree[idx];
 
     exists[idx]     = true;
@@ -80,6 +74,21 @@ export function spawnEntity(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland
     id[idx]         = gameState.nextId;
     gameState.nextId++;
     nextFree[idx]   = INVALID_ENTITY_INDEX;
+
+    return idx;
+}
+
+export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLane = null)
+{
+    const { homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
+
+    if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
+        console.warn("Can't spawn entity there");
+        return INVALID_ENTITY_INDEX;
+    }
+
+    const idx = createEntity();
+
     homeIsland[idx] = aHomeIsland;
     team[idx]       = aTeamId;
     color[idx]      = aColor;
@@ -133,22 +142,22 @@ export function spawnEntity(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland
     return idx;
 }
 
-export function spawnEntityForPlayer(pos, playerId, unit, lane=null)
+export function spawnUnitForPlayer(pos, playerId, unit, lane=null)
 {
     const player = gameState.players[playerId];
     const teamId = player.team;
     const color = player.color;
     const island = player.island;
-    return spawnEntity(pos, teamId, playerId, color, unit, island, lane);
+    return spawnUnit(pos, teamId, playerId, color, unit, island, lane);
 }
 
-export function spawnEntityInLane(laneIdx, playerId, unit)
+export function spawnUnitInLane(laneIdx, playerId, unit)
 {
     const player = gameState.players[playerId];
     const lane = player.island.lanes[laneIdx];
     const pos = lane.spawnPos;
     const randPos = vecAdd(pos, vecMulBy(vecRand(), params.laneWidth*0.5));
-    return spawnEntityForPlayer(randPos, playerId, unit, lane);
+    return spawnUnitForPlayer(randPos, playerId, unit, lane);
 }
 
 export function getLocalPlayer()
@@ -338,8 +347,8 @@ export function initGameState(gameConfig)
     }
 
     // spawn lighthouses
-    islands[0].idx = spawnEntityForPlayer(islandPos[0], 0, units[UNIT.BASE]);
-    islands[1].idx = spawnEntityForPlayer(islandPos[1], 1, units[UNIT.BASE]);
+    islands[0].idx = spawnUnitForPlayer(islandPos[0], 0, units[UNIT.BASE]);
+    islands[1].idx = spawnUnitForPlayer(islandPos[1], 1, units[UNIT.BASE]);
 
     // select middle lane by default
     for (const player of gameState.players) {
