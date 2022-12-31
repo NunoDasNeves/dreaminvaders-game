@@ -3,7 +3,6 @@ Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import * as App from './app.js';
 import { SCREEN } from './data.js';
-import { assets } from './assets.js';
 
 let context = null;
 let currMusic = null;
@@ -55,17 +54,17 @@ function pause(id)
 
 export function start()
 {
-    if (context.state === "suspended") {
-        context.resume();
-    }
     if (App.state.screen == SCREEN.TITLE) {
-        currMusic = play(MUSIC.MENU);
+        if (currMusic == null || currMusic.id != MUSIC.MENU) {
+            currMusic = play(MUSIC.MENU);
+        }
     }
+    context.resume();
 }
 
 export function stop()
 {
-    pause(currMusic.id);
+    //pause(currMusic.id);
     context.suspend();
     currMusic = null;
 }
