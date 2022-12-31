@@ -188,6 +188,34 @@ function drawLine(posFrom, posTo, width, strokeStyle) {
     context.stroke();
 }
 
+function drawVFX(i)
+{
+    const { pos, vfxState, parent } = gameState.entities;
+    const vfx = vfxState[i];
+
+    switch(vfxState[i].type) {
+        case (VFX.BIGEYE_BEAM):
+        {
+            const p = parent[i].getIndex();
+            const weapon = weapons[UNIT.BIGEYE];
+            const f = clamp(1 - vfx.timeMs / vfx.totalTimeMs, 0, 1);
+            const colorLaser = `rgb(255,${255*f},255)`;
+            drawLine(pos[i], vfx.hitPos, f*weapon.aoeRadius/2, colorLaser);
+            fillCircle(pos[i], f*weapon.aoeRadius/4, colorLaser);
+            fillCircle(vfx.hitPos, weapon.aoeRadius/3, colorLaser);
+            break;
+        }
+        case (VFX.EXPLOSION):
+        {
+            const f = clamp(vfx.timeMs / vfx.totalTimeMs, 0, 1);
+            const colorBoom = `rgba(${55+200*f},${200*f},0,${clamp(f*2,0,1)}`;
+            fillCircle(pos[i], vfx.radius, colorBoom);
+            break;
+        }
+        default:
+    }
+}
+
 function drawWeapon(i)
 {
     const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
@@ -197,37 +225,8 @@ function drawWeapon(i)
     }
 
     switch(weapon.id) {
-        case (UNIT.BIGEYE):
-        {
-            switch(atkState[i].state) {
-                case ATKSTATE.AIM:
-                    break;
-                case ATKSTATE.SWING:
-                {
-                    const hitPos = atkState[i].aoeHitPos;
-                    const f = clamp(1 - atkState[i].timer / weapon.recoverMs, 0, 1);
-                    const colorLaser = `rgb(255,${255*f},255)`;
-                    drawLine(pos[i], hitPos, 2, colorLaser);
-                    break;
-                }
-                case ATKSTATE.RECOVER:
-                {
-                    const hitPos = atkState[i].aoeHitPos;
-                    const f = clamp(atkState[i].timer / weapon.recoverMs, 0, 1);
-                    const colorLaser = `rgb(255,${255*f},255)`;
-                    const colorBoom = `rgba(${55+200*f},${200*f},0,${clamp(f*2,0,1)}`;
-                    // boom
-                    fillCircle(hitPos, weapon.aoeRadius, colorBoom);
-                    // laser
-                    drawLine(pos[i], hitPos, weapon.aoeRadius/2, colorLaser);
-                    fillCircle(pos[i], weapon.aoeRadius/4, colorLaser);
-                    fillCircle(hitPos, weapon.aoeRadius/3, colorLaser);
-                    break;
-                }
-            }
-            break;
-        }
-        default:
+        case (UNIT.CHOGORINGU):
+        case (UNIT.TANK):
         {
             if (!debug.drawUI || !debug.drawSwing) {
                 break;
@@ -651,6 +650,12 @@ export function draw(realTimeMs, timeDeltaMs)
             continue;
         }
         drawUnit(i);
+    }
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.VFX)) {
+            continue;
+        }
+        drawVFX(i);
     }
     // only draw UI while game is running
     if (App.state.screen == SCREEN.GAME) {

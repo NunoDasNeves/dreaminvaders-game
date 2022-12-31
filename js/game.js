@@ -547,16 +547,25 @@ function doWeaponHit(i)
     console.assert(t != INVALID_ENTITY_INDEX);
     const weapon = getUnitWeapon(unit[i]);
 
-    if (weapon.aoeRadius) {
-        for (const j of getCollidingWithCircle(atkState[i].aoeHitPos, weapon.aoeRadius)) {
-            if (team[i] != team[j]) {
-                hitEntity(j, weapon.damage);
+    switch(weapon.id) {
+        case UNIT.CHOGORINGU:
+        case UNIT.TANK:
+        {
+            if (canAttackTarget(i) && atkState[i].didHit) {
+                hitEntity(t, weapon.damage);
             }
+            break;
         }
-        return;
-    }
-    if (canAttackTarget(i) && atkState[i].didHit) {
-        hitEntity(t, weapon.damage);
+        case UNIT.BIGEYE:
+        {
+            for (const j of getCollidingWithCircle(atkState[i].aoeHitPos, weapon.aoeRadius)) {
+                if (team[i] != team[j]) {
+                    hitEntity(j, weapon.damage);
+                }
+            }
+            spawnVFXExplosion(atkState[i].aoeHitPos, weapon.aoeRadius, 300);
+            break;
+        }
     }
 }
 
@@ -568,19 +577,25 @@ function startWeaponSwing(i)
     console.assert(t != INVALID_ENTITY_INDEX);
     const weapon = getUnitWeapon(unit[i]);
 
-    // AOE
-    if (weapon.aoeRadius) {
-        const targetPos = pos[t];
-        // how far off target are we? 0 == completely on-target, 1 == completely off-target
-        const offTarget = Math.random() * (1 - weapon.aoeAccuracy);
-        const offVec = vecMulBy(vecMulBy(vecRandDir(), offTarget), weapon.aoeMissRadius);
-        const hitPos = vecAdd(targetPos, offVec);
-        atkState[i].aoeHitPos = vecClone(hitPos);
-        return;
+    switch(weapon.id) {
+        case UNIT.CHOGORINGU:
+        case UNIT.TANK:
+        {
+            atkState[i].didHit = canAttackTarget(i) && Math.random() > weapon.missChance;
+            break;
+        }
+        case UNIT.BIGEYE:
+        {
+            const targetPos = pos[t];
+            // how far off target are we? 0 == completely on-target, 1 == completely off-target
+            const offTarget = Math.random() * (1 - weapon.aoeAccuracy);
+            const offVec = vecMulBy(vecMulBy(vecRandDir(), offTarget), weapon.aoeMissRadius);
+            const hitPos = vecAdd(targetPos, offVec);
+            atkState[i].aoeHitPos = hitPos;
+            spawnVFXBigEyeBeam(i, vecClone(hitPos));
+            break;
+        }
     }
-
-    // single target
-    atkState[i].didHit = canAttackTarget(i) && Math.random() > weapon.missChance;
 }
 
 function updateAtkState(timeDeltaMs)
@@ -689,6 +704,21 @@ function updateAnimState(timeDeltaMs)
     });
 }
 
+function updateVFXState(timeDeltaMs)
+{
+    const { exists, freeable, vfxState, parent } = gameState.entities;
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.VFX)) {
+            continue;
+        }
+        vfxState[i].timeMs -= timeDeltaMs;
+        if (vfxState[i].timeMs <= 0) {
+            freeable[i] = true;
+            continue;
+        }
+    }
+}
+
 function updateDreamerState(timeDeltaMs)
 {
     const { playerId, unit, homeIsland, pos, lane } = gameState.entities;
@@ -760,6 +790,7 @@ function updateGame(timeDeltaMs)
     updateAtkState(timeDeltaMs);
     updateAiState();
     updateAnimState(timeDeltaMs);
+    updateVFXState(timeDeltaMs);
 
     // this should come right before reap
     updateHitState(timeDeltaMs);
