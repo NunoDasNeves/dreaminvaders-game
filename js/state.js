@@ -1,7 +1,7 @@
 import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
-import { params, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, UNIT, weapons, units, debug } from "./data.js";
+import { params, NO_LANE_INDEX, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, UNIT, weapons, units, debug } from "./data.js";
 
 /*
  * Game state init and related helpers
@@ -55,6 +55,39 @@ export class EntityRef {
     }
 }
 
+const entityDefaults = Object.freeze({
+    exists: false,
+    freeable: false,
+    id: 0n,
+    nextFree: INVALID_ENTITY_INDEX,
+    homeIsland: null,
+    team: NO_TEAM_INDEX,
+    color: null,
+    playerId: NO_PLAYER_INDEX,
+    unit: null,
+    hp: 0,
+    pos: null,
+    vel: null,
+    accel: null,
+    angle: 0,
+    angVel: 0,
+    target: null,
+    lane: NO_LANE_INDEX,
+    atkState: null,
+    aiState: null,
+    physState: null,
+    hitState: null,
+    animState: null,
+    debugState: null,
+});
+
+function resetEntity(i)
+{
+    for (const [key, val] of Object.entries(entityDefaults)) {
+        gameState.entities[key][i] = val;
+    }
+}
+
 export function createEntity()
 {
     const { exists, id, nextFree, freeable, pos } = gameState.entities;
@@ -69,6 +102,7 @@ export function createEntity()
     const idx = gameState.freeSlot;
     gameState.freeSlot = nextFree[idx];
 
+    resetEntity(idx);
     exists[idx]     = true;
     freeable[idx]   = false;
     id[idx]         = gameState.nextId;
@@ -80,7 +114,7 @@ export function createEntity()
 
 export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLane = null)
 {
-    const { homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, boidState, hitState, animState, debugState } = gameState.entities;
+    const { homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, hitState, animState, debugState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -130,14 +164,6 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
         loop: true,
     };
     debugState[idx] = {}; // misc debug stuff
-    // gonna be folded in or removed at some point
-    boidState[idx]  = {
-        targetPos: null,
-        avoiding: false,
-        avoidDir: 0,
-        avoidanceForce: vec(),
-        seekForce: vec()
-    };
 
     return idx;
 }
@@ -216,32 +242,13 @@ export function makeGameConfig(p0name, p0controller, p1name, p1controller)
 export function initGameState(gameConfig)
 {
     gameState = {
-        entities: {
-            exists: [],
-            freeable: [],
-            id: [],
-            nextFree: [],
-            homeIsland: [],
-            team: [],
-            color: [],
-            playerId: [],
-            unit: [],
-            hp: [],
-            pos: [],
-            vel: [],
-            accel: [],
-            angle: [],
-            angVel: [],
-            target: [],
-            lane: [],
-            aiState: [],
-            atkState: [],
-            physState: [],
-            boidState: [],
-            hitState: [],
-            animState: [],
-            debugState: [],
-        },
+        entities: Object.keys(entityDefaults)
+            .reduce(
+                (acc, key) => {
+                    acc[key] = [];
+                    return acc;
+                },
+            {}),
         freeSlot: INVALID_ENTITY_INDEX,
         nextId: 0n, // bigint
         camera: {

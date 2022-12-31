@@ -67,6 +67,7 @@ export const params = Object.freeze(
     }()
 );
 
+export const NO_LANE_INDEX = -1;
 export const NO_PLAYER_INDEX = -1;
 export const NO_TEAM_INDEX = -1;
 
