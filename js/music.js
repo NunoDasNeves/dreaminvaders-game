@@ -1,8 +1,7 @@
-import * as utils from "./util.js";
-Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
-
+import * as Utils from "./util.js";
 import * as App from './app.js';
 import { SCREEN } from './data.js';
+Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
 let context = null;
 let currMusic = null;

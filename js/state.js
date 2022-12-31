@@ -1,7 +1,7 @@
-import * as utils from "./util.js";
-Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
-
-import { params, NO_LANE_INDEX, NO_PLAYER_INDEX, NO_TEAM_INDEX, AISTATE, HITSTATE, ATKSTATE, ANIM, UNIT, weapons, units, debug } from "./data.js";
+import * as Utils from "./util.js";
+import * as Data from "./data.js";
+Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
+Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 
 /*
  * Game state init and related helpers

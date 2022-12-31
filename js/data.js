@@ -1,5 +1,5 @@
-import * as utils from "./util.js";
-Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
+import * as Utils from "./util.js";
+Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
 /*
  * Static data

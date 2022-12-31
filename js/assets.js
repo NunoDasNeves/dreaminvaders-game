@@ -1,8 +1,7 @@
-import * as utils from "./util.js";
-Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
-
+import * as Utils from "./util.js";
 import { unitSprites } from "./data.js";
 import { music } from "./music.js";
+Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
 // all the images (and other assets later) will live here
 export const assets = {

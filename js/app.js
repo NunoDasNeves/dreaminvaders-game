@@ -1,9 +1,9 @@
-import * as utils from "./util.js";
-Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
+import * as Utils from "./util.js";
 import { debug, SCREEN } from "./data.js";
-import { init as resetGame, update } from "./game.js";
-import { PLAYER_CONTROLLER, makeGameConfig, updateMouseClick } from "./state.js";
+import { init as resetGame } from "./game.js";
+import { PLAYER_CONTROLLER, makeGameConfig } from "./state.js";
 import * as Music from "./music.js";
+Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
 export let state = null;
 

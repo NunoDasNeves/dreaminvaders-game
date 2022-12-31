@@ -1,11 +1,12 @@
-import * as utils from "./util.js";
-Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
-
-import { debug, params, AISTATE, ATKSTATE, UNIT, weapons, units, HITSTATE, unitSprites, hotKeys, SCREEN, getUnitWeapon } from "./data.js";
-import { gameState, INVALID_ENTITY_INDEX, EntityRef, updateCameraSize, worldToCamera, worldVecToCamera, getLocalPlayer, PLAYER_CONTROLLER } from './state.js'
-import { assets } from "./assets.js";
+import * as Utils from "./util.js";
+import * as Data from "./data.js";
+import * as State from "./state.js";
 import * as App from './app.js';
+import { assets } from "./assets.js";
 import { debugHotKeys } from "./game.js"
+Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
+Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
+Object.entries(State).forEach(([name, exported]) => window[name] = exported);
 
 let canvas = null;
 let context = null;
