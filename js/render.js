@@ -555,12 +555,10 @@ function drawPlayerUI(player)
         );
         fillRectangleScreen(pos, buttonDims.x, buttonDims.y, "#444444");
         // draw sprite
-        if (unit.draw.sprite) {
-            const sprite = unit.draw.sprite;
-            const spriteDrawPos = vecAdd(pos, vecMul(buttonDims, 0.5))
-            vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
-            drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
-        }
+        const sprite = unitSprites[unit.id];
+        const spriteDrawPos = vecAdd(pos, vecMul(buttonDims, 0.5))
+        vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
+        drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
         // hotKey
         if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
             drawTextScreen(`[${key}]`, vec(pos.x + buttonDims.x - 5, pos.y + 20), 20, 'white', true, 'right');
