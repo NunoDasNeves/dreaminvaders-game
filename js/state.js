@@ -43,9 +43,9 @@ export class EntityRef {
         this.index = INVALID_ENTITY_INDEX;
     }
     isValid() {
-        const { exists, index, id } = gameState.entities;
+        const { exists, id } = gameState.entities;
         const idx = this.index;
-        if (idx < 0 || dx >= exists.length) {
+        if (idx < 0 || idx >= exists.length) {
             return false;
         }
         return exists[idx] && (id[idx] == this.id);
@@ -58,12 +58,17 @@ export class EntityRef {
     }
 }
 
+export const ENTITY = Object.freeze({
+    NONE: 0,
+    UNIT: 1,
+});
+
 const entityDefaults = Object.freeze({
     /*
      * If exists is false,
      * everything except nextFree is invalid
      */
-    exists: false, 
+    exists: false,
     /*
      * Pointer to next free entity,
      * only valid if exists == false
@@ -76,6 +81,8 @@ const entityDefaults = Object.freeze({
     id: INVALID_ENTITY_ID,
     /* Set this when it's time for entity to be freed */
     freeable: false,
+    /* type is shorthand for 'these components are present' */
+    type: ENTITY.NONE,
     /* Rest of the components... null == not present */
     homeIsland: null,
     team: null,
@@ -107,7 +114,7 @@ function resetEntity(i)
 
 export function reapFreeableEntities()
 {
-    const { exists, freeable, nextFree } = gameState.entities;
+    const { exists, freeable, nextFree, type } = gameState.entities;
     for (let i = 0; i < exists.length; ++i) {
         if (exists[i] && freeable[i]) {
             exists[i] = false;
@@ -118,9 +125,9 @@ export function reapFreeableEntities()
     };
 }
 
-export function createEntity()
+export function createEntity(eType)
 {
-    const { exists, id, nextFree, freeable } = gameState.entities;
+    const { exists, id, nextFree, freeable, type } = gameState.entities;
     const len = exists.length;
     let idx = gameState.freeSlot;
     if (idx == INVALID_ENTITY_INDEX) {
@@ -131,7 +138,7 @@ export function createEntity()
         nextFree[idx] = INVALID_ENTITY_INDEX;
         // freeSlot remains invalid because we use up the slot
     } else {
-        console.assert(!exists[i]);
+        console.assert(!exists[idx]);
         gameState.freeSlot = nextFree[idx];
         resetEntity(idx);
     }
@@ -140,6 +147,7 @@ export function createEntity()
     freeable[idx]   = false;
     id[idx]         = gameState.nextId;
     gameState.nextId++;
+    type[idx]       = eType;
 
     return idx;
 }
@@ -153,7 +161,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
         return INVALID_ENTITY_INDEX;
     }
 
-    const idx = createEntity();
+    const idx = createEntity(ENTITY.UNIT);
 
     homeIsland[idx] = aHomeIsland;
     team[idx]       = aTeamId;
@@ -500,5 +508,11 @@ export function getCollidingWithCircle(aPos, aRadius)
         }
     }
     return colls;
+}
 
+export function entityExists(i, eType)
+{
+    const { exists, type } = gameState.entities;
+    console.assert(i >= 0 && i < exists.length);
+    return exists[i] && type[i] == eType;
 }

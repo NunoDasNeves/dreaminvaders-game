@@ -15,11 +15,11 @@ export function init(config)
     initGameState(config);
 }
 
-function forAllEntities(fn)
+function forAllUnits(fn)
 {
-    const { exists } = gameState.entities;
+    const { exists, type } = gameState.entities;
     for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i]) {
+        if (!entityExists(i, ENTITY.UNIT)) {
             continue;
         }
         fn(i);
@@ -33,7 +33,7 @@ function nearestUnit(i, minRange, filterFn)
     let minDist = minRange;
     // TODO broad phase
     for (let j = 0; j < exists.length; ++j) {
-        if (!exists[j]) {
+        if (!entityExists(j, ENTITY.UNIT)) {
             continue;
         }
         if (!filterFn(i, j)) {
@@ -111,7 +111,7 @@ function getCollidingWith(i)
         return colls;
     }
     for (let j = 0; j < exists.length; ++j) {
-        if (!exists[j]) {
+        if (!entityExists(j, ENTITY.UNIT)) {
             continue;
         }
         if (j == i || !physState[j].canCollide) {
@@ -131,14 +131,14 @@ function updateAllCollidingPairs(pairs)
     pairs.length = 0;
 
     for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i]) {
+        if (!entityExists(i, ENTITY.UNIT)) {
             continue;
         }
         if (!physState[i].canCollide) {
             continue;
         }
         for (let j = i + 1; j < exists.length; ++j) {
-            if (!exists[j]) {
+            if (!entityExists(j, ENTITY.UNIT)) {
                 continue;
             }
             if (j == i || !physState[j].canCollide) {
@@ -192,7 +192,7 @@ function updateAiState()
     const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i]) {
+        if (!entityExists(i, ENTITY.UNIT)) {
             continue;
         }
         if (aiState[i].state == AISTATE.DO_NOTHING) {
@@ -377,7 +377,7 @@ function updatePhysicsState()
     const pairs = [];
     // move, collide
     for (let i = 0; i < exists.length; ++i) {
-        if (!exists[i]) {
+        if (!entityExists(i, ENTITY.UNIT)) {
             continue;
         }
         physState[i].colliding = false;
@@ -433,11 +433,14 @@ function updatePhysicsState()
     }
 
     // rotate to face vel
-    forAllEntities((i) => {
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.UNIT)) {
+            continue;
+        }
         if (vecLen(vel[i]) > params.minUnitVelocity) {
             angle[i] = vecToAngle(vel[i]);
         }
-    });
+    };
 }
 
 function hitEntity(i, damage)
@@ -462,7 +465,7 @@ function isOnIsland(i)
 function updateHitState(timeDeltaMs)
 {
     const { freeable, unit, color, pos, vel, accel, hp, lane, team, playerId, aiState, atkState, hitState, physState } = gameState.entities;
-    forAllEntities((i) => {
+    forAllUnits((i) => {
         hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
 
@@ -584,7 +587,7 @@ function updateAtkState(timeDeltaMs)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
 
-    forAllEntities((i) => {
+    forAllUnits((i) => {
         const newTime = atkState[i].timer - timeDeltaMs;
         if (newTime > 0) {
             atkState[i].timer = newTime;
@@ -626,7 +629,7 @@ function updateAnimState(timeDeltaMs)
 {
     const { exists, unit, aiState, atkState, animState } = gameState.entities;
 
-    forAllEntities((i) => {
+    forAllUnits((i) => {
         const aState = animState[i];
         const sprite = unitSprites[unit[i].id];
         if (!sprite) {
@@ -698,7 +701,7 @@ function updateDreamerState(timeDeltaMs)
         for (const pId of playerIds) {
             playerCounts[pId] = 0;
         }
-        forAllEntities(i => {
+        forAllUnits(i => {
             if (playerId[i] == NO_PLAYER_INDEX || !homeIsland[i]) {
                 return;
             }
