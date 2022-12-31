@@ -1,5 +1,4 @@
 ## TODO
-- weapons: cleaner handling of different types and associated logic
 - weapons: compute hit at start of swing state and store it - so renderer can use it during swing
 - weapons: have a 'hit' time, instead of having to be at end of swing
 - make animations optionally loop or not loop; gives some flexibility for pausing at end of swing state, recover, etc...
@@ -26,6 +25,9 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- make music loop cleanly
+- get music playing
+- units, weapons, sprites all use a similar data format
 - AOE weapon with basic visual effect
 - add a 3rd unit type - AOE ranged attacker
 - animation - fix flicker on change to animation with different number of frames
