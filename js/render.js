@@ -240,7 +240,7 @@ function drawWeapon(i)
             const offTangent = vecMul(tangent, unit[i].radius*0.5);
             const off = vecMul(dir, unit[i].radius*0.75);
             const didHit = atkState[i].didHit;
-            let color = 'rgb(200,200,0)';
+            let color = 'rgb(200,200,200)';
             vecAddTo(off, offTangent);
             const finalPos = vecAdd(pos[i], off);
             switch(atkState[i].state) {
@@ -252,15 +252,15 @@ function drawWeapon(i)
                     const forwardOff = vecMul(dir, f*weapon.range);
                     vecAddTo(finalPos, forwardOff);
                     const num = 100+155*f;
-                    color = didHit ? `rgb(${num}, 20, 20)` : `rgb(${num},${num},${num})`;
+                    color = didHit ? `rgb(${num}, 20, 20)` : `rgb(${num},${num},${num},)`;
                     break;
                 }
                 case ATKSTATE.RECOVER:
                 {
-                    color = didHit ? 'rgb(100,20,20)' : 'rgb(200,200,200)';
                     const f = clamp(atkState[i].timer / weapon.recoverMs, 0, 1);
                     const forwardOff = vecMul(dir, f*weapon.range);
                     vecAddTo(finalPos, forwardOff);
+                    color = didHit ? 'rgb(100,20,20)' : 'rgb(200,200,200)';
                     break;
                 }
             }
@@ -268,7 +268,7 @@ function drawWeapon(i)
             break;
         }
     }
-    if (debug.drawWeaponRange && weapon.range > 0)
+    if (debug.drawUI && debug.drawWeaponRange && weapon.range > 0)
     {
         strokeCircle(pos[i], weapon.range + unit[i].radius, 1, 'red');
     }

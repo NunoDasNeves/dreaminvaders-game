@@ -337,7 +337,7 @@ for (const sprite of Object.values(unitSprites)) {
 }
 
 export const weapons = makeFromDefaults("weapon", weaponData, weaponDefaults, weaponRequired);
-export const units = makeFromDefaults("unit", unitData, unitDefaults, weaponRequired);
+export const units = makeFromDefaults("unit", unitData, unitDefaults, unitRequired);
 
 export function getUnitWeapon(unit)
 {
