@@ -203,11 +203,15 @@ function drawWeapon(i)
                     break;
                 case ATKSTATE.SWING:
                 {
+                    const hitPos = atkState[i].aoeHitPos;
+                    const f = clamp(1 - atkState[i].timer / weapon.recoverMs, 0, 1);
+                    const colorLaser = `rgb(255,${255*f},255)`;
+                    drawLine(pos[i], hitPos, 2, colorLaser);
                     break;
                 }
                 case ATKSTATE.RECOVER:
                 {
-                    const hitPos = atkState[i].lastHitPos;
+                    const hitPos = atkState[i].aoeHitPos;
                     const f = clamp(atkState[i].timer / weapon.recoverMs, 0, 1);
                     const colorLaser = `rgb(255,${255*f},255)`;
                     const colorBoom = `rgba(${55+200*f},${200*f},0,${clamp(f*2,0,1)}`;
@@ -235,7 +239,8 @@ function drawWeapon(i)
             const tangent = vecTangentRight(dir);
             const offTangent = vecMul(tangent, unit[i].radius*0.5);
             const off = vecMul(dir, unit[i].radius*0.75);
-            let color = 'rgb(100,20,20)';
+            const didHit = atkState[i].didHit;
+            let color = 'rgb(200,200,0)';
             vecAddTo(off, offTangent);
             const finalPos = vecAdd(pos[i], off);
             switch(atkState[i].state) {
@@ -246,11 +251,13 @@ function drawWeapon(i)
                     const f = clamp(1 - atkState[i].timer / weapon.swingMs, 0, 1);
                     const forwardOff = vecMul(dir, f*weapon.range);
                     vecAddTo(finalPos, forwardOff);
-                    color = `rgb(${100 + 155*f}, 20, 20)`;
+                    const num = 100+155*f;
+                    color = didHit ? `rgb(${num}, 20, 20)` : `rgb(${num},${num},${num})`;
                     break;
                 }
                 case ATKSTATE.RECOVER:
                 {
+                    color = didHit ? 'rgb(100,20,20)' : 'rgb(200,200,200)';
                     const f = clamp(atkState[i].timer / weapon.recoverMs, 0, 1);
                     const forwardOff = vecMul(dir, f*weapon.range);
                     vecAddTo(finalPos, forwardOff);

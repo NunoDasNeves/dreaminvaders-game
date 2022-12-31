@@ -652,13 +652,35 @@ function updateHitState(timeDeltaMs)
     });
 }
 
-function tryHitTarget(i)
+function doWeaponHit(i)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
-    const weapon = getUnitWeapon(unit[i]);
-
+    console.assert(atkState[i].state == ATKSTATE.RECOVER);
     const t = target[i].getIndex();
     console.assert(t != INVALID_ENTITY_INDEX);
+    const weapon = getUnitWeapon(unit[i]);
+
+    if (weapon.aoeRadius) {
+        for (const j of getCollidingWithCircle(atkState[i].aoeHitPos, weapon.aoeRadius)) {
+            if (team[i] != team[j]) {
+                hitEntity(j, weapon.damage);
+            }
+        }
+        return;
+    }
+    if (canAttackTarget(i) && atkState[i].didHit) {
+        hitEntity(t, weapon.damage);
+    }
+}
+
+function startWeaponSwing(i)
+{
+    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    console.assert(atkState[i].state == ATKSTATE.SWING);
+    const t = target[i].getIndex();
+    console.assert(t != INVALID_ENTITY_INDEX);
+    const weapon = getUnitWeapon(unit[i]);
+
     // AOE
     if (weapon.aoeRadius) {
         const targetPos = pos[t];
@@ -666,20 +688,12 @@ function tryHitTarget(i)
         const offTarget = Math.random() * (1 - weapon.aoeAccuracy);
         const offVec = vecMulBy(vecMulBy(vecRandDir(), offTarget), weapon.aoeMissRadius);
         const hitPos = vecAdd(targetPos, offVec);
-        for (const j of getCollidingWithCircle(hitPos, weapon.aoeRadius)) {
-            if (team[i] != team[j]) {
-                hitEntity(j, weapon.damage);
-            }
-        }
-        // TODO this better
-        atkState[i].lastHitPos = vecClone(hitPos);
+        atkState[i].aoeHitPos = vecClone(hitPos);
         return;
     }
 
     // single target
-    if (canAttackTarget(i) && Math.random() > weapon.missChance) {
-        hitEntity(t, weapon.damage);
-    } else {} // otherwise miss
+    atkState[i].didHit = canAttackTarget(i) && Math.random() > weapon.missChance;
 }
 
 function updateAtkState(timeDeltaMs)
@@ -704,13 +718,14 @@ function updateAtkState(timeDeltaMs)
             {
                 atkState[i].state = ATKSTATE.SWING;
                 atkState[i].timer = newTime + weapon.swingMs; // there may be remaining negative time; remove that from the timer by adding here
+                startWeaponSwing(i);
                 break;
             }
             case ATKSTATE.SWING:
             {
                 atkState[i].state = ATKSTATE.RECOVER;
                 atkState[i].timer = newTime + weapon.recoverMs;
-                tryHitTarget(i);
+                doWeaponHit(i);
                 break;
             }
             case ATKSTATE.RECOVER:
