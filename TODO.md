@@ -1,14 +1,14 @@
 ## TODO
-- weapons: compute hit at start of swing state and store it - so renderer can use it during swing
-- weapons: have a 'hit' time, instead of having to be at end of swing
-- make animations optionally loop or not loop; gives some flexibility for pausing at end of swing state, recover, etc...
-- better handling of weapon animations - some kinda particle object or entity so it has its own lifetime
 - more weapon types
     - projectile weapon
 - armor
 - for 1 player, make UI stuff into buttons, make lanes clickable
 - fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
 - round spawning areas at end of each lane (on the island)
+- dirt paths join up into single path to lighthouse, which is set further back on island
+- weapons: have a 'hit' time, instead of having to be at end of swing ?
+- make animations optionally loop or not loop? gives some flexibility for pausing at end of swing state, recover, etc...
+- sort units for drawing
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
@@ -21,10 +21,13 @@
 - better steering/avoidance?
     - deal with avoidance conflict (they avoid the same way)?
     - use velocity to determine how far ahead to look
-        - use other boids velocity to determine where they'll be
+        - use other units velocity to determine where they'll be
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- VFX entity type - now can spawn, update and render VFX independently of units
+- fix regression: UI not displaying units
+- weapons: compute hit at start of swing state and store it - so renderer can use it during swing
 - make music loop cleanly
 - get music playing
 - units, weapons, sprites all use a similar data format
