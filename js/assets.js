@@ -2,6 +2,7 @@ import * as utils from "./util.js";
 Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
 
 import { unitSprites } from "./data.js";
+import { music } from "./music.js";
 
 // all the images (and other assets later) will live here
 export const assets = {
@@ -22,13 +23,6 @@ const imageData = {
         width: 128,
         height: 256,
         centerOffset: vec(0, 74)
-    },
-};
-
-const musicData = {
-    menu: {
-        filename: 'menu.mp3',
-        loop: true,
     },
 };
 
@@ -85,9 +79,10 @@ export function init()
         }
         sprite.imgAsset = assets.images[name];
     }
-    for (const [name, data] of Object.entries(musicData)) {
+    for (const [name, data] of Object.entries(music)) {
         const { filename } = data;
         const asset = loadAudioAsset(filename, data.loop ? true : false);
         assets.music[name] = asset;
+        data.asset = asset;
     }
 }

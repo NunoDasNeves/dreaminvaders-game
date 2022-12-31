@@ -1,3 +1,29 @@
+/*
+ * Map a list 'data' like [{ id: 0, ... }, { id: 1, ... }, ... ] to an object like { 0: { id, ... }, 1: { id, ... } }
+ * Require that the list elements have all keys in the 'required' list
+ * Any keys not present which are in 'defaults' are replaced by the value in 'defaults'
+ * Use 'name' to print an error
+ */
+export function makeFromDefaults(name, data, defaults, required) {
+    return Object.freeze(
+        data.reduce((acc, item) => {
+            for (const key of required) {
+                if (!(key in item)) {
+                    console.error(`Required property ${key} missing from an item in ${name} data`);
+                    return acc;
+                }
+            }
+            for (const [key, val] of Object.entries(defaults)) {
+                if (!(key in item)) {
+                    item[key] = val;
+                }
+            }
+            acc[item.id] = item;
+            return acc;
+        }, {})
+    );
+}
+
 export function clamp(x, min, max)
 {
     if (x < min) {

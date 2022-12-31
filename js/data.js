@@ -13,8 +13,8 @@ export const debug = {
     drawUI: false, // all the debug UI below is dependent on this
     drawAiState: true,
     drawCollision: false,
-    drawSightRange: false,
-    drawWeaponRange: false,
+    drawSightRange: true,
+    drawWeaponRange: true,
     drawAngle: false,
     drawVel: true,
     drawAccel: true,
@@ -313,26 +313,6 @@ const unitData = [
         cdTimeMs: 1500,
     }
 ];
-
-function makeFromDefaults(name, data, defaults, required) {
-    return Object.freeze(
-        data.reduce((acc, item) => {
-            for (const key of required) {
-                if (!(key in item)) {
-                    console.error(`Required property ${key} missing from an item in ${name} data`);
-                    return acc;
-                }
-            }
-            for (const [key, val] of Object.entries(defaults)) {
-                if (!(key in item)) {
-                    item[key] = val;
-                }
-            }
-            acc[item.id] = item;
-            return acc;
-        }, {})
-    );
-}
 
 export const unitSprites = makeFromDefaults("unit sprite", unitSpriteData,
                                             unitSpriteDefaults, unitSpriteRequired);

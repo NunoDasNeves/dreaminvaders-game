@@ -3,6 +3,7 @@ import * as Game from "./game.js";
 import * as State from "./state.js";
 import * as Render from "./render.js";
 import * as Assets from "./assets.js";
+import * as Music from "./music.js";
 import { debug } from "./data.js";
 
 window.onload = start;
@@ -72,6 +73,7 @@ function initEvents()
 function start()
 {
     Assets.init();
+    Music.init();
     Render.init();
     initEvents();
     App.init();
