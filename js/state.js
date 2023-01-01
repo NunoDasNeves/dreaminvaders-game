@@ -21,7 +21,7 @@ export function closestPoint(arr, pos)
     return minPoint;
 }
 
-export let gameState = null;
+export let gameState = {};
 
 /*
  * Reference to an entity that is allowed to persist across more than one frame
@@ -29,6 +29,7 @@ export let gameState = null;
  * TODO enforce it better; i.e. use a getter that return null if it's not valid anymore
  */
 export const INVALID_ENTITY_INDEX = -1;
+export const INVALID_ENTITY_ID = -1n;
 export class EntityRef {
     constructor(index) {
         this.index = index;
@@ -42,10 +43,12 @@ export class EntityRef {
         this.index = INVALID_ENTITY_INDEX;
     }
     isValid() {
-        if (this.index < 0) {
+        const { exists, index, id } = gameState.entities;
+        const idx = this.index;
+        if (idx < 0 || dx >= exists.length) {
             return false;
         }
-        return gameState.entities.exists[this.index] && (gameState.entities.id[this.index] == this.id);
+        return exists[idx] && (id[idx] == this.id);
     }
     getIndex() {
         if (this.isValid()) {
@@ -56,23 +59,37 @@ export class EntityRef {
 }
 
 const entityDefaults = Object.freeze({
-    exists: false,
-    freeable: false,
-    id: 0n,
+    /*
+     * If exists is false,
+     * everything except nextFree is invalid
+     */
+    exists: false, 
+    /*
+     * Pointer to next free entity,
+     * only valid if exists == false
+     */
     nextFree: INVALID_ENTITY_INDEX,
+    /*
+     * Globally unique id for differentiating entities,
+     * due to the fact slots are reused
+     */
+    id: INVALID_ENTITY_ID,
+    /* Set this when it's time for entity to be freed */
+    freeable: false,
+    /* Rest of the components... null == not present */
     homeIsland: null,
-    team: NO_TEAM_INDEX,
+    team: null,
     color: null,
-    playerId: NO_PLAYER_INDEX,
+    playerId: null,
     unit: null,
-    hp: 0,
+    hp: null,
     pos: null,
     vel: null,
     accel: null,
-    angle: 0,
-    angVel: 0,
+    angle: null,
+    angVel: null,
     target: null,
-    lane: NO_LANE_INDEX,
+    lane: null,
     atkState: null,
     aiState: null,
     physState: null,
@@ -88,26 +105,41 @@ function resetEntity(i)
     }
 }
 
+export function reapFreeableEntities()
+{
+    const { exists, freeable, nextFree } = gameState.entities;
+    for (let i = 0; i < exists.length; ++i) {
+        if (exists[i] && freeable[i]) {
+            exists[i] = false;
+            // add to free list
+            nextFree[i] = gameState.freeSlot;
+            gameState.freeSlot = i;
+        }
+    };
+}
+
 export function createEntity()
 {
-    const { exists, id, nextFree, freeable, pos } = gameState.entities;
+    const { exists, id, nextFree, freeable } = gameState.entities;
     const len = exists.length;
-    if (gameState.freeSlot == INVALID_ENTITY_INDEX) {
+    let idx = gameState.freeSlot;
+    if (idx == INVALID_ENTITY_INDEX) {
         for (const [key, arr] of Object.entries(gameState.entities)) {
-            arr.push(null);
+            arr.push(entityDefaults[key]);
         }
-        nextFree[len] = INVALID_ENTITY_INDEX;
-        gameState.freeSlot = len;
+        idx = len;
+        nextFree[idx] = INVALID_ENTITY_INDEX;
+        // freeSlot remains invalid because we use up the slot
+    } else {
+        console.assert(!exists[i]);
+        gameState.freeSlot = nextFree[idx];
+        resetEntity(idx);
     }
-    const idx = gameState.freeSlot;
-    gameState.freeSlot = nextFree[idx];
 
-    resetEntity(idx);
     exists[idx]     = true;
     freeable[idx]   = false;
     id[idx]         = gameState.nextId;
     gameState.nextId++;
-    nextFree[idx]   = INVALID_ENTITY_INDEX;
 
     return idx;
 }
@@ -241,29 +273,27 @@ export function makeGameConfig(p0name, p0controller, p1name, p1controller)
 
 export function initGameState(gameConfig)
 {
-    gameState = {
-        entities: Object.keys(entityDefaults)
-            .reduce(
-                (acc, key) => {
+    gameState.entities =
+        Object
+        .keys(entityDefaults)
+        .reduce((acc, key) => {
                     acc[key] = [];
                     return acc;
-                },
-            {}),
-        freeSlot: INVALID_ENTITY_INDEX,
-        nextId: 0n, // bigint
-        camera: {
+                }, {});
+    gameState.freeSlot = INVALID_ENTITY_INDEX;
+    gameState.nextId = 0n; // bigint
+    gameState.camera = {
             pos: vec(),
             scale: 1, // scale +++ means zoom out
             easeFactor: 0.1
-        },
-        players: [],
-        islands: [],
-        lanes: [],
-        localPlayerId: 0,
-        mouseSelectLane: true,
-        input: makeInput(),
-        lastInput: makeInput(),
-    };
+        };
+    gameState.players = [];
+    gameState.islands = [];
+    gameState.lanes = [];
+    gameState.localPlayerId = 0;
+    gameState.mouseSelectLane = true;
+    gameState.input = makeInput();
+    gameState.lastInput = makeInput();
     if (gameConfig.players[0].controller == PLAYER_CONTROLLER.LOCAL_HUMAN &&
         gameConfig.players[1].controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         gameState.mouseSelectLane = false;

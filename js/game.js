@@ -1,9 +1,10 @@
-import * as utils from "./util.js";
-Object.entries(utils).forEach(([name, exported]) => window[name] = exported);
-
-import { debug, params, AISTATE, HITSTATE, ATKSTATE, ANIM, weapons, units, SCREEN, NO_PLAYER_INDEX, UNIT, hotKeys, getUnitWeapon, unitSprites } from "./data.js";
-import { gameState, INVALID_ENTITY_INDEX, EntityRef, spawnUnit, spawnUnitInLane, updateGameInput, initGameState, getLocalPlayer, PLAYER_CONTROLLER, getCollidingWithCircle } from './state.js';
+import * as Utils from "./util.js";
+import * as Data from "./data.js";
+import * as State from "./state.js";
 import * as App from './app.js';
+Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
+Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
+Object.entries(State).forEach(([name, exported]) => window[name] = exported);
 
 /*
  * Game init and update functions
@@ -876,15 +877,7 @@ function updateGame(timeDeltaMs)
 
     // this should come right before reap
     updateHitState(timeDeltaMs);
-    // reap freeable entities
-    for (let i = 0; i < exists.length; ++i) {
-        if (exists[i] && freeable[i]) {
-            exists[i] = false;
-            // add to free list
-            gameState.entities.nextFree[i] = gameState.freeSlot;
-            gameState.freeSlot = i;
-        }
-    };
+    reapFreeableEntities();
 
     updateDreamerState(timeDeltaMs); // should come before player state, since dreamer affects income
     updatePlayerState(timeDeltaMs);
@@ -966,13 +959,13 @@ function tryBuildUnit(playerId, unit)
     if (player.unitCds[unit.id] > 0) {
         return false;
     }
-    let id = INVALID_ENTITY_INDEX;
+    let idx = INVALID_ENTITY_INDEX;
     let iters = 100;
-    while (id == INVALID_ENTITY_INDEX && iters > 0) {
-        id = spawnUnitInLane(player.laneSelected, playerId, unit);
+    while (idx == INVALID_ENTITY_INDEX && iters > 0) {
+        idx = spawnUnitInLane(player.laneSelected, playerId, unit);
         iters--;
     }
-    if (id == INVALID_ENTITY_INDEX) {
+    if (idx == INVALID_ENTITY_INDEX) {
         return false;
     }
     player.gold -= unit.goldCost;
