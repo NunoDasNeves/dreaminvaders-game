@@ -109,6 +109,7 @@ export const UNIT = Object.freeze({
 export const VFX = Object.freeze({
     EXPLOSION: 1,
     BIGEYE_BEAM: 2,
+    TANK_SPARKS: 3,
 });
 
 const unitSpriteRequired = ['id', 'filename', 'width', 'height'];
@@ -241,12 +242,12 @@ const weaponData = [
         aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
     },{
         id: UNIT.TANK,
-        range: 30,
-        aimMs: 300,
-        swingMs: 300,
-        recoverMs: 500,
-        damage: 3,
-        missChance: 0.25,
+        range: 100,
+        aimMs: 400,
+        swingMs: 200,
+        recoverMs: 800,
+        damage: 5,
+        missChance: 0.20,
     },
 ];
 
@@ -270,7 +271,7 @@ const unitDefaults = Object.freeze({
 const unitData = [
     {
         id: UNIT.BASE,
-        maxHp: 50,
+        maxHp: 100,
         radius: params.lighthouseRadius,
         collides: false,
         canFall: false,
@@ -304,16 +305,16 @@ const unitData = [
         cdTimeMs: 300,
     },{
         id: UNIT.TANK,
-        maxSpeed: 1,
+        maxSpeed: 0.8,
         accel: 0.1,
         angSpeed: 1,
         maxHp: 10,
-        sightRange: params.laneWidth*2,
+        sightRange: 120,
         radius: 20,
         collides: true,
         canFall: true,
         defaultAiState: AISTATE.PROCEED,
-        lighthouseDamage: 5,
+        lighthouseDamage: 12,
         goldCost: 20,
         cdTimeMs: 1500,
     }

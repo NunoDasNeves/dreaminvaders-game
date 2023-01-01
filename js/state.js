@@ -104,7 +104,6 @@ const entityDefaults = Object.freeze({
     hitState: null,
     animState: null,
     vfxState: null,
-    parent: null,
     debugState: null,
 });
 
@@ -157,30 +156,57 @@ export function createEntity(eType)
 
 export function spawnVFXBigEyeBeam(i, hitPos)
 {
-    const { pos, vfxState, parent } = gameState.entities;
+    const { pos, vfxState } = gameState.entities;
     const idx = createEntity(ENTITY.VFX);
     pos[idx] = pos[i];
-    parent[idx] = new EntityRef(i);
     vfxState[idx] = {
         type: VFX.BIGEYE_BEAM,
         hitPos,
         timeMs: 600,
         totalTimeMs: 600,
     };
+    return idx;
+}
+
+export function spawnVFXTankSparks(i, hitPos)
+{
+    const { pos, vfxState } = gameState.entities;
+    const idx = createEntity(ENTITY.VFX);
+    pos[idx] = pos[i];
+    const traceParticles = [];
+    const hitAngle = vecToAngle(vecSub(hitPos, pos[i]));
+    for (let p = 0; p < 5; ++p) {
+        const pAngle = hitAngle + Math.random()*(Math.PI/4) - Math.PI/8; 
+        const pVel = vecMulBy(vecFromAngle(pAngle), 1+Math.random());
+        traceParticles.push({
+            pos: vecClone(pos[i]),
+            vel: pVel,
+            accel: vec(),
+            width: 2,
+            color: "rgba(255,255,255,1)",
+        });
+    }
+    vfxState[idx] = {
+        type: VFX.TANK_SPARKS,
+        timeMs: 200,
+        totalTimeMs: 200,
+        traceParticles,
+    };
+    return idx;
 }
 
 export function spawnVFXExplosion(aPos, radius, timeMs)
 {
-    const { pos, vfxState, parent } = gameState.entities;
+    const { pos, vfxState } = gameState.entities;
     const idx = createEntity(ENTITY.VFX);
     pos[idx] = aPos;
-    parent[idx] = new EntityRef(INVALID_ENTITY_INDEX);
     vfxState[idx] = {
         type: VFX.EXPLOSION,
         timeMs,
         totalTimeMs: timeMs,
         radius,
     };
+    return idx;
 }
 
 export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLane = null)

@@ -548,8 +548,15 @@ function doWeaponHit(i)
     const weapon = getUnitWeapon(unit[i]);
 
     switch(weapon.id) {
-        case UNIT.CHOGORINGU:
         case UNIT.TANK:
+        {
+            if (canAttackTarget(i) && atkState[i].didHit) {
+                hitEntity(t, weapon.damage);
+                spawnVFXExplosion(pos[t], 8, 300);
+            }
+            break;
+        }
+        case UNIT.CHOGORINGU:
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
                 hitEntity(t, weapon.damage);
@@ -579,9 +586,14 @@ function startWeaponSwing(i)
 
     switch(weapon.id) {
         case UNIT.CHOGORINGU:
+        {
+            atkState[i].didHit = canAttackTarget(i) && Math.random() > weapon.missChance;
+            break;
+        }
         case UNIT.TANK:
         {
             atkState[i].didHit = canAttackTarget(i) && Math.random() > weapon.missChance;
+            spawnVFXTankSparks(i, pos[t]);
             break;
         }
         case UNIT.BIGEYE:
@@ -704,6 +716,16 @@ function updateAnimState(timeDeltaMs)
     });
 }
 
+function updateTraceParticles(particles)
+{
+    const numParticles = particles.length
+    for (let p = 0; p < numParticles; ++p) {
+        const particle = particles[p];
+        vecAddTo(particle.vel, particle.accel);
+        vecAddTo(particle.pos, particle.vel);
+    }
+}
+
 function updateVFXState(timeDeltaMs)
 {
     const { exists, freeable, vfxState, parent } = gameState.entities;
@@ -711,10 +733,14 @@ function updateVFXState(timeDeltaMs)
         if (!entityExists(i, ENTITY.VFX)) {
             continue;
         }
-        vfxState[i].timeMs -= timeDeltaMs;
-        if (vfxState[i].timeMs <= 0) {
+        const vfx = vfxState[i];
+        vfx.timeMs -= timeDeltaMs;
+        if (vfx.timeMs <= 0) {
             freeable[i] = true;
             continue;
+        }
+        if (vfx.traceParticles) {
+            updateTraceParticles(vfx.traceParticles);
         }
     }
 }

@@ -188,15 +188,23 @@ function drawLine(posFrom, posTo, width, strokeStyle) {
     context.stroke();
 }
 
+function drawTraceParticles(origin, particles)
+{
+    const numParticles = particles.length;
+    for (let i = 0; i < numParticles; ++i) {
+        const particle = particles[i];
+        drawLine(origin, particle.pos, particle.width, particle.color);
+    }
+}
+
 function drawVFX(i)
 {
-    const { pos, vfxState, parent } = gameState.entities;
+    const { pos, vfxState } = gameState.entities;
     const vfx = vfxState[i];
 
     switch(vfxState[i].type) {
         case (VFX.BIGEYE_BEAM):
         {
-            const p = parent[i].getIndex();
             const weapon = weapons[UNIT.BIGEYE];
             const f = clamp(1 - vfx.timeMs / vfx.totalTimeMs, 0, 1);
             const colorLaser = `rgb(255,${255*f},255)`;
@@ -210,6 +218,11 @@ function drawVFX(i)
             const f = clamp(vfx.timeMs / vfx.totalTimeMs, 0, 1);
             const colorBoom = `rgba(${55+200*f},${200*f},0,${clamp(f*2,0,1)}`;
             fillCircle(pos[i], vfx.radius, colorBoom);
+            break;
+        }
+        case (VFX.TANK_SPARKS):
+        {
+            drawTraceParticles(pos[i], vfx.traceParticles);
             break;
         }
         default:
