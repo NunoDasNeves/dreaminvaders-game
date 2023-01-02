@@ -217,6 +217,8 @@ function updateAiState()
                 } else if (nearestAtkTarget.isValid()) {
                     aiState[i].state = AISTATE.ATTACK;
                     target[i] = nearestAtkTarget;
+                    atkState[i].timer = weapon.aimMs;
+                    atkState[i].state = ATKSTATE.AIM;
                 } else if (nearestChaseTarget.isValid()) {
                     aiState[i].state = AISTATE.CHASE;
                     target[i] = nearestChaseTarget;
