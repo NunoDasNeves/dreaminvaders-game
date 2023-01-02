@@ -4,6 +4,7 @@ import * as State from "./state.js";
 import * as Render from "./render.js";
 import * as Assets from "./assets.js";
 import * as Music from "./music.js";
+import * as UI from "./UI.js";
 import { debug } from "./data.js";
 
 window.onload = start;
@@ -75,6 +76,7 @@ function start()
     Assets.init();
     Music.init();
     Render.init();
+    UI.init();
     initEvents();
     App.init();
 

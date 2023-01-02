@@ -2,6 +2,7 @@ import * as Utils from "./util.js";
 import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as App from './app.js';
+import * as UI from './UI.js';
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
@@ -1050,5 +1051,6 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
             updateGame(timeDeltaMs);
         }
     }
+    UI.doUI();
     updateGameInput();
 }

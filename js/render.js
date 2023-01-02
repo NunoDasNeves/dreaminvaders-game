@@ -1,12 +1,15 @@
 import * as Utils from "./util.js";
 import * as Data from "./data.js";
 import * as State from "./state.js";
+import * as Draw from './draw.js';
 import * as App from './app.js';
+import * as UI from './UI.js';
 import { assets } from "./assets.js";
 import { debugHotKeys } from "./game.js"
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
+Object.entries(Draw).forEach(([name, exported]) => window[name] = exported);
 
 let canvas = null;
 let context = null;
@@ -27,25 +30,8 @@ function drawImage(imgAsset, pos)
         context.imageSmoothingEnabled = false;
         context.drawImage(imgAsset.img, drawPos.x, drawPos.y, drawWidth, drawHeight);
     } else {
-        fillRectangleScreen(drawPos, drawWidth, drawHeight, "#000000");
-    }
-}
-
-function drawSpriteScreen(sprite, row, col, pos)
-{
-    const asset = sprite.imgAsset;
-    if (asset.loaded) {
-        const sourceX = col * sprite.width;
-        const sourceY = row * sprite.height;
-        context.imageSmoothingEnabled = false;
-        context.drawImage(
-            asset.img,
-            sourceX, sourceY,
-            sprite.width, sprite.height,
-            pos.x, pos.y,
-            sprite.width, sprite.height);
-    } else {
-        fillRectangleScreen(pos, sprite.width, sprite.height, "#000000");
+        context.fillStyle = "#000";
+        context.fillRect(drawPos.x, drawPos.y, drawWidth, drawHeight);
     }
 }
 
@@ -67,7 +53,8 @@ function drawSprite(sprite, row, col, pos)
             drawPos.x, drawPos.y,
             drawWidth, drawHeight);
     } else {
-        fillRectangleScreen(drawPos, drawWidth, drawHeight, "#000000");
+        context.fillStyle = "#000";
+        context.fillRect(drawPos.x, drawPos.y, drawWidth, drawHeight);
     }
 }
 
@@ -176,24 +163,12 @@ function drawUnit(i)
     }
 }
 
-function drawLine(posFrom, posTo, width, strokeStyle) {
-    const posFromScreen = worldVecToCamera(posFrom);
-    const posToScreen = worldVecToCamera(posTo);
-    context.strokeStyle = strokeStyle;
-    context.setLineDash([]);
-    context.lineWidth = width / gameState.camera.scale;
-    context.beginPath();
-    context.moveTo(posFromScreen.x, posFromScreen.y);
-    context.lineTo(posToScreen.x, posToScreen.y);
-    context.stroke();
-}
-
 function drawTraceParticles(origin, particles)
 {
     const numParticles = particles.length;
     for (let i = 0; i < numParticles; ++i) {
         const particle = particles[i];
-        drawLine(origin, particle.pos, particle.width, particle.color);
+        strokeLineWorld(context, origin, particle.pos, particle.width, particle.color);
     }
 }
 
@@ -208,7 +183,7 @@ function drawVFX(i)
             const weapon = weapons[UNIT.BIGEYE];
             const f = clamp(1 - vfx.timeMs / vfx.totalTimeMs, 0, 1);
             const colorLaser = `rgb(255,${255*f},255)`;
-            drawLine(pos[i], vfx.hitPos, f*weapon.aoeRadius/2, colorLaser);
+            strokeLineWorld(context, pos[i], vfx.hitPos, f*weapon.aoeRadius/2, colorLaser);
             fillCircle(pos[i], f*weapon.aoeRadius/4, colorLaser);
             fillCircle(vfx.hitPos, weapon.aoeRadius/3, colorLaser);
             break;
@@ -277,7 +252,7 @@ function drawWeapon(i)
                     break;
                 }
             }
-            fillEquilateralTriangle(finalPos, vecToAngle(dir), 5, 8, color);
+            fillTriangleWorld(context, finalPos, vecToAngle(dir), 5, 8, color);
             break;
         }
     }
@@ -368,58 +343,15 @@ function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
     strokeCapsule(worldPos, length - radius, radius, angle, width, strokeStyle, true);
 }
 
-function fillEquilateralTriangle(worldPos, angle, base, height, fillStyle, fromCenter=true)
-{
-    const coords = worldToCamera(worldPos.x, worldPos.y);
-    const scaledBase = base / gameState.camera.scale;
-    const scaledHeight = height / gameState.camera.scale;
-    // points right - so angle == 0
-    const triPoints = fromCenter ?
-        [
-            vec(-scaledHeight/2, -scaledBase/2),
-            vec(scaledHeight/2, 0),
-            vec(-scaledHeight/2, scaledBase/2),
-        ] :
-        [
-            vec(0, -scaledBase/2),
-            vec(scaledHeight, 0),
-            vec(0, scaledBase/2),
-        ];
-
-    // rotate to angle
-    triPoints.forEach((v) => vecRotateBy(v, angle));
-
-    // move to coords
-    triPoints.forEach((v) => vecAddTo(v, coords));
-
-    context.beginPath();
-    context.moveTo(triPoints[2].x, triPoints[2].y);
-    for (let i = 0; i < triPoints.length; ++i) {
-        context.lineTo(triPoints[i].x, triPoints[i].y);
-    }
-
-    context.fillStyle = fillStyle;
-    context.fill();
-
-}
-
-function fillRectangleScreen(pos, width, height, fillStyle, fromCenter=false)
-{
-    let coords = pos;
-    if (fromCenter) {
-        coords = vec(pos.x - width * 0.5, pos.y - height * 0.5);
-    }
-    context.beginPath();
-    context.rect(coords.x, coords.y, width, height);
-    context.fillStyle = fillStyle;
-    context.fill();
-}
-
 function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
-    let coords = worldToCamera(worldPos.x, worldPos.y);
+    const coords = worldToCamera(worldPos.x, worldPos.y);
     const scaledWidth = width / gameState.camera.scale;
     const scaledHeight = height / gameState.camera.scale;
-    fillRectangleScreen(coords, scaledWidth, scaledHeight, fillStyle, fromCenter);
+    if (fromCenter) {
+        vecSubFrom(coords, vec(scaledWidth * 0.5, scaledHeight * 0.5));
+    }
+    context.fillStyle = fillStyle;
+    context.fillRect(coords.x, coords.y, scaledWidth, scaledHeight);
 }
 
 function drawIsland(team, island)
@@ -551,83 +483,6 @@ export function getBoundingClientRect()
     return canvas.getBoundingClientRect();
 }
 
-function drawPlayerUI(player)
-{
-    const UIwidth = canvas.width/3 + 64; // TODO compute this based on unit hotkeys n stuff - currently based on lighthouse HP bars
-    const buttonDims = vec(64,64);
-    const UIstartX = player.id == 0 ? 0 : canvas.width - UIwidth;
-    const buttonStart = vec(UIstartX + 32, canvas.height-48-buttonDims.y);
-    const buttonXGap = 16;
-    let xoff = 0;
-    // unit buttons and hotkeys
-    for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
-        const pos = vec(
-            buttonStart.x + xoff,
-            buttonStart.y
-        );
-        fillRectangleScreen(pos, buttonDims.x, buttonDims.y, "#444444");
-        // draw sprite
-        const sprite = unitSprites[unit.id];
-        const spriteDrawPos = vecAdd(pos, vecMul(buttonDims, 0.5))
-        vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
-        drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
-        // hotKey
-        if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
-            drawTextScreen(`[${key}]`, vec(pos.x + buttonDims.x - 5, pos.y + 20), 20, 'white', true, 'right');
-        }
-        // overlay if can't afford
-        let costColor = '#ffdd22';
-        if (player.gold < unit.goldCost) {
-            fillRectangleScreen(pos, buttonDims.x, buttonDims.y, "rgba(20,20,20,0.6)");
-            costColor = '#ff7744';
-        }
-        if (player.unitCds[unit.id] > 0) {
-            const f = (player.unitCds[unit.id] / unit.cdTimeMs);
-            fillRectangleScreen(pos, buttonDims.x, buttonDims.y * f, "rgba(20,20,20,0.6)");
-        }
-        drawTextScreen(`$${unit.goldCost}`, vec(pos.x,pos.y + buttonDims.y), 20, costColor, true);
-        xoff += buttonDims.x + buttonXGap;
-    }
-
-    // gold
-    const goldStart = vec(UIstartX + 32, canvas.height-32-buttonDims.y-32);
-    drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, 30, player.color, true);
-
-    // lane indicators and hotkeys
-    for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
-        const lane = player.island.lanes[laneIdx];
-        const pos = lane.bridgePoints[0];
-        if (player.laneSelected == laneIdx) {
-            const dir = vecSub(lane.bridgePoints[1], pos);
-            fillEquilateralTriangle(pos, vecToAngle(dir), 15, 20, player.color);
-        } else {
-            // TODO maybe take away this scale hack and just let it scale
-            drawText(`[${key}]`, pos, 20 * gameState.camera.scale, 'white', true);
-        }
-    }
-
-    // lighthouse health bars
-    const { unit, hp } = gameState.entities;
-    const lighthouseHp = hp[player.island.idx];
-    const f = lighthouseHp / unit[player.island.idx].maxHp;
-    const maxWidth = canvas.width / 3;
-    const barStartX = UIstartX + 32;
-    const barY = canvas.height - 32;
-    const greenWidth = maxWidth * f;
-    const redStartX = barStartX + greenWidth;
-    const redWidth = maxWidth * (1 - f);
-    fillRectangleScreen(vec(barStartX, barY), greenWidth, 16, '#00ff00');
-    fillRectangleScreen(vec(redStartX, barY), redWidth, 16, '#ff0000');
-}
-
-function drawUI()
-{
-    for (let i = 0; i < gameState.players.length; ++i) {
-        const player = gameState.players[i];
-        drawPlayerUI(player);
-    }
-}
-
 export function draw(realTimeMs, timeDeltaMs)
 {
     const localPlayer = getLocalPlayer();
@@ -699,54 +554,35 @@ export function draw(realTimeMs, timeDeltaMs)
                 debug.fpsCounter = 0;
                 debug.numUpdates = 0;
             }
-            drawDebugTextScreen(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20), 'white');
+            drawDebugTextScreen(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20));
             let yoff = 45;
             for (const { key, text } of debugHotKeys) {
-                drawDebugTextScreen(` '${key}'  ${text}`, vec(10,yoff), 'white');
+                drawDebugTextScreen(` '${key}'  ${text}`, vec(10,yoff));
                 yoff += 25;
             }
             if (debug.drawFPS) {
                 const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
-                drawTextScreen(fpsStr, vec(canvas.width - 10,20), 20, 'white', true, 'right');
+                drawDebugTextScreen(fpsStr, vec(canvas.width - 10,20), 20, 'right');
             }
             if (debug.drawNumUpdates) {
                 const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
-                drawTextScreen(updatesStr, vec(canvas.width - 10,40), 20, 'white', true, 'right');
+                drawDebugTextScreen(updatesStr, vec(canvas.width - 10,40), 'right');
             }
         }
-        drawUI();
+    }
+    const UIcanvas = UI.getCanvas();
+    context.drawImage(UIcanvas, 0, 0);
+    if (UIcanvas.width != canvas.width || UIcanvas.height != canvas.height) {
+        UI.updateDims(canvas.width, canvas.height);
     }
 }
 
-function drawTextScreen(string, pos, sizePx, fillStyle, stroke=false, align='left')
-{
-    context.font = `${sizePx}px sans-serif`;
-    context.textAlign = align;
-    if (stroke) {
-        context.strokeStyle = 'black';
-        context.setLineDash([]);
-        context.lineWidth = 3;
-        context.strokeText(string, pos.x, pos.y);
-    }
-    context.fillStyle = fillStyle;
-    context.fillText(string, pos.x, pos.y);
-}
+const debugFont = '20px sans-serif';
 
-function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='center')
+function drawDebugTextScreen(string, pos, align='left')
 {
-    const scaledSize = sizePx / gameState.camera.scale;
-    const coords = worldVecToCamera(worldPos);
-    drawTextScreen(string, coords, scaledSize, fillStyle, stroke, align);
-}
-
-function drawDebugTextScreen(string, pos)
-{
-    drawTextScreen(string, pos, 20, 'white', true, 'left');
-}
-
-function drawDebugText(string, worldPos)
-{
-    drawText(string, worldPos, 20, 'white', true, 'center');
+    strokeTextScreen(context, string, pos, debugFont, 3, 'black', align);
+    fillTextScreen(context, string, pos, debugFont, 'white', align);
 }
 
 export function init()
