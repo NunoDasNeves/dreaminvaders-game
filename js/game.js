@@ -1051,6 +1051,6 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
             updateGame(timeDeltaMs);
         }
     }
-    UI.doUI();
+    UI.doUI(timeDeltaMs);
     updateGameInput();
 }

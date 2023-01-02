@@ -261,25 +261,6 @@ function drawWeapon(i)
     }
 }
 
-function drawHpBar(i)
-{
-    const { team, unit, pos, vel, angle, target, hp, atkState, physState, hitState } = gameState.entities;
-    // hp bar
-    if (hitState[i].hpBarTimer > 0) {
-        const hpBarWidth = unit[i].radius*2;
-        const hpBarHeight = 3;
-        const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
-        const hpPos = vecAdd(pos[i], hpOff);
-        const hpPercent = hp[i]/unit[i].maxHp;
-        const filledWidth = hpPercent * hpBarWidth;
-        const emptyWidth = (1 - hpPercent) * hpBarWidth;
-        const emptyPos = vecAdd(hpPos, vec(filledWidth, 0))
-        const hpAlpha = clamp(hitState[i].hpBarTimer / (params.hpBarTimeMs*0.5), 0, 1); // fade after half the time expired
-        fillRectWorld(context, hpPos, vec(filledWidth, hpBarHeight), `rgba(0,255,0,${hpAlpha})`);
-        fillRectWorld(context, emptyPos, vec(emptyWidth, hpBarHeight), `rgba(255,0,0,${hpAlpha})`);
-    }
-}
-
 function strokeCapsule(worldPos, length, radius, angle, width, strokeStyle, half=false)
 {
     const dir = vecFromAngle(angle);
@@ -320,17 +301,6 @@ function strokeCapsule(worldPos, length, radius, angle, width, strokeStyle, half
 function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
 {
     strokeCapsule(worldPos, length - radius, radius, angle, width, strokeStyle, true);
-}
-
-function fillRectangle(worldPos, width, height, fillStyle, fromCenter=false) {
-    const coords = worldToCamera(worldPos.x, worldPos.y);
-    const scaledWidth = width / gameState.camera.scale;
-    const scaledHeight = height / gameState.camera.scale;
-    if (fromCenter) {
-        vecSubFrom(coords, vec(scaledWidth * 0.5, scaledHeight * 0.5));
-    }
-    context.fillStyle = fillStyle;
-    context.fillRect(coords.x, coords.y, scaledWidth, scaledHeight);
 }
 
 function drawIsland(team, island)
@@ -504,64 +474,11 @@ export function draw(realTimeMs, timeDeltaMs)
         }
         drawVFX(i);
     }
-    // only draw UI while game is running
-    if (App.state.screen == SCREEN.GAME) {
-        // health bars on top!
-        for (let i = 0; i < exists.length; ++i) {
-            if (!entityExists(i, ENTITY.UNIT)) {
-                continue;
-            }
-            drawHpBar(i);
-        }
-
-        if (debug.drawUI) {
-            if (debug.drawClickBridgeDebugArrow) {
-                drawArrow(
-                    debug.closestLanePoint,
-                    debug.clickedPoint,
-                    1,
-                    "#ff0000"
-                );
-            }
-            // compute fps and updates
-            debug.fpsTime += timeDeltaMs;
-            debug.fpsCounter++;
-            if (debug.fpsTime >= 1000) {
-                debug.fps = 1000*debug.fpsCounter/debug.fpsTime;
-                debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
-                debug.fpsTime = 0;
-                debug.fpsCounter = 0;
-                debug.numUpdates = 0;
-            }
-            drawDebugTextScreen(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20));
-            let yoff = 45;
-            for (const { key, text } of debugHotKeys) {
-                drawDebugTextScreen(` '${key}'  ${text}`, vec(10,yoff));
-                yoff += 25;
-            }
-            if (debug.drawFPS) {
-                const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
-                drawDebugTextScreen(fpsStr, vec(canvas.width - 10,20), 20, 'right');
-            }
-            if (debug.drawNumUpdates) {
-                const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
-                drawDebugTextScreen(updatesStr, vec(canvas.width - 10,40), 'right');
-            }
-        }
-    }
     const UIcanvas = UI.getCanvas();
     context.drawImage(UIcanvas, 0, 0);
     if (UIcanvas.width != canvas.width || UIcanvas.height != canvas.height) {
         UI.updateDims(canvas.width, canvas.height);
     }
-}
-
-const debugFont = '20px sans-serif';
-
-function drawDebugTextScreen(string, pos, align='left')
-{
-    strokeTextScreen(context, string, pos, debugFont, 3, 'black', align);
-    fillTextScreen(context, string, pos, debugFont, 'white', align);
 }
 
 export function init()

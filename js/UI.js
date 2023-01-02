@@ -124,12 +124,87 @@ function doPlayerUI(player)
     fillRectScreen(context, vec(redStartX, barY), vec(redWidth, 16), '#ff0000');
 }
 
-export function doUI()
+function drawHpBar(i)
+{
+    const { unit, pos, vel, angle, target, hp, atkState, physState, hitState } = gameState.entities;
+    // hp bar
+    if (hitState[i].hpBarTimer > 0) {
+        const hpBarWidth = unit[i].radius*2;
+        const hpBarHeight = 3;
+        const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
+        const hpPos = vecAdd(pos[i], hpOff);
+        const hpPercent = hp[i]/unit[i].maxHp;
+        const filledWidth = hpPercent * hpBarWidth;
+        const emptyWidth = (1 - hpPercent) * hpBarWidth;
+        const emptyPos = vecAdd(hpPos, vec(filledWidth, 0))
+        const hpAlpha = clamp(hitState[i].hpBarTimer / (params.hpBarTimeMs*0.5), 0, 1); // fade after half the time expired
+        fillRectWorld(context, hpPos, vec(filledWidth, hpBarHeight), `rgba(0,255,0,${hpAlpha})`);
+        fillRectWorld(context, emptyPos, vec(emptyWidth, hpBarHeight), `rgba(255,0,0,${hpAlpha})`);
+    }
+}
+
+const debugFont = '20px sans-serif';
+function drawDebugTextScreen(string, pos, align='left')
+{
+    strokeTextScreen(context, string, pos, debugFont, 3, 'black', align);
+    fillTextScreen(context, string, pos, debugFont, 'white', align);
+}
+
+function drawDebugUI(timeDeltaMs)
+{
+    if (debug.drawClickBridgeDebugArrow) {
+        drawArrow(
+            debug.closestLanePoint,
+            debug.clickedPoint,
+            1,
+            "#ff0000"
+        );
+    }
+    // compute fps and updates
+    debug.fpsTime += timeDeltaMs;
+    debug.fpsCounter++;
+    if (debug.fpsTime >= 1000) {
+        debug.fps = 1000*debug.fpsCounter/debug.fpsTime;
+        debug.avgUpdates = debug.numUpdates/debug.fpsCounter;
+        debug.fpsTime = 0;
+        debug.fpsCounter = 0;
+        debug.numUpdates = 0;
+    }
+    drawDebugTextScreen(`debug mode [${debug.paused ? 'paused' : 'running'}]`, vec(10,20));
+    let yoff = 45;
+    for (const { key, text } of debugHotKeys) {
+        drawDebugTextScreen(` '${key}'  ${text}`, vec(10,yoff));
+        yoff += 25;
+    }
+    if (debug.drawFPS) {
+        const fpsStr = `FPS: ${Number(debug.fps).toFixed(2)}`;
+        drawDebugTextScreen(fpsStr, vec(canvas.width - 10,20), 20, 'right');
+    }
+    if (debug.drawNumUpdates) {
+        const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
+        drawDebugTextScreen(updatesStr, vec(canvas.width - 10,40), 'right');
+    }
+}
+
+export function doUI(timeDeltaMs)
 {
     context.clearRect(0, 0, canvas.width, canvas.height);
+
+    const { exists } = gameState.entities;
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.UNIT)) {
+            continue;
+        }
+        drawHpBar(i);
+    }
+
     for (let i = 0; i < gameState.players.length; ++i) {
         const player = gameState.players[i];
         doPlayerUI(player);
+    }
+
+    if (debug.drawUI) {
+        drawDebugUI();
     }
 }
 
