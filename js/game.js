@@ -446,7 +446,7 @@ function updatePhysicsState()
 function hitEntity(i, damage)
 {
     const { unit, hp, hitState } = gameState.entities;
-    hp[i] -= damage;
+    hp[i] -= Math.max(damage - unit[i].armor, 0);
     hitState[i].hitTimer = params.hitFadeTimeMs;
     hitState[i].hpBarTimer = params.hpBarTimeMs;
 }
