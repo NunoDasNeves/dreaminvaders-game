@@ -48,6 +48,57 @@ export function fillRectScreen(ctx, pos, dims, fillStyle)
     ctx.fillRect(pos.x, pos.y, dims.x, dims.y);
 }
 
+export function fillRectWorld(ctx, pos, dims, fillStyle)
+{
+    fillRectScreen(
+        ctx,
+        worldVecToCamera(pos),
+        vec(dims.x / gameState.camera.scale, dims.y / gameState.camera.scale),
+        fillStyle
+    );
+}
+
+export function strokeCircleScreen(ctx, pos, radius, width, strokeStyle)
+{
+    ctx.setLineDash([]);
+    ctx.lineWidth = width;
+    ctx.strokeStyle = strokeStyle;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+}
+
+export function fillCircleScreen(ctx, pos, radius, fillStyle)
+{
+    ctx.fillStyle = fillStyle;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+}
+
+export function strokeCircleWorld(ctx, worldPos, radius, width, strokeStyle)
+{
+    const coords = worldToCamera(worldPos.x, worldPos.y);
+    strokeCircleScreen(
+        ctx,
+        coords,
+        radius / gameState.camera.scale,
+        width / gameState.camera.scale,
+        strokeStyle
+    );
+}
+
+export function fillCircleWorld(ctx, worldPos, radius, fillStyle)
+{
+    const coords = worldToCamera(worldPos.x, worldPos.y);
+    fillCircleScreen(
+        ctx,
+        coords,
+        radius / gameState.camera.scale,
+        fillStyle
+    );
+}
+
 export function strokeLineWorld(ctx, posFrom, posTo, width, strokeStyle) {
     const posFromScreen = worldVecToCamera(posFrom);
     const posToScreen = worldVecToCamera(posTo);

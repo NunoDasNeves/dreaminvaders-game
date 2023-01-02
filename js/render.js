@@ -111,7 +111,7 @@ function drawUnit(i)
             //unitScale = (1 - params.fallSizeReduction) + (hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction;
         }
     } else {
-        strokeCircle(pos[i], unit[i].radius, 1, color[i]);
+        strokeCircleWorld(context, pos[i], unit[i].radius, 1, color[i]);
     }
     // flash red when hit
     if (hitState[i].hitTimer > 0) {
@@ -129,11 +129,10 @@ function drawUnit(i)
     }
     // all this stuff is debug only, later we wanna draw sprites
     if (debug.drawCollision && physState[i].colliding) {
-        strokeCircle(pos[i], unit[i].radius, 1, 'red');
+        strokeCircleWorld(context, pos[i], unit[i].radius, 1, 'red');
     }
-    if (debug.drawSightRange && unit[i].sightRange > 0)
-    {
-        strokeCircle(pos[i], unit[i].sightRange + unit[i].radius, 1, 'yellow');
+    if (debug.drawSightRange && unit[i].sightRange > 0) {
+        strokeCircleWorld(context, pos[i], unit[i].sightRange + unit[i].radius, 1, 'yellow');
     }
     // TODO remove
     if (debugState[i].velPreColl) {
@@ -159,7 +158,7 @@ function drawUnit(i)
     if (debug.drawAiState) {
         const color = aiState[i].state == AISTATE.PROCEED ? 'blue' : aiState[i].state == AISTATE.CHASE ? 'yellow' : 'red';
         const off = vecMulBy(vecFromAngle(angle[i]), -unit[i].radius*0.75);
-        fillCircle(vecAdd(pos[i], off), unit[i].radius/3, color);
+        fillCircleWorld, (context, vecAdd(pos[i], off), unit[i].radius/3, color);
     }
 }
 
@@ -184,15 +183,15 @@ function drawVFX(i)
             const f = clamp(1 - vfx.timeMs / vfx.totalTimeMs, 0, 1);
             const colorLaser = `rgb(255,${255*f},255)`;
             strokeLineWorld(context, pos[i], vfx.hitPos, f*weapon.aoeRadius/2, colorLaser);
-            fillCircle(pos[i], f*weapon.aoeRadius/4, colorLaser);
-            fillCircle(vfx.hitPos, weapon.aoeRadius/3, colorLaser);
+            fillCircleWorld(context, pos[i], f*weapon.aoeRadius/4, colorLaser);
+            fillCircleWorld(context, vfx.hitPos, weapon.aoeRadius/3, colorLaser);
             break;
         }
         case (VFX.EXPLOSION):
         {
             const f = clamp(vfx.timeMs / vfx.totalTimeMs, 0, 1);
             const colorBoom = `rgba(${55+200*f},${200*f},0,${clamp(f*2,0,1)}`;
-            fillCircle(pos[i], vfx.radius, colorBoom);
+            fillCircleWorld(context, pos[i], vfx.radius, colorBoom);
             break;
         }
         case (VFX.TANK_SPARKS):
@@ -258,7 +257,7 @@ function drawWeapon(i)
     }
     if (debug.drawUI && debug.drawWeaponRange && weapon.range > 0)
     {
-        strokeCircle(pos[i], weapon.range + unit[i].radius, 1, 'red');
+        strokeCircleWorld(context, pos[i], weapon.range + unit[i].radius, 1, 'red');
     }
 }
 
@@ -276,29 +275,9 @@ function drawHpBar(i)
         const emptyWidth = (1 - hpPercent) * hpBarWidth;
         const emptyPos = vecAdd(hpPos, vec(filledWidth, 0))
         const hpAlpha = clamp(hitState[i].hpBarTimer / (params.hpBarTimeMs*0.5), 0, 1); // fade after half the time expired
-        fillRectangle(hpPos, filledWidth, hpBarHeight, `rgba(0,255,0,${hpAlpha})`);
-        fillRectangle(emptyPos, emptyWidth, hpBarHeight, `rgba(255,0,0,${hpAlpha})`);
+        fillRectWorld(context, hpPos, vec(filledWidth, hpBarHeight), `rgba(0,255,0,${hpAlpha})`);
+        fillRectWorld(context, emptyPos, vec(emptyWidth, hpBarHeight), `rgba(255,0,0,${hpAlpha})`);
     }
-}
-
-function strokeCircle(worldPos, radius, width, strokeStyle)
-{
-    const coords = worldToCamera(worldPos.x, worldPos.y);
-    context.beginPath();
-    context.arc(coords.x, coords.y, radius / gameState.camera.scale, 0, 2 * Math.PI);
-    context.setLineDash([]);
-    context.lineWidth = width / gameState.camera.scale;
-    context.strokeStyle = strokeStyle;
-    context.stroke();
-}
-
-function fillCircle(worldPos, radius, fillStyle)
-{
-    const coords = worldToCamera(worldPos.x, worldPos.y);
-    context.beginPath();
-    context.arc(coords.x, coords.y, radius / gameState.camera.scale, 0, 2 * Math.PI);
-    context.fillStyle = fillStyle;
-    context.fill();
 }
 
 function strokeCapsule(worldPos, length, radius, angle, width, strokeStyle, half=false)
@@ -444,7 +423,7 @@ function capsulePoints(arr, radius, strokeWidth, strokeStyle)
 function dotPoints(arr, radius, fillStyle)
 {
     for (let i = 0; i < arr.length; ++i) {
-        fillCircle(arr[i], radius, fillStyle);
+        fillCircleWorld(context, arr[i], radius, fillStyle);
     }
 }
 
@@ -470,12 +449,12 @@ function drawLane(laneIdx, hovered)
         strokePoints(bridgePoints, 5, "#ff0000");
         capsulePoints(bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
         dotPoints(bridgePoints, 7, "#0000ff");
-        fillCircle(lane.playerLanes[0].spawnPos, 8, "#00ff00");
-        fillCircle(lane.playerLanes[1].spawnPos, 8, "#00ff00");
+        fillCircleWorld(context, lane.playerLanes[0].spawnPos, 8, "#00ff00");
+        fillCircleWorld(context, lane.playerLanes[1].spawnPos, 8, "#00ff00");
     }
 
     const dreamer = lane.dreamer;
-    fillCircle(vecAdd(lane.middlePos, vec(0, -params.laneWidth)), 15, dreamer.color);
+    fillCircleWorld(context, vecAdd(lane.middlePos, vec(0, -params.laneWidth)), 15, dreamer.color);
 }
 
 export function getBoundingClientRect()
