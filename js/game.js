@@ -445,10 +445,11 @@ function updatePhysicsState()
     };
 }
 
-function hitEntity(i, damage)
+function hitEntity(i, damage, armorPen=0)
 {
     const { unit, hp, hitState } = gameState.entities;
-    hp[i] -= Math.max(damage - unit[i].armor, 0);
+    const effectiveArmor = Math.max(unit[i].armor - armorPen, 0);
+    hp[i] -= Math.max(damage - effectiveArmor, 0);
     hitState[i].hitTimer = params.hitFadeTimeMs;
     hitState[i].hpBarTimer = params.hpBarTimeMs;
 }
@@ -553,7 +554,7 @@ function doWeaponHit(i)
         case UNIT.TANK:
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
-                hitEntity(t, weapon.damage);
+                hitEntity(t, weapon.damage, weapon.armorPen);
                 spawnVFXExplosion(pos[t], 8, 300);
             }
             break;
@@ -589,12 +590,13 @@ function startWeaponSwing(i)
     switch(weapon.id) {
         case UNIT.CHOGORINGU:
         {
-            atkState[i].didHit = canAttackTarget(i) && Math.random() > weapon.missChance;
+            // can't miss twice
+            atkState[i].didHit = canAttackTarget(i) && (!atkState[i].didHit || Math.random() > weapon.missChance);
             break;
         }
         case UNIT.TANK:
         {
-            atkState[i].didHit = canAttackTarget(i) && Math.random() > weapon.missChance;
+            atkState[i].didHit = canAttackTarget(i) && (!atkState[i].didHit || Math.random() > weapon.missChance);
             spawnVFXTankSparks(i, pos[t]);
             break;
         }

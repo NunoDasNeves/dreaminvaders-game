@@ -211,11 +211,19 @@ const unitSpriteData = [
 
 const weaponRequired = ['id'];
 const weaponDefaults = Object.freeze({
+    // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
     range: 0,
+    // time from deciding to attack until starting attack
     aimMs: Infinity,
+    // time from starting attack til attack hits
     swingMs: Infinity,
+    // time after attack hits til can attack again
     recoverMs: Infinity,
+    // damage to HP, reduced by effective armor (after armorPen)
     damage: 0,
+    // flat armor reduction, before damage is applied
+    armorPen: 0,
+    // can't miss twice in a row, so it's less really
     missChance: 1,
 });
 
@@ -224,30 +232,31 @@ const weaponData = [
         id: UNIT.BASE,
     },{
         id: UNIT.CHOGORINGU,
-        range: 10,       // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
-        aimMs: 300,      // time from deciding to attack until starting attack
-        swingMs: 200,    // time from starting attack til attack hits
-        recoverMs: 400,  // time after attack hits til can attack again
-        damage: 1,
-        missChance: 0.3,
+        range: 10,
+        aimMs: 200,
+        swingMs: 200,
+        recoverMs: 300,
+        damage: 6,
+        missChance: 0.15,
     },{
         id: UNIT.BIGEYE,
-        range: 80,
+        range: 90,
         aimMs: 300,
         swingMs: 400,
-        recoverMs: 400,
-        damage: 2,
+        recoverMs: 600,
+        damage: 9,
         aoeRadius: 20, // radius around the hit point
         aoeMissRadius: 30, // how far away from target we might hit
         aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
     },{
         id: UNIT.TANK,
-        range: 120,
-        aimMs: 600,
+        range: 100,
+        aimMs: 400,
         swingMs: 200,
         recoverMs: 800,
-        damage: 5,
-        missChance: 0.20,
+        damage: 34,
+        armorPen: 2,
+        missChance: 0.1,
     },
 ];
 
@@ -272,7 +281,7 @@ const unitDefaults = Object.freeze({
 const unitData = [
     {
         id: UNIT.BASE,
-        maxHp: 100,
+        maxHp: 1000,
         radius: params.lighthouseRadius,
         collides: false,
         canFall: false,
@@ -281,13 +290,13 @@ const unitData = [
         maxSpeed: 2,
         accel: 0.4,
         angSpeed: 1,
-        maxHp: 3,
+        maxHp: 35,
         sightRange: params.laneWidth*0.5,
-        radius: 10,
+        radius: 8,
         collides: true,
         canFall: true,
         defaultAiState: AISTATE.PROCEED,
-        lighthouseDamage: 5,
+        lighthouseDamage: 50,
         goldCost: 5,
         cdTimeMs: 300,
     },{
@@ -295,14 +304,14 @@ const unitData = [
         maxSpeed: 1.5,
         accel: 0.3,
         angSpeed: 1,
-        maxHp: 4,
+        maxHp: 125,
         armor: 1,
         sightRange: 120,
         radius: 15,
         collides: true,
         canFall: true,
         defaultAiState: AISTATE.PROCEED,
-        lighthouseDamage: 8,
+        lighthouseDamage: 100,
         goldCost: 10,
         cdTimeMs: 300,
     },{
@@ -310,15 +319,15 @@ const unitData = [
         maxSpeed: 0.8,
         accel: 0.1,
         angSpeed: 1,
-        maxHp: 10,
+        maxHp: 150,
         armor: 2,
         sightRange: 120,
         radius: 20,
         collides: true,
         canFall: true,
         defaultAiState: AISTATE.PROCEED,
-        lighthouseDamage: 12,
-        goldCost: 20,
+        lighthouseDamage: 150,
+        goldCost: 25,
         cdTimeMs: 1500,
     }
 ];
