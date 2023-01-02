@@ -1,18 +1,21 @@
 ## TODO
-- more weapon types
-    - projectile weapon
-- armor
-- for 1 player, make UI stuff into buttons, make lanes clickable
+- make UI stuff into buttons (for 1 player)
 - fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
 - round spawning areas at end of each lane (on the island)
 - dirt paths join up into single path to lighthouse, which is set further back on island
+- add eco upgrade button
+- lock units behind upgrades
+- add attack upgrade/add armor upgrade
+- display unit stats on mouseover
 - weapons: have a 'hit' time, instead of having to be at end of swing ?
 - make animations optionally loop or not loop? gives some flexibility for pausing at end of swing state, recover, etc...
-- sort units for drawing
+- sort units for drawing back to front
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
 - fix resolution; default camera scale should look the best
+- more weapon types?
+    - projectile weapon need a projectile entity
 - production queue for each lane? 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
 - make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - better collision or AI for collision
@@ -25,6 +28,9 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- make lanes clickable in 1 player mode
+- update unit stats
+- armor
 - VFX entity type - now can spawn, update and render VFX independently of units
 - fix regression: UI not displaying units
 - weapons: compute hit at start of swing state and store it - so renderer can use it during swing
