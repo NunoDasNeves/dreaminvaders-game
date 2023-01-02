@@ -985,15 +985,20 @@ function processMouseInput()
             minStuff = stuff;
         }
     }
-    if (gameState.mouseSelectLane) {
+    if (gameState.mouseEnabled) {
         if (minDist < params.laneSelectDist) {
             localPlayer.laneHovered = minLane;
         }
     }
     if (mouseLeftPressed()) {
+        if (gameState.mouseEnabled) {
+            if (minLane >= 0) {
+                localPlayer.laneSelected = minLane;
+            }
+        }
         if (debug.enableControls) {
-                debug.clickedPoint = vecClone(gameState.input.mousePos);
-                debug.closestLanePoint = minStuff.point;
+            debug.clickedPoint = vecClone(gameState.input.mousePos);
+            debug.closestLanePoint = minStuff.point;
         }
     }
 }
