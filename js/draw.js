@@ -45,7 +45,7 @@ export function strokeTextWorld(ctx, string, pos, sizePx, width, strokeStyle, al
 export function fillRectScreen(ctx, pos, dims, fillStyle, cornerRadii = 0)
 {
     ctx.fillStyle = fillStyle;
-    if (cornerRadii > 0) {
+    if (ctx.roundRect && cornerRadii > 0) {
         ctx.beginPath();
         ctx.roundRect(pos.x, pos.y, dims.x, dims.y, cornerRadii);
         ctx.fill();
