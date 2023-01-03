@@ -172,8 +172,8 @@ export function processMouseInput()
     let minLane = 0;
     let minDist = Infinity;
     let minStuff = null;
-    for (let i = 0; i < gameState.lanes.length; ++i) {
-        const lane = gameState.lanes[i].playerLanes[0];
+    for (let i = 0; i < localPlayer.island.lanes.length; ++i) {
+        const lane = localPlayer.island.lanes[i];
         const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
         if (stuff.dist < minDist) {
             minLane = i;

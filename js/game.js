@@ -750,9 +750,9 @@ function updateDreamerState(timeDeltaMs)
 {
     const { playerId, unit, homeIsland, pos, lane } = gameState.entities;
     const timeDeltaSec = 0.001 * timeDeltaMs;
-    for (const dreamerLane of gameState.lanes) {
-        const { dreamer, middlePos } = dreamerLane;
-        const playerIds = Object.keys(dreamerLane.playerLanes);
+    for (const bridge of gameState.bridges) {
+        const { dreamer, middlePos } = bridge;
+        const playerIds = Object.keys(bridge.playerLanes);
         console.assert(playerIds.length == 2);
         const playerCounts = {};
         for (const pId of playerIds) {
@@ -762,7 +762,7 @@ function updateDreamerState(timeDeltaMs)
             if (playerId[i] == NO_PLAYER_INDEX || !homeIsland[i]) {
                 return;
             }
-            if (lane[i] != dreamerLane.playerLanes[playerId[i]]) {
+            if (lane[i] != bridge.playerLanes[playerId[i]]) {
                 return;
             }
             const toMiddle = vecSub(middlePos, pos[i]);
@@ -793,7 +793,7 @@ function updatePlayerState(timeDeltaMs)
     for (const player of gameState.players) {
         player.goldPerSec = params.startingGoldPerSec;
     }
-    for (const { dreamer } of gameState.lanes) {
+    for (const { dreamer } of gameState.bridges) {
         if (dreamer.playerId != NO_PLAYER_INDEX) {
             gameState.players[dreamer.playerId].goldPerSec += params.dreamerGoldPerSec;
         }

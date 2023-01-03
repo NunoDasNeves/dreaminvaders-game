@@ -354,7 +354,7 @@ export function initGameState(gameConfig)
         };
     gameState.players = [];
     gameState.islands = [];
-    gameState.lanes = [];
+    gameState.bridges = [];
     gameState.localPlayerId = 0;
     gameState.mouseEnabled = true;
     gameState.input = makeInput();
@@ -436,7 +436,7 @@ export function initGameState(gameConfig)
         };
         gameState.players[0].island.lanes.push(p0Lane);
         gameState.players[1].island.lanes.push(p1Lane);
-        gameState.lanes.push({
+        gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
             dreamer: { playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, },
             pathPoints,

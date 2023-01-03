@@ -413,9 +413,9 @@ function dotPoints(arr, radius, fillStyle)
     }
 }
 
-function drawLane(laneIdx, hovered)
+function drawBridge(laneIdx, hovered)
 {
-    const lane = gameState.lanes[laneIdx];
+    const lane = gameState.bridges[laneIdx];
     // lanes; bezier curves
     context.setLineDash([]);
     context.lineWidth = params.laneWidth / gameState.camera.scale;
@@ -464,8 +464,8 @@ export function draw(realTimeMs, timeDeltaMs)
         drawIsland(team, base);
     }
 
-    for (let i = 0; i < gameState.lanes.length; ++i) {
-        drawLane(i, localPlayer.laneHovered == i);
+    for (let i = 0; i < gameState.bridges.length; ++i) {
+        drawBridge(i, localPlayer.laneHovered == i);
     }
 
     const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
