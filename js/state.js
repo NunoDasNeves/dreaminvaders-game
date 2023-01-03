@@ -279,7 +279,7 @@ export function spawnUnitInLane(laneIdx, playerId, unit)
     const player = gameState.players[playerId];
     const lane = player.island.lanes[laneIdx];
     const pos = lane.spawnPos;
-    const randPos = vecAdd(pos, vecMulBy(vecRand(), params.laneWidth*0.5));
+    const randPos = vecAdd(pos, vecMulBy(vecRand(), params.spawnPlatRadius*0.9));
     return spawnUnitForPlayer(randPos, playerId, unit, lane);
 }
 
@@ -374,6 +374,14 @@ export function initGameState(gameConfig)
     ];
     gameState.islands = islands;
     const islandPos = islands.map(island => island.pos);
+    const lighthouseOffsets = [
+        vec(-50, -25),
+        vec(50, -25),
+    ];
+    const lighthousePos = [
+        vecAdd(islandPos[0], lighthouseOffsets[0]),
+        vecAdd(islandPos[1], lighthouseOffsets[1]),
+    ];
     const islandToIsland = vecSub(islandPos[1], islandPos[0]);
     const centerPoint = vecAddTo(vecMul(islandToIsland, 0.5), islandPos[0]);
     const islandToLaneStart = vec(params.laneDistFromBase, 0);
@@ -444,20 +452,15 @@ export function initGameState(gameConfig)
             middlePos,
         });
         // TODO probably don't need these
-        islands[0].paths.push([vecClone(pLaneStart), islandPos[0]]);
-        islands[1].paths.push([vecClone(pLaneEnd), islandPos[1]]);
+        islands[0].paths.push([vecClone(pLaneStart), islandPos[0], lighthousePos[0]]);
+        islands[1].paths.push([vecClone(pLaneEnd), islandPos[1], lighthousePos[1]]);
     }
 
     // spawn lighthouses
-    const lighthouseOffsets = [
-        vec(-50, -25),
-        vec(50, -25),
-    ];
-    islands[0].idx = spawnUnitForPlayer(vecAdd(islandPos[0], lighthouseOffsets[0]), 0, units[UNIT.BASE]);
-    islands[1].idx = spawnUnitForPlayer(vecAdd(islandPos[1], lighthouseOffsets[1]), 1, units[UNIT.BASE]);
-
-    // select middle lane by default
-    for (const player of gameState.players) {
+    for (let i = 0; i < gameState.players.length; ++i) {
+        const player = gameState.players[i];
+        player.island.idx = spawnUnitForPlayer(lighthousePos[i], i, units[UNIT.BASE]);
+        // select middle lane by default
         player.laneSelected = Math.floor(player.island.lanes.length/2);
     }
 }

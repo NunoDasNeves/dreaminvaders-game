@@ -333,16 +333,8 @@ function drawIsland(team, island)
     context.fill();
 
 
-    context.strokeStyle = params.pathColor;
-    context.setLineDash([]);
-    context.lineWidth = params.pathWidth / gameState.camera.scale;
-
     for (const path of island.paths) {
-        const points = path.map(v => worldVecToCamera(v));
-        context.beginPath();
-        context.moveTo(points[0].x, points[0].y);
-        context.lineTo(points[1].x, points[1].y);
-        context.stroke();
+        strokePoints(path, params.pathWidth, params.pathColor);
     }
 }
 
@@ -415,32 +407,35 @@ function dotPoints(arr, radius, fillStyle)
 
 function drawBridge(laneIdx, hovered)
 {
-    const lane = gameState.bridges[laneIdx];
+    const bridge = gameState.bridges[laneIdx];
     // lanes; bezier curves
     context.setLineDash([]);
     context.lineWidth = params.laneWidth / gameState.camera.scale;
-    context.strokeStyle = hovered ? params.laneHoveredColor : params.laneColor;
+    context.strokeStyle = params.laneColor;
     context.beginPath();
-    const bezPoints = lane.bezierPoints.map(v => worldVecToCamera(v));
+    const bezPoints = bridge.bezierPoints.map(v => worldVecToCamera(v));
     context.moveTo(bezPoints[0].x, bezPoints[0].y);
     context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
     context.stroke();
 
+    fillCircleWorld(context, bridge.playerLanes[0].spawnPos, params.spawnPlatRadius, hovered ? params.laneHoveredColor : params.laneColor);
+    fillCircleWorld(context, bridge.playerLanes[1].spawnPos, params.spawnPlatRadius, params.laneColor);
+
     if (debug.drawBezierPoints) {
-        strokePoints(lane.bezierPoints, 3, "#00ff00");
+        strokePoints(bridge.bezierPoints, 3, "#00ff00");
     }
 
     if (debug.drawLaneSegs) {
-        const bridgePoints = lane.playerLanes[0].bridgePoints[0];
+        const bridgePoints = bridge.playerLanes[0].bridgePoints[0];
         strokePoints(bridgePoints, 5, "#ff0000");
         capsulePoints(bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
         dotPoints(bridgePoints, 7, "#0000ff");
-        fillCircleWorld(context, lane.playerLanes[0].spawnPos, 8, "#00ff00");
-        fillCircleWorld(context, lane.playerLanes[1].spawnPos, 8, "#00ff00");
+        fillCircleWorld(context, bridge.playerLanes[0].spawnPos, 8, "#00ff00");
+        fillCircleWorld(context, bridge.playerLanes[1].spawnPos, 8, "#00ff00");
     }
 
-    const dreamer = lane.dreamer;
-    fillCircleWorld(context, vecAdd(lane.middlePos, vec(0, -params.laneWidth)), 15, dreamer.color);
+    const dreamer = bridge.dreamer;
+    fillCircleWorld(context, vecAdd(bridge.middlePos, vec(0, -params.laneWidth)), 15, dreamer.color);
 }
 
 export function getBoundingClientRect()

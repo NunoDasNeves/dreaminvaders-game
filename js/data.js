@@ -42,8 +42,8 @@ export const params = Object.freeze(
             minUnitVelocity: 0.5,
             backgroundColor: "#1f1f1f",
             baseFadeColor: "#101010",
-            laneColor: "#888888",
-            laneHoveredColor: "#cccccc",
+            laneColor: "#888",
+            laneHoveredColor: "#aaa",
             laneWidth: 60,
             laneSelectDist: 80,
             pathWidth: 40,
@@ -62,7 +62,8 @@ export const params = Object.freeze(
             dreamerGoldPerSec: 0.5,
             botActionTimeMs: 2000,
         }
-        obj.laneDistFromBase = obj.islandRadius - 15;
+        obj.laneDistFromBase = obj.islandRadius - 50;
+        obj.spawnPlatRadius = obj.laneWidth * 0.75;
         obj.safePathDistFromBase = obj.laneDistFromBase - obj.laneWidth*0.5;
         return obj;
     }()
