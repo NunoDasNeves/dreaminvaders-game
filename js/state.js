@@ -98,6 +98,7 @@ const entityDefaults = Object.freeze({
     angVel: null,
     target: null,
     lane: null,
+    laneIdx: null,
     atkState: null,
     aiState: null,
     physState: null,
@@ -209,9 +210,9 @@ export function spawnVFXExplosion(aPos, radius, timeMs)
     return idx;
 }
 
-export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLane = null)
+export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLaneIdx = null)
 {
-    const { homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, atkState, aiState, physState, hitState, animState, debugState } = gameState.entities;
+    const { homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, laneIdx, atkState, aiState, physState, hitState, animState, debugState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -232,7 +233,8 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     angle[idx]      = 0;
     angVel[idx]     = 0; // not used yet
     // possibly lane, and probably target, should be in aiState
-    lane[idx]       = aLane;
+    lane[idx]       = aLaneIdx == null ? null : gameState.islands[aPlayerId].lanes[aLaneIdx];
+    laneIdx[idx]    = aLaneIdx;
     target[idx]     = new EntityRef(INVALID_ENTITY_INDEX);
     // aiState, atkState, hitState are pretty interlinked
     aiState[idx]    = {
@@ -265,22 +267,21 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     return idx;
 }
 
-export function spawnUnitForPlayer(pos, playerId, unit, lane=null)
+export function spawnUnitForPlayer(pos, playerId, unit, laneIdx=null)
 {
     const player = gameState.players[playerId];
     const teamId = player.team;
     const color = player.color;
     const island = player.island;
-    return spawnUnit(pos, teamId, playerId, color, unit, island, lane);
+    return spawnUnit(pos, teamId, playerId, color, unit, island, laneIdx);
 }
 
 export function spawnUnitInLane(laneIdx, playerId, unit)
 {
     const player = gameState.players[playerId];
-    const lane = player.island.lanes[laneIdx];
-    const pos = lane.spawnPos;
+    const pos = player.island.lanes[laneIdx].spawnPos;
     const randPos = vecAdd(pos, vecMulBy(vecRand(), params.spawnPlatRadius*0.9));
-    return spawnUnitForPlayer(randPos, playerId, unit, lane);
+    return spawnUnitForPlayer(randPos, playerId, unit, laneIdx);
 }
 
 export function getLocalPlayer()

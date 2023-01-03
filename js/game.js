@@ -53,7 +53,7 @@ function nearestUnit(i, minRange, filterFn)
 
 function canChaseOrAttack(myIdx, theirIdx)
 {
-    const { unit, pos, team, playerId, lane, hitState } = gameState.entities;
+    const { unit, pos, team, playerId, lane, laneIdx, hitState } = gameState.entities;
     if (hitState[theirIdx].state != HITSTATE.ALIVE) {
         return false;
     }
@@ -72,6 +72,12 @@ function canChaseOrAttack(myIdx, theirIdx)
             return false;
         }
     }
+    if (laneIdx[myIdx] != null && laneIdx[theirIdx] != null) {
+        if (laneIdx[theirIdx] != laneIdx[myIdx]) {
+            return false;
+        }
+    }
+
     return true;
 }
 
