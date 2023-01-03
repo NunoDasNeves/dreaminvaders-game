@@ -2,7 +2,7 @@ import * as Utils from "./util.js";
 import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as Draw from './draw.js';
-import { debugHotKeys } from "./game.js"
+import { debugHotKeys, tryBuildUnit } from "./game.js"
 import { strokeTextScreen, strokeTextWorld } from "./draw.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
@@ -26,8 +26,7 @@ function drawSpriteScreen(sprite, row, col, pos)
             pos.x, pos.y,
             sprite.width, sprite.height);
     } else {
-        context.fillStyle = "#000";
-        context.fillRect(pos, sprite.width, sprite.height);
+        fillRectScreen(context, pos, vec(sprite.width, sprite.height), "#000");
     }
 }
 
@@ -49,6 +48,27 @@ function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='cent
 
 function unitButton(player, pos, dims, key, unit)
 {
+    let tryBuild = false;
+    // process the input first
+    if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        if (gameState.mouseEnabled) {
+            if (pointInAABB(gameState.input.mouseScreenPos, pos, dims)) {
+                if (mouseLeftPressed()) {
+                    tryBuild = true;
+                } else {
+                    // hover
+                }
+            }
+        }
+        if (keyPressed(key)) {
+            tryBuild = true;
+        }
+    }
+
+    if (tryBuild) {
+        tryBuildUnit(player.id, unit);
+    }
+
     context.fillStyle = "#444";
     context.fillRect(pos.x, pos.y, dims.x, dims.y);
     // draw sprite
@@ -56,10 +76,12 @@ function unitButton(player, pos, dims, key, unit)
     const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
     vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
     drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
-    // hotKey
+
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        // hotKey
         drawTextScreen(`[${key}]`, vec(pos.x + dims.x - 5, pos.y + 20), 20, 'white', true, 'right');
     }
+
     // overlay if can't afford
     let costColor = '#ffdd22';
     if (player.gold < unit.goldCost) {
@@ -75,7 +97,7 @@ function unitButton(player, pos, dims, key, unit)
     drawTextScreen(`$${unit.goldCost}`, vec(pos.x,pos.y + dims.y), 20, costColor, true);
 }
 
-function doPlayerUI(player)
+export function doPlayerUI(player)
 {
     const UIwidth = canvas.width/3 + 64; // TODO compute this based on unit hotkeys n stuff - currently based on lighthouse HP bars
     const buttonDims = vec(64,64);
@@ -83,6 +105,16 @@ function doPlayerUI(player)
     const buttonStart = vec(UIstartX + 32, canvas.height-48-buttonDims.y);
     const buttonXGap = 16;
     let xoff = 0;
+
+    // lane hotkeys
+    if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
+            if (keyPressed(key)) {
+                player.laneSelected = laneIdx;
+            }
+        }
+    }
+
     // unit buttons and hotkeys
     for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
         const pos = vec(
@@ -124,22 +156,46 @@ function doPlayerUI(player)
     fillRectScreen(context, vec(redStartX, barY), vec(redWidth, 16), '#ff0000');
 }
 
-function drawHpBar(i)
+export function processMouseInput()
 {
-    const { unit, pos, vel, angle, target, hp, atkState, physState, hitState } = gameState.entities;
-    // hp bar
-    if (hitState[i].hpBarTimer > 0) {
-        const hpBarWidth = unit[i].radius*2;
-        const hpBarHeight = 3;
-        const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
-        const hpPos = vecAdd(pos[i], hpOff);
-        const hpPercent = hp[i]/unit[i].maxHp;
-        const filledWidth = hpPercent * hpBarWidth;
-        const emptyWidth = (1 - hpPercent) * hpBarWidth;
-        const emptyPos = vecAdd(hpPos, vec(filledWidth, 0))
-        const hpAlpha = clamp(hitState[i].hpBarTimer / (params.hpBarTimeMs*0.5), 0, 1); // fade after half the time expired
-        fillRectWorld(context, hpPos, vec(filledWidth, hpBarHeight), `rgba(0,255,0,${hpAlpha})`);
-        fillRectWorld(context, emptyPos, vec(emptyWidth, hpBarHeight), `rgba(255,0,0,${hpAlpha})`);
+    // camera
+    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScrollDelta, 0.1, 5);
+    if (gameState.input.mouseMiddle) {
+        const delta = vecMul(vecSub(gameState.input.mouseScreenPos, gameState.lastInput.mouseScreenPos), gameState.camera.scale);
+        if (vecLen(delta)) {
+            vecSubFrom(gameState.camera.pos, delta);
+        }
+    }
+    // select lane
+    const localPlayer = getLocalPlayer();
+    localPlayer.laneHovered = -1;
+    let minLane = 0;
+    let minDist = Infinity;
+    let minStuff = null;
+    for (let i = 0; i < gameState.lanes.length; ++i) {
+        const lane = gameState.lanes[i].playerLanes[0];
+        const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
+        if (stuff.dist < minDist) {
+            minLane = i;
+            minDist = stuff.dist;
+            minStuff = stuff;
+        }
+    }
+    if (gameState.mouseEnabled) {
+        if (minDist < params.laneSelectDist) {
+            localPlayer.laneHovered = minLane;
+        }
+    }
+    if (mouseLeftPressed()) {
+        if (gameState.mouseEnabled) {
+            if (localPlayer.laneHovered >= 0) {
+                localPlayer.laneSelected = localPlayer.laneHovered;
+            }
+        }
+        if (debug.enableControls) {
+            debug.clickedPoint = vecClone(gameState.input.mousePos);
+            debug.closestLanePoint = minStuff.point;
+        }
     }
 }
 
@@ -150,8 +206,11 @@ function drawDebugTextScreen(string, pos, align='left')
     fillTextScreen(context, string, pos, debugFont, 'white', align);
 }
 
-function drawDebugUI(timeDeltaMs)
+export function debugUI(timeDeltaMs)
 {
+    if (!debug.drawUI) {
+        return;
+    }
     if (debug.drawClickBridgeDebugArrow) {
         drawArrow(
             debug.closestLanePoint,
@@ -186,31 +245,14 @@ function drawDebugUI(timeDeltaMs)
     }
 }
 
-export function doUI(timeDeltaMs)
-{
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    const { exists } = gameState.entities;
-    for (let i = 0; i < exists.length; ++i) {
-        if (!entityExists(i, ENTITY.UNIT)) {
-            continue;
-        }
-        drawHpBar(i);
-    }
-
-    for (let i = 0; i < gameState.players.length; ++i) {
-        const player = gameState.players[i];
-        doPlayerUI(player);
-    }
-
-    if (debug.drawUI) {
-        drawDebugUI();
-    }
-}
-
 export function getCanvas()
 {
     return canvas;
+}
+
+export function startFrame()
+{
+    context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 export function updateDims(width, height)

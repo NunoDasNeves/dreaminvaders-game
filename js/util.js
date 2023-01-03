@@ -1,3 +1,78 @@
+export function pointInAABB(point, topLeft, dims)
+{
+    if (point.x < topLeft.x || point.x >= (topLeft.x + dims.x)) {
+        return false;
+    }
+    if (point.y < topLeft.y || point.y >= (topLeft.y + dims.y)) {
+        return false;
+    }
+    return true;
+}
+
+/*
+ * Get info about relationship between point and the closest point on lineSegs;
+ * lineSegs is a list of points treated as joined line segments.
+ * Returns: {
+ *      baseIdx,    // index in lineSegs of 'base' of line which point is closest to
+ *      point,      // point on lineSegs which is closest to point argument
+ *      dir,        // direction from point on lineSegs to point argument. null if point is very close to the line
+ *      dist,       // distance from point arg to closest point on lineSegs
+ * }
+ */
+export function pointNearLineSegs(point, lineSegs)
+{
+    let minBaseIdx = 0;
+    let minPoint = null;
+    let minDir = null;
+    let minDist = Infinity;
+    for (let i = 0; i < lineSegs.length - 1; ++i) {
+        const capsuleLine = vecSub(lineSegs[i+1], lineSegs[i]);
+        const lineLen = vecLen(capsuleLine);
+        const baseToPoint = vecSub(point, lineSegs[i]);
+        if (almostZero(lineLen)) {
+            const d = vecLen(baseToPoint);
+            if (d < minDist) {
+                minDist = d;
+                minBaseIdx = i;
+                minPoint = vecClone(lineSegs[i]);
+                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
+            }
+            continue;
+        }
+        const lineDir = vecMul(capsuleLine, 1/lineLen);
+        const distAlongLine = vecDot(lineDir, baseToPoint);
+        if (distAlongLine < 0) {
+            const d = vecLen(baseToPoint);
+            if (d < minDist) {
+                minDist = d;
+                minBaseIdx = i;
+                minPoint = vecClone(lineSegs[i]);
+                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
+            }
+        } else if (distAlongLine > lineLen) {
+            const dir = vecSub(point, lineSegs[i+1]);
+            const d = vecLen(dir);
+            if (d < minDist) {
+                minDist = d;
+                minBaseIdx = i; // its the 'base' of the segment, so it is i and not i+1
+                minPoint = vecClone(lineSegs[i+1]);
+                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
+            }
+        } else {
+            const pointOnLine = vecAddTo(vecMul(lineDir, distAlongLine), lineSegs[i]);
+            const dir = vecSub(point, pointOnLine);
+            const d = vecLen(dir);
+            if (d < minDist) {
+                minDist = d;
+                minBaseIdx = i;
+                minPoint = pointOnLine;
+                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
+            }
+        }
+    }
+    return { baseIdx: minBaseIdx, point: minPoint, dir: minDir, dist: minDist };
+}
+
 /*
  * Map a list 'data' like [{ id: 0, ... }, { id: 1, ... }, ... ] to an object like { 0: { id, ... }, 1: { id, ... } }
  * Require that the list elements have all keys in the 'required' list

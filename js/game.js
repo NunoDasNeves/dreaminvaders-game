@@ -362,16 +362,6 @@ function updateAiState()
     }
 }
 
-function mouseLeftPressed()
-{
-    return gameState.input.mouseLeft && !gameState.lastInput.mouseLeft;
-}
-
-function keyPressed(k)
-{
-    return gameState.input.keyMap[k] && !gameState.lastInput.keyMap[k];
-}
-
 function updatePhysicsState()
 {
     const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState, debugState } = gameState.entities;
@@ -831,71 +821,7 @@ function updateGame(timeDeltaMs)
     updatePlayerState(timeDeltaMs);
 }
 
-/*
- * Get info about relationship between point and the closest point on lineSegs;
- * lineSegs is a list of points treated as joined line segments.
- * Returns: {
- *      baseIdx,    // index in lineSegs of 'base' of line which point is closest to
- *      point,      // point on lineSegs which is closest to point argument
- *      dir,        // direction from point on lineSegs to point argument. null if point is very close to the line
- *      dist,       // distance from point arg to closest point on lineSegs
- * }
- */
-function pointNearLineSegs(point, lineSegs)
-{
-    let minBaseIdx = 0;
-    let minPoint = null;
-    let minDir = null;
-    let minDist = Infinity;
-    for (let i = 0; i < lineSegs.length - 1; ++i) {
-        const capsuleLine = vecSub(lineSegs[i+1], lineSegs[i]);
-        const lineLen = vecLen(capsuleLine);
-        const baseToPoint = vecSub(point, lineSegs[i]);
-        if (almostZero(lineLen)) {
-            const d = vecLen(baseToPoint);
-            if (d < minDist) {
-                minDist = d;
-                minBaseIdx = i;
-                minPoint = vecClone(lineSegs[i]);
-                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
-            }
-            continue;
-        }
-        const lineDir = vecMul(capsuleLine, 1/lineLen);
-        const distAlongLine = vecDot(lineDir, baseToPoint);
-        if (distAlongLine < 0) {
-            const d = vecLen(baseToPoint);
-            if (d < minDist) {
-                minDist = d;
-                minBaseIdx = i;
-                minPoint = vecClone(lineSegs[i]);
-                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
-            }
-        } else if (distAlongLine > lineLen) {
-            const dir = vecSub(point, lineSegs[i+1]);
-            const d = vecLen(dir);
-            if (d < minDist) {
-                minDist = d;
-                minBaseIdx = i; // its the 'base' of the segment, so it is i and not i+1
-                minPoint = vecClone(lineSegs[i+1]);
-                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
-            }
-        } else {
-            const pointOnLine = vecAddTo(vecMul(lineDir, distAlongLine), lineSegs[i]);
-            const dir = vecSub(point, pointOnLine);
-            const d = vecLen(dir);
-            if (d < minDist) {
-                minDist = d;
-                minBaseIdx = i;
-                minPoint = pointOnLine;
-                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
-            }
-        }
-    }
-    return { baseIdx: minBaseIdx, point: minPoint, dir: minDir, dist: minDist };
-}
-
-function tryBuildUnit(playerId, unit)
+export function tryBuildUnit(playerId, unit)
 {
     const player = gameState.players[playerId];
     if (player.laneSelected < 0) {
@@ -921,21 +847,6 @@ function tryBuildUnit(playerId, unit)
     return true;
 }
 
-
-function processHumanInput(player)
-{
-    for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
-        if (keyPressed(key)) {
-            player.laneSelected = laneIdx;
-        }
-    }
-    for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
-        if (keyPressed(key)) {
-            tryBuildUnit(player.id, unit);
-        }
-    }
-}
-
 function updateBotPlayer(player, timeDeltaMs)
 {
     player.botState.actionTimer -= timeDeltaMs;
@@ -949,57 +860,13 @@ function updateBotPlayer(player, timeDeltaMs)
     tryBuildUnit(player.id, unit);
 }
 
-function doPlayerActions(player, timeDeltaMs)
+function updatePlayersActionsAndUI(timeDeltaMs)
 {
-    switch(player.controller) {
-        case PLAYER_CONTROLLER.LOCAL_HUMAN:
-            processHumanInput(player);
-            break;
-        case PLAYER_CONTROLLER.BOT:
+    UI.processMouseInput();
+    for (const player of gameState.players) {
+        UI.doPlayerUI(player);
+        if (player.controller == PLAYER_CONTROLLER.BOT) {
             updateBotPlayer(player, timeDeltaMs);
-            break;
-    }
-}
-
-function processMouseInput()
-{
-    // camera
-    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScrollDelta, 0.1, 5);
-    if (gameState.input.mouseMiddle) {
-        const delta = vecMul(vecSub(gameState.input.mouseScreenPos, gameState.lastInput.mouseScreenPos), gameState.camera.scale);
-        if (vecLen(delta)) {
-            vecSubFrom(gameState.camera.pos, delta);
-        }
-    }
-    // select lane
-    const localPlayer = getLocalPlayer();
-    localPlayer.laneHovered = -1;
-    let minLane = 0;
-    let minDist = Infinity;
-    let minStuff = null;
-    for (let i = 0; i < gameState.lanes.length; ++i) {
-        const lane = gameState.lanes[i].playerLanes[0];
-        const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
-        if (stuff.dist < minDist) {
-            minLane = i;
-            minDist = stuff.dist;
-            minStuff = stuff;
-        }
-    }
-    if (gameState.mouseEnabled) {
-        if (minDist < params.laneSelectDist) {
-            localPlayer.laneHovered = minLane;
-        }
-    }
-    if (mouseLeftPressed()) {
-        if (gameState.mouseEnabled) {
-            if (minLane >= 0) {
-                localPlayer.laneSelected = minLane;
-            }
-        }
-        if (debug.enableControls) {
-            debug.clickedPoint = vecClone(gameState.input.mousePos);
-            debug.closestLanePoint = minStuff.point;
         }
     }
 }
@@ -1042,15 +909,13 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
     if (keyPressed('Escape')) {
         App.pause();
     } else {
-        processMouseInput();
-        // keep getting input while debug paused
-        for (const player of gameState.players) {
-            doPlayerActions(player, timeDeltaMs);
-        }
+        UI.startFrame();
+        UI.debugUI(timeDeltaMs);
+        // keep doing player actions while debug paused
+        updatePlayersActionsAndUI(timeDeltaMs);
         if (!debug.enableControls || !debug.paused || keyPressed('.')) {
             updateGame(timeDeltaMs);
         }
     }
-    UI.doUI(timeDeltaMs);
     updateGameInput();
 }

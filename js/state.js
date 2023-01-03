@@ -548,6 +548,16 @@ export function updateMouseWheel(y)
     gameState.input.mouseScrollDelta = y;
 }
 
+export function mouseLeftPressed()
+{
+    return gameState.input.mouseLeft && !gameState.lastInput.mouseLeft;
+}
+
+export function keyPressed(k)
+{
+    return gameState.input.keyMap[k] && !gameState.lastInput.keyMap[k];
+}
+
 export function getCollidingWithCircle(aPos, aRadius)
 {
     const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;

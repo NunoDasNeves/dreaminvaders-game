@@ -162,6 +162,25 @@ function drawUnit(i)
     }
 }
 
+function drawHpBar(i)
+{
+    const { unit, pos, vel, angle, target, hp, atkState, physState, hitState } = gameState.entities;
+    // hp bar
+    if (hitState[i].hpBarTimer > 0) {
+        const hpBarWidth = unit[i].radius*2;
+        const hpBarHeight = 3;
+        const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
+        const hpPos = vecAdd(pos[i], hpOff);
+        const hpPercent = hp[i]/unit[i].maxHp;
+        const filledWidth = hpPercent * hpBarWidth;
+        const emptyWidth = (1 - hpPercent) * hpBarWidth;
+        const emptyPos = vecAdd(hpPos, vec(filledWidth, 0))
+        const hpAlpha = clamp(hitState[i].hpBarTimer / (params.hpBarTimeMs*0.5), 0, 1); // fade after half the time expired
+        fillRectWorld(context, hpPos, vec(filledWidth, hpBarHeight), `rgba(0,255,0,${hpAlpha})`);
+        fillRectWorld(context, emptyPos, vec(emptyWidth, hpBarHeight), `rgba(255,0,0,${hpAlpha})`);
+    }
+}
+
 function drawTraceParticles(origin, particles)
 {
     const numParticles = particles.length;
@@ -473,6 +492,12 @@ export function draw(realTimeMs, timeDeltaMs)
             continue;
         }
         drawVFX(i);
+    }
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.UNIT)) {
+            continue;
+        }
+        drawHpBar(i);
     }
     const UIcanvas = UI.getCanvas();
     context.drawImage(UIcanvas, 0, 0);
