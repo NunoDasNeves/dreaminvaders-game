@@ -110,15 +110,6 @@ export function doPlayerUI(player)
     const buttonXGap = 16;
     let xoff = 0;
 
-    // lane hotkeys
-    if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
-        for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
-            if (keyPressed(key)) {
-                player.laneSelected = laneIdx;
-            }
-        }
-    }
-
     // unit buttons and hotkeys
     for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
         const pos = vec(
@@ -134,15 +125,20 @@ export function doPlayerUI(player)
     drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, 30, player.color, true);
 
     // lane indicators and hotkeys
-    for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
-        const lane = player.island.lanes[laneIdx];
-        const pos = lane.bridgePoints[0];
-        if (player.laneSelected == laneIdx) {
-            const dir = vecSub(lane.bridgePoints[1], pos);
-            fillTriangleWorld(context, pos, vecToAngle(dir), 15, 20, player.color);
-        } else {
-            // TODO maybe take away this scale hack and just let it scale
-            drawText(`[${key}]`, pos, 20 * gameState.camera.scale, 'white', true);
+    if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
+            const lane = player.island.lanes[laneIdx];
+            const pos = lane.bridgePoints[0];
+            if (keyPressed(key)) {
+                player.laneSelected = laneIdx;
+            }
+            if (player.laneSelected == laneIdx) {
+                const dir = vecSub(lane.bridgePoints[1], pos);
+                fillTriangleWorld(context, pos, vecToAngle(dir), 15, 20, player.color);
+            } else {
+                // TODO maybe take away this scale hack and just let it scale
+                drawText(`[${key}]`, pos, 20 * gameState.camera.scale, 'white', true);
+            }
         }
     }
 
