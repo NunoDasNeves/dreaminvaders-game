@@ -189,7 +189,8 @@ export function doPlayerUI(player)
     const UIOuterPadding = 20;
     const goldFontSz = 30;
     const goldFont = `${goldFontSz}px sans-serif`;
-    const goldFontMetrics = getTextDims(context, "$00", goldFont, 'left', 'top');
+    const goldFontSmol = `20px sans-serif`;
+    const goldFontMetrics = getTextDims(context, '$00', goldFont, 'left', 'top');
     const goldHeight = goldFontMetrics.actualHeight;
     const buttonDims = vec(64,64);
     const buttonXGap = UIInnerpadding;
@@ -212,7 +213,11 @@ export function doPlayerUI(player)
 
     // gold
     const goldStart = vec(xOff, yOff);
-    drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, goldFont, player.color, true, 'left', 'top');
+    const goldText = `$${Math.floor(player.gold)}`;
+    drawTextScreen(goldText, goldStart, goldFont, player.color, true, 'left', 'top');
+    const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
+    const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
+    drawTextScreen(gpsText, gpsStart, goldFontSmol, player.color, true, 'left', 'top');
 
     yOff += UIInnerpadding + goldHeight;
 
