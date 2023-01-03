@@ -1,3 +1,8 @@
+export function randFromArray(arr)
+{
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
 export function pointInAABB(point, topLeft, dims)
 {
     if (point.x < topLeft.x || point.x >= (topLeft.x + dims.x)) {

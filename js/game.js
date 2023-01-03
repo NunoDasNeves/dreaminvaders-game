@@ -907,8 +907,9 @@ function updateBotPlayer(player, timeDeltaMs)
     }
     player.botState.actionTimer += params.botActionTimeMs;
     player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
-    const units = Object.values(hotKeys[player.id].units);
-    const unit = units[Math.floor(Math.random()*units.length)];
+    const unitIds = Object.values(hotKeys[player.id].units);
+    const unitId = randFromArray(unitIds);
+    const unit = units[unitId];
     if (player.unitUnlocked[unit.id]) {
         tryBuildUnit(player.id, unit);
     } else {

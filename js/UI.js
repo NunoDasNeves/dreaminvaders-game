@@ -141,12 +141,12 @@ export function doPlayerUI(player)
     let xoff = 0;
 
     // unit buttons and hotkeys
-    for (const [key, unit] of Object.entries(hotKeys[player.id].units)) {
+    for (const [key, unitId] of Object.entries(hotKeys[player.id].units)) {
         const pos = vec(
             buttonStart.x + xoff,
             buttonStart.y
         );
-        unitButton(player, pos, buttonDims, key, unit);
+        unitButton(player, pos, buttonDims, key, units[unitId]);
         xoff += buttonDims.x + buttonXGap;
     }
 

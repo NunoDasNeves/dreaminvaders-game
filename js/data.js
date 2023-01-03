@@ -377,9 +377,9 @@ export const hotKeys = {
             '3': 2,
         },
         units: {
-            'q': units[UNIT.CHOGORINGU],
-            'w': units[UNIT.BIGEYE],
-            'e': units[UNIT.TANK],
+            'q': UNIT.CHOGORINGU,
+            'w': UNIT.BIGEYE,
+            'e': UNIT.TANK,
         },
     },
     [1]: {
@@ -389,9 +389,9 @@ export const hotKeys = {
             '0': 2,
         },
         units: {
-            'i': units[UNIT.CHOGORINGU],
-            'o': units[UNIT.BIGEYE],
-            'p': units[UNIT.TANK],
+            'i': UNIT.CHOGORINGU,
+            'o': UNIT.BIGEYE,
+            'p': UNIT.TANK,
         },
     }
 };
