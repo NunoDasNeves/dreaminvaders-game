@@ -199,21 +199,23 @@ function updateAiState()
         if (aiState[i].state == AISTATE.DO_NOTHING) {
             continue;
         }
-        const enemyIslandPos = gameState.players[lane[i].otherPlayerIdx].island.pos;
-        const toEnemyBase = vecSub(enemyIslandPos, pos[i]);
-        const distToEnemyBase = vecLen(toEnemyBase);
+        const enemyIsland = gameState.players[lane[i].otherPlayerIdx].island;
+        const enemyLighthousePos = pos[enemyIsland.idx];
+        const distToEnemyIsland = getDist(pos[i], enemyIsland.pos);
+        const toEnemyLighthouse = vecSub(enemyLighthousePos, pos[i]);
+        const distToEnemyLighthouse = vecLen(toEnemyLighthouse);
         const nearestAtkTarget = nearestEnemyInAttackRange(i);
         const nearestChaseTarget = nearestEnemyInSightRange(i);
         const weapon = getUnitWeapon(unit[i]);
         switch (aiState[i].state) {
             case AISTATE.PROCEED:
             {
-                if (distToEnemyBase < unit[i].radius) {
+                if (distToEnemyLighthouse < unit[i].radius) {
                     aiState[i].state = AISTATE.DO_NOTHING;
                     decel(i); // stand still
                     break;
                 }
-                if (distToEnemyBase < params.safePathDistFromBase) {
+                if (distToEnemyIsland < params.safePathDistFromBase) {
                     // keep proceeding
                 } else if (nearestAtkTarget.isValid()) {
                     aiState[i].state = AISTATE.ATTACK;
@@ -292,9 +294,9 @@ function updateAiState()
                 const nextPoint = vec();
                 // little bit of a hack, just check if we're on the island to go straight to the base
                 let goToPoint = false
-                if (nextIdx >= bridgePoints.length || getDist(pos[i], enemyIslandPos) < params.islandRadius) {
+                if (nextIdx >= bridgePoints.length || getDist(pos[i], enemyIsland.pos) < params.islandRadius) {
                     goToPoint = true;
-                    vecCopyTo(nextPoint, enemyIslandPos);
+                    vecCopyTo(nextPoint, enemyLighthousePos);
                 } else {
                     vecCopyTo(nextPoint, bridgePoints[nextIdx]);
                 }
@@ -505,10 +507,10 @@ function updateHitState(timeDeltaMs)
                         if (player.team == team[i]) {
                             continue;
                         }
-                        const enemyLighthouse = player.island;
-                        if (onIsland && getDist(pos[i], enemyLighthouse.pos) < params.lighthouseRadius) {
-                            hitEntity(enemyLighthouse.idx, unit[i].lighthouseDamage);
-                            if ( hp[enemyLighthouse.idx] <= 0 ) {
+                        const enemyLighthouseIdx = player.island.idx;
+                        if (onIsland && getDist(pos[i], pos[enemyLighthouseIdx]) < params.lighthouseRadius) {
+                            hitEntity(enemyLighthouseIdx, unit[i].lighthouseDamage);
+                            if ( hp[enemyLighthouseIdx] <= 0 ) {
                                 deferUpdate(() => {
                                     // TODO this is a hack so the lighthouse HP shows as 0 when game ends
                                     updatePlayersActionsAndUI(timeDeltaMs);

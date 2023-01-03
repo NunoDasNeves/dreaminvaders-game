@@ -449,8 +449,12 @@ export function initGameState(gameConfig)
     }
 
     // spawn lighthouses
-    islands[0].idx = spawnUnitForPlayer(islandPos[0], 0, units[UNIT.BASE]);
-    islands[1].idx = spawnUnitForPlayer(islandPos[1], 1, units[UNIT.BASE]);
+    const lighthouseOffsets = [
+        vec(-50, -25),
+        vec(50, -25),
+    ];
+    islands[0].idx = spawnUnitForPlayer(vecAdd(islandPos[0], lighthouseOffsets[0]), 0, units[UNIT.BASE]);
+    islands[1].idx = spawnUnitForPlayer(vecAdd(islandPos[1], lighthouseOffsets[1]), 1, units[UNIT.BASE]);
 
     // select middle lane by default
     for (const player of gameState.players) {
