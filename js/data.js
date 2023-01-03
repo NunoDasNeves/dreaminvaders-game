@@ -379,24 +379,24 @@ export const upgrades = Object.freeze({
     [UPGRADE.ECO]: {
         id: UPGRADE.ECO,
         goldCost: [10, 20, 30],
-        goldPerSecIncrease: [1,2,3],
+        goldPerSecBonus: [0.5,1,2],
     },
     [UPGRADE.ATK]: {
         id: UPGRADE.ATK,
         goldCost: [15, 25],
         damageBonus: {
-            [UNIT.CHOGORINGU]: [1,2],
-            [UNIT.BIGEYE]: [2,3],
-            [UNIT.TANK]: [2,4],
+            [UNIT.CHOGORINGU]: [1,3],
+            [UNIT.BIGEYE]: [2,4],
+            [UNIT.TANK]: [2,5],
         },
     },
     [UPGRADE.DEF]: {
         id: UPGRADE.DEF,
         goldCost: [15, 25],
         armorBonus: {
-            [UNIT.CHOGORINGU]: [2,2],
-            [UNIT.BIGEYE]: [1,2],
-            [UNIT.TANK]: [2,2],
+            [UNIT.CHOGORINGU]: [2,4],
+            [UNIT.BIGEYE]: [1,3],
+            [UNIT.TANK]: [2,4],
         },
     },
 });

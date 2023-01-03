@@ -823,9 +823,12 @@ function updateDreamerState(timeDeltaMs)
 function updatePlayerState(timeDeltaMs)
 {
     const timeDeltaSec = 0.001 * timeDeltaMs;
+    const ecoUpgrade = upgrades[UPGRADE.ECO];
     // compute gold per sec
     for (const player of gameState.players) {
-        player.goldPerSec = params.startingGoldPerSec;
+        const upgradeLevel = player.upgradeLevels[UPGRADE.ECO];
+        const bonus = upgradeLevel < 0 ? 0 : ecoUpgrade.goldPerSecBonus[upgradeLevel];
+        player.goldPerSec = params.startingGoldPerSec + bonus;
     }
     for (const { dreamer } of gameState.bridges) {
         if (dreamer.playerId != NO_PLAYER_INDEX) {
