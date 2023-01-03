@@ -42,19 +42,26 @@ export function strokeTextWorld(ctx, string, pos, sizePx, width, strokeStyle, al
     strokeTextScreen(ctx, string, coords, makeFont(scaledSize), scaledWidth, strokeStyle, align);
 }
 
-export function fillRectScreen(ctx, pos, dims, fillStyle)
+export function fillRectScreen(ctx, pos, dims, fillStyle, cornerRadii = 0)
 {
     ctx.fillStyle = fillStyle;
-    ctx.fillRect(pos.x, pos.y, dims.x, dims.y);
+    if (cornerRadii > 0) {
+        ctx.beginPath();
+        ctx.roundRect(pos.x, pos.y, dims.x, dims.y, cornerRadii);
+        ctx.fill();
+    } else {
+        ctx.fillRect(pos.x, pos.y, dims.x, dims.y);
+    }
 }
 
-export function fillRectWorld(ctx, pos, dims, fillStyle)
+export function fillRectWorld(ctx, pos, dims, fillStyle, cornerRadii = 0)
 {
     fillRectScreen(
         ctx,
         worldVecToCamera(pos),
         vec(dims.x / gameState.camera.scale, dims.y / gameState.camera.scale),
-        fillStyle
+        fillStyle,
+        cornerRadii
     );
 }
 

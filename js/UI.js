@@ -49,29 +49,31 @@ function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='cent
 
 function unitButton(player, pos, dims, key, unit)
 {
-    let tryBuild = false;
+    let hover = false;
+    let pressed = false;
+    let canAfford = player.gold >= unit.goldCost;
+    let onCd = player.unitCds[unit.id] > 0;
     // process the input first
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         if (gameState.mouseEnabled) {
             if (pointInAABB(gameState.input.mouseScreenPos, pos, dims)) {
                 if (mouseLeftPressed()) {
-                    tryBuild = true;
+                    pressed = true;
                 } else {
-                    // hover
+                    hover = true && canAfford && !onCd;
                 }
             }
         }
         if (keyPressed(key)) {
-            tryBuild = true;
+            pressed = true;
         }
     }
 
-    if (tryBuild) {
+    if (pressed) {
         tryBuildUnit(player.id, unit);
     }
 
-    context.fillStyle = "#444";
-    context.fillRect(pos.x, pos.y, dims.x, dims.y);
+    fillRectScreen(context, pos, dims, hover ? "#888" : "#444", 10);
     // draw sprite
     const sprite = unitSprites[unit.id];
     const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
@@ -85,17 +87,18 @@ function unitButton(player, pos, dims, key, unit)
 
     // overlay if can't afford
     let costColor = '#ffdd22';
-    if (player.gold < unit.goldCost) {
-        context.fillStyle = "rgba(20,20,20,0.6)";
-        context.fillRect(pos.x, pos.y, dims.x, dims.y);
+    if (!canAfford) {
+        const overlayColor = "rgba(20,20,20,0.6)";
+        fillRectScreen(context, pos, dims, overlayColor, 10);
         costColor = '#ff7744';
     }
-    if (player.unitCds[unit.id] > 0) {
+    if (onCd) {
         const f = (player.unitCds[unit.id] / unit.cdTimeMs);
-        context.fillStyle = "rgba(20,20,20,0.6)";
-        context.fillRect(pos.x, pos.y, dims.x, dims.y * f);
+        const overlayColor = "rgba(20,20,20,0.6)";
+        const overlayDims = vec(dims.x, dims.y * f);
+        fillRectScreen(context, pos, overlayDims, overlayColor, 10);
     }
-    drawTextScreen(`$${unit.goldCost}`, vec(pos.x,pos.y + dims.y), 20, costColor, true);
+    drawTextScreen(`$${unit.goldCost}`, vec(pos.x + 3,pos.y + dims.y - 5), 20, costColor, true);
 }
 
 export function doPlayerUI(player)
