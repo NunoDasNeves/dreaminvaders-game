@@ -369,6 +369,38 @@ export function getUnitWeapon(unit)
     return weapons[unit.id];
 }
 
+export const UPGRADE = Object.freeze({
+    ECO: 0,
+    ATK: 1,
+    DEF: 2,
+});
+
+export const upgrades = Object.freeze({
+    [UPGRADE.ECO]: {
+        id: UPGRADE.ECO,
+        goldCost: [10, 20, 30],
+        goldPerSecIncrease: [1,2,3],
+    },
+    [UPGRADE.ATK]: {
+        id: UPGRADE.ATK,
+        goldCost: [15, 25],
+        damageBonus: {
+            [UNIT.CHOGORINGU]: [1,2],
+            [UNIT.BIGEYE]: [2,3],
+            [UNIT.TANK]: [2,4],
+        },
+    },
+    [UPGRADE.DEF]: {
+        id: UPGRADE.DEF,
+        goldCost: [15, 25],
+        armorBonus: {
+            [UNIT.CHOGORINGU]: [2,2],
+            [UNIT.BIGEYE]: [1,2],
+            [UNIT.TANK]: [2,2],
+        },
+    },
+});
+
 export const hotKeys = {
     [0]: {
         lanes: {
@@ -381,6 +413,11 @@ export const hotKeys = {
             'w': UNIT.BIGEYE,
             'e': UNIT.TANK,
         },
+        upgrades: {
+            'a': UPGRADE.ECO,
+            's': UPGRADE.ATK,
+            'd': UPGRADE.DEF,
+        }
     },
     [1]: {
         lanes: {
@@ -393,6 +430,11 @@ export const hotKeys = {
             'o': UNIT.BIGEYE,
             'p': UNIT.TANK,
         },
+        upgrades: {
+            'k': UPGRADE.ECO,
+            'l': UPGRADE.ATK,
+            ';': UPGRADE.DEF,
+        }
     }
 };
 

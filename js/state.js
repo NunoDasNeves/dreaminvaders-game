@@ -314,13 +314,38 @@ function addPlayer(name, controller, pos, team, colorIdx)
             paths: [],
             lanes: [],
         },
+        upgradeLevels: Object.fromEntries(Object.values(upgrades).map(({ id }) => [id, -1])),
+        unitCds: Object.fromEntries(Object.values(UNIT).map(id => [id, 0])),
         unitUnlocked: Object.fromEntries(Object.values(units).map(({ id, needsUnlock }) => [id, needsUnlock ? false : true])),
-        unitCds: Object.fromEntries(Object.values(units).map(({ id }) => [id, 0])),
         botState: {
             actionTimer: 0,
         },
     });
     return id;
+}
+
+export function getWeaponDamage(playerId, weapon)
+{
+    const player = gameState.players[playerId];
+    const upgradeLevel = player.upgradeLevels[UPGRADE.ATK];
+    const base = weapon.damage;
+    let bonus = 0;
+    if (upgradeLevel >= 0) {
+        bonus = upgrades[UPGRADE.ATK].damageBonus[weapon.id][upgradeLevel];
+    }
+    return base + bonus;
+}
+
+export function getUnitArmor(playerId, unit)
+{
+    const player = gameState.players[playerId];
+    const upgradeLevel = player.upgradeLevels[UPGRADE.DEF];
+    const base = unit.armor;
+    let bonus = 0;
+    if (upgradeLevel >= 0) {
+        bonus = upgrades[UPGRADE.DEF].armorBonus[unit.id][upgradeLevel];
+    }
+    return base + bonus;
 }
 
 export function makeGameConfig(p0name, p0controller, p1name, p1controller)
