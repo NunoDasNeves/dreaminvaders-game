@@ -47,13 +47,23 @@ function loadImageAsset(filename, width=50, height=50, centerOffset=vec())
 {
     const img = new Image();
 
-    const imageAsset = { img, loaded: false, width, height, centerOffset: vecClone(centerOffset) } ;
+    const imageAsset = {
+        img,
+        loaded: false,
+        width,
+        height,
+        centerOffset: vecClone(centerOffset),
+        scratchCanvas: new OffscreenCanvas(width, height),
+    };
+    imageAsset.scratchCtx = imageAsset.scratchCanvas.getContext("2d");
 
     img.onload = function() {
         imageAsset.loaded = true;
         // update with real width and height; the others are just an estimate/placeholder...idk
         imageAsset.width = img.width;
         imageAsset.height = img.height;
+        imageAsset.scratchCanvas.width = img.width;
+        imageAsset.scratchCanvas.height = img.height;
     };
 
     // this actually makes it start loading the image
