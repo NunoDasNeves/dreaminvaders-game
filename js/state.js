@@ -314,6 +314,7 @@ function addPlayer(name, controller, pos, team, colorIdx)
             paths: [],
             lanes: [],
         },
+        unitUnlocked: Object.fromEntries(Object.values(units).map(({ id, needsUnlock }) => [id, needsUnlock ? false : true])),
         unitCds: Object.fromEntries(Object.values(units).map(({ id }) => [id, 0])),
         botState: {
             actionTimer: 0,

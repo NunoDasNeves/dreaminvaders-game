@@ -826,7 +826,7 @@ function updatePlayerState(timeDeltaMs)
             gameState.players[dreamer.playerId].goldPerSec += params.dreamerGoldPerSec;
         }
     }
-    // add the income
+    // add the income, update cooldowns
     for (const player of gameState.players) {
         player.gold += player.goldPerSec * timeDeltaSec;
         for (const unitId of Object.values(UNIT)) {
@@ -858,6 +858,9 @@ function updateGame(timeDeltaMs)
 export function tryBuildUnit(playerId, unit)
 {
     const player = gameState.players[playerId];
+    if (!player.unitUnlocked[unit.id]) {
+        return false;
+    }
     if (player.laneSelected < 0) {
         return false;
     }
@@ -881,6 +884,21 @@ export function tryBuildUnit(playerId, unit)
     return true;
 }
 
+export function tryUnlockUnit(playerId, unit)
+{
+    const player = gameState.players[playerId];
+    if (player.unitUnlocked[unit.id]) {
+        return false;
+    }
+    if (player.gold < unit.unlockCost) {
+        return false;
+    }
+    player.gold -= unit.unlockCost;
+    player.unitUnlocked[unit.id] = true;
+    player.unitCds[unit.id] = unit.cdTimeMs;
+    return true;
+}
+
 function updateBotPlayer(player, timeDeltaMs)
 {
     player.botState.actionTimer -= timeDeltaMs;
@@ -891,7 +909,11 @@ function updateBotPlayer(player, timeDeltaMs)
     player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
     const units = Object.values(hotKeys[player.id].units);
     const unit = units[Math.floor(Math.random()*units.length)];
-    tryBuildUnit(player.id, unit);
+    if (player.unitUnlocked[unit.id]) {
+        tryBuildUnit(player.id, unit);
+    } else {
+        tryUnlockUnit(player.id, unit);
+    }
 }
 
 function updatePlayersActionsAndUI(timeDeltaMs)

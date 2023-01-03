@@ -3,8 +3,7 @@ import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as Draw from './draw.js';
 import * as App from './app.js';
-import { tryBuildUnit } from "./game.js"
-import { strokeTextScreen, strokeTextWorld } from "./draw.js";
+import { tryBuildUnit, tryUnlockUnit } from "./game.js"
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
@@ -71,28 +70,36 @@ function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='cent
 
 function unitButton(player, pos, dims, key, unit)
 {
+    const unlocked = player.unitUnlocked[unit.id];
+    const cost = unlocked ? unit.goldCost : unit.unlockCost;
+    const canAfford = player.gold >= cost;
+    const onCd = player.unitCds[unit.id] > 0;
+    const canPress = canAfford && !onCd;
+
     let hover = false;
     let pressed = false;
-    let canAfford = player.gold >= unit.goldCost;
-    let onCd = player.unitCds[unit.id] > 0;
     // process the input first
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         if (gameState.mouseEnabled) {
             if (pointInAABB(gameState.input.mouseScreenPos, pos, dims)) {
                 if (mouseLeftPressed()) {
-                    pressed = true;
+                    pressed = canPress;
                 } else {
-                    hover = true && canAfford && !onCd;
+                    hover = canPress;
                 }
             }
         }
         if (keyPressed(key)) {
-            pressed = true;
+            pressed = canPress;
         }
     }
 
     if (pressed) {
-        tryBuildUnit(player.id, unit);
+        if (unlocked) {
+            tryBuildUnit(player.id, unit);
+        } else {
+            tryUnlockUnit(player.id, unit);
+        }
     }
 
     fillRectScreen(context, pos, dims, hover ? "#888" : "#444", 10);
@@ -100,27 +107,28 @@ function unitButton(player, pos, dims, key, unit)
     const sprite = unitSprites[unit.id];
     const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
     vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
-    drawSpriteScreen(sprite, 0, 0, spriteDrawPos);
+    drawSpriteScreen(sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
 
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         // hotKey
         drawTextScreen(`[${key}]`, vec(pos.x + dims.x - 5, pos.y + 20), 20, 'white', true, 'right');
     }
 
-    // overlay if can't afford
-    let costColor = '#ffdd22';
-    if (!canAfford) {
-        const overlayColor = "rgba(20,20,20,0.6)";
-        fillRectScreen(context, pos, dims, overlayColor, 10);
-        costColor = '#ff7744';
-    }
     if (onCd) {
         const f = (player.unitCds[unit.id] / unit.cdTimeMs);
         const overlayColor = "rgba(20,20,20,0.6)";
         const overlayDims = vec(dims.x, dims.y * f);
         fillRectScreen(context, pos, overlayDims, overlayColor, 10);
     }
-    drawTextScreen(`$${unit.goldCost}`, vec(pos.x + 3,pos.y + dims.y - 5), 20, costColor, true);
+
+    let costColor = '#ffdd22';
+    if (!canAfford) {
+        const overlayColor = "rgba(20,20,20,0.6)";
+        fillRectScreen(context, pos, dims, overlayColor, 10);
+        costColor = '#ff7744';
+    }
+
+    drawTextScreen(`$${cost}`, vec(pos.x + 3,pos.y + dims.y - 5), 20, costColor, true);
 }
 
 export function doPlayerUI(player)

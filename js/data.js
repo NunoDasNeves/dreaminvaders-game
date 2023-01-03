@@ -276,6 +276,8 @@ const unitDefaults = Object.freeze({
     lighthouseDamage: 0,
     goldCost: Infinity,
     cdTimeMs: Infinity,
+    needsUnlock: false,
+    unlockCost: 0,
     draw: {},
 });
 
@@ -315,6 +317,8 @@ const unitData = [
         lighthouseDamage: 100,
         goldCost: 10,
         cdTimeMs: 300,
+        needsUnlock: true,
+        unlockCost: 20,
     },{
         id: UNIT.TANK,
         maxSpeed: 0.8,
@@ -330,6 +334,8 @@ const unitData = [
         lighthouseDamage: 150,
         goldCost: 25,
         cdTimeMs: 1500,
+        needsUnlock: true,
+        unlockCost: 40,
     }
 ];
 
