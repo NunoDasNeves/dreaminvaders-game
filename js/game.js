@@ -448,13 +448,16 @@ function updatePhysicsState()
     };
 }
 
-function hitEntity(i, damage, armorPen=0)
+function hitUnit(hitter, hittee)
 {
-    const { unit, hp, hitState } = gameState.entities;
-    const effectiveArmor = Math.max(unit[i].armor - armorPen, 0);
-    hp[i] -= Math.max(damage - effectiveArmor, 0);
-    hitState[i].hitTimer = params.hitFadeTimeMs;
-    hitState[i].hpBarTimer = params.hpBarTimeMs;
+    const { unit, hp, hitState, playerId } = gameState.entities;
+    const weapon = getUnitWeapon(unit[hitter]);
+    const damage = getWeaponDamage(playerId[hitter], weapon);
+    const armor = getUnitArmor(playerId[hittee], unit[hittee]);
+    const effectiveArmor = Math.max(armor - weapon.armorPen, 0);
+    hp[hittee] -= Math.max(damage - effectiveArmor, 0);
+    hitState[hittee].hitTimer = params.hitFadeTimeMs;
+    hitState[hittee].hpBarTimer = params.hpBarTimeMs;
 }
 
 function isOnIsland(i)
@@ -537,10 +540,13 @@ function updateHitState(timeDeltaMs)
                         }
                         const enemyLighthouseIdx = player.island.idx;
                         if (onIsland && getDist(pos[i], pos[enemyLighthouseIdx]) < params.lighthouseRadius) {
-                            hitEntity(enemyLighthouseIdx, unit[i].lighthouseDamage);
+                            hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
+                            hitState[i].hitTimer = params.hitFadeTimeMs;
+                            hitState[i].hpBarTimer = params.hpBarTimeMs;
                             if ( hp[enemyLighthouseIdx] <= 0 ) {
                                 deferUpdate(() => {
                                     // TODO this is a hack so the lighthouse HP shows as 0 when game ends
+                                    UI.startFrame();
                                     updatePlayersActionsAndUI(timeDeltaMs);
                                     App.gameOver(gameState.players[playerId[i]].name, color[i]);
                                 });
@@ -579,7 +585,7 @@ function doWeaponHit(i)
         case UNIT.TANK:
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
-                hitEntity(t, weapon.damage, weapon.armorPen);
+                hitUnit(i, t);
                 spawnVFXExplosion(pos[t], 8, 300);
             }
             break;
@@ -587,7 +593,7 @@ function doWeaponHit(i)
         case UNIT.CHOGORINGU:
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
-                hitEntity(t, weapon.damage);
+                hitUnit(i, t);
             }
             break;
         }
@@ -595,7 +601,7 @@ function doWeaponHit(i)
         {
             for (const j of getCollidingWithCircle(atkState[i].aoeHitPos, weapon.aoeRadius)) {
                 if (team[i] != team[j]) {
-                    hitEntity(j, weapon.damage);
+                    hitUnit(i, j);
                 }
             }
             spawnVFXExplosion(atkState[i].aoeHitPos, weapon.aoeRadius, 300);
