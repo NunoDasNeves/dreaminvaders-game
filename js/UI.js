@@ -2,7 +2,8 @@ import * as Utils from "./util.js";
 import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as Draw from './draw.js';
-import { debugHotKeys, tryBuildUnit } from "./game.js"
+import * as App from './app.js';
+import { tryBuildUnit } from "./game.js"
 import { strokeTextScreen, strokeTextWorld } from "./draw.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
@@ -199,6 +200,31 @@ export function processMouseInput()
     }
 }
 
+const debugHotKeys = [
+    // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
+    {
+        key: '`',
+        fn: () => {debug.paused = !debug.paused},
+        text: 'debug pause',
+    }, {
+        key: '.',
+        fn: () => { debug.frameAdvance = true; },
+        text: 'advance 1 frame (while paused)',
+    }, {
+        key: ',',
+        fn: () => {App.gameOver(getLocalPlayer().name, params.playerColors[0])},
+        text: 'end game',
+    }, {
+        key: 'n',
+        fn: () => {gameState.players[0].gold += 100},
+        text: '+100 gold to player 0',
+    }, {
+        key: 'm',
+        fn: () => {gameState.players[1].gold += 100},
+        text: '+100 gold to player 1',
+    },
+];
+
 const debugFont = '20px sans-serif';
 function drawDebugTextScreen(string, pos, align='left')
 {
@@ -211,6 +237,16 @@ export function debugUI(timeDeltaMs)
     if (!debug.drawUI) {
         return;
     }
+
+    if (debug.enableControls) {
+        for (const { key, fn } of debugHotKeys) {
+            if (keyPressed(key)) {
+                fn();
+                break;
+            }
+        }
+    }
+
     if (debug.drawClickBridgeDebugArrow) {
         drawArrow(
             debug.closestLanePoint,

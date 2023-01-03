@@ -864,33 +864,14 @@ function updatePlayersActionsAndUI(timeDeltaMs)
 {
     UI.processMouseInput();
     for (const player of gameState.players) {
+        // draw UI for player and bot
         UI.doPlayerUI(player);
-        if (player.controller == PLAYER_CONTROLLER.BOT) {
+        // don't let bot play while paused
+        if (!debug.paused && player.controller == PLAYER_CONTROLLER.BOT) {
             updateBotPlayer(player, timeDeltaMs);
         }
     }
 }
-
-export const debugHotKeys = [
-    // TODO this will mess up ticksMs if we ever use it for anything, so don't for now
-    {
-        key: '`',
-        fn: () => {debug.paused = !debug.paused},
-        text: 'debug pause',
-    }, {
-        key: ',',
-        fn: () => {App.gameOver(getLocalPlayer().name, params.playerColors[0])},
-        text: 'end game',
-    }, {
-        key: 'n',
-        fn: () => {gameState.players[0].gold += 100},
-        text: '+100 gold to player 0',
-    }, {
-        key: 'm',
-        fn: () => {gameState.players[1].gold += 100},
-        text: '+100 gold to player 1',
-    },
-];
 
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
 {
@@ -898,14 +879,6 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         return;
     }
 
-    if (debug.enableControls) {
-        for (const { key, fn } of debugHotKeys) {
-            if (keyPressed(key)) {
-                fn();
-                break;
-            }
-        }
-    }
     if (keyPressed('Escape')) {
         App.pause();
     } else {
@@ -913,9 +886,10 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         UI.debugUI(timeDeltaMs);
         // keep doing player actions while debug paused
         updatePlayersActionsAndUI(timeDeltaMs);
-        if (!debug.enableControls || !debug.paused || keyPressed('.')) {
+        if (!debug.enableControls || !debug.paused || debug.frameAdvance) {
             updateGame(timeDeltaMs);
         }
+        debug.frameAdvance = false;
     }
     updateGameInput();
 }

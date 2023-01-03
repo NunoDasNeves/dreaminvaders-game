@@ -9,6 +9,7 @@ export const debug = {
     skipAppMenu: false, // launch straight into a game
     enableControls: false,
     paused: false,
+    frameAdvance: false,
     // debug drawing below here
     drawUI: false, // all the debug UI below is dependent on this
     drawAiState: true,
