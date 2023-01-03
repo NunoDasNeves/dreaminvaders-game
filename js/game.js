@@ -509,7 +509,11 @@ function updateHitState(timeDeltaMs)
                         if (onIsland && getDist(pos[i], enemyLighthouse.pos) < params.lighthouseRadius) {
                             hitEntity(enemyLighthouse.idx, unit[i].lighthouseDamage);
                             if ( hp[enemyLighthouse.idx] <= 0 ) {
-                                App.gameOver(gameState.players[playerId[i]].name, color[i]);
+                                deferUpdate(() => {
+                                    // TODO this is a hack so the lighthouse HP shows as 0 when game ends
+                                    updatePlayersActionsAndUI(timeDeltaMs);
+                                    App.gameOver(gameState.players[playerId[i]].name, color[i]);
+                                });
                             }
                             // instantly disappear this frame
                             freeable[i] = true;
@@ -873,6 +877,20 @@ function updatePlayersActionsAndUI(timeDeltaMs)
     }
 }
 
+const deferred = [];
+function doDeferredUpdates()
+{
+    for (const fn of deferred) {
+        fn();
+    }
+    deferred.length = 0;
+}
+// do something at the end of the current update function
+function deferUpdate(fn)
+{
+    deferred.push(fn);
+}
+
 export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix debug pause */, timeDeltaMs)
 {
     if (App.state.screen != SCREEN.GAME) {
@@ -892,4 +910,5 @@ export function update(realTimeMs, __ticksMs /* <- don't use this unless we fix 
         debug.frameAdvance = false;
     }
     updateGameInput();
+    doDeferredUpdates();
 }
