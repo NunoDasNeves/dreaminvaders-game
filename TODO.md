@@ -1,5 +1,4 @@
 ## TODO
-- make UI stuff into buttons (for 1 player)
 - fix issues with units being able to attack stuff when it's past the lane (should just be tweaking and stuff)
 - round spawning areas at end of each lane (on the island)
 - dirt paths join up into single path to lighthouse, which is set further back on island
@@ -28,6 +27,7 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- make UI stuff into buttons (for 1 player)
 - make lanes clickable in 1 player mode
 - update unit stats
 - armor
