@@ -3,7 +3,7 @@ import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as Draw from './draw.js';
 import * as App from './app.js';
-import { tryBuildUnit, tryUnlockUnit } from "./game.js"
+import { tryBuildUnit, tryUnlockUnit, tryUpgrade } from "./game.js"
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
@@ -68,6 +68,68 @@ function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='cent
     fillTextWorld(context, string, worldPos, sizePx, fillStyle, align);
 }
 
+function pressedButton(player, pos, dims, key)
+{
+    let hover = false;
+    let press = false;
+    if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        if (gameState.mouseEnabled) {
+            if (pointInAABB(gameState.input.mouseScreenPos, pos, dims)) {
+                if (mouseLeftPressed()) {
+                    press = true;
+                } else {
+                    hover = true;
+                }
+            }
+        }
+        if (keyPressed(key)) {
+            press = true;
+        }
+    }
+    return { press, hover };
+}
+
+function upgradeButton(player, pos, dims, key, upgrade)
+{
+    const level = player.upgradeLevels[upgrade.id];
+    const maxLevel = upgrade.goldCost.length - 1;
+    const isMax = level >= maxLevel;
+    const cost = isMax ? Infinity : upgrade.goldCost[level + 1];
+    const canAfford = player.gold >= cost;
+    const canPress = canAfford;
+    const buttonFontSz = 20;
+    const buttonFont = `${buttonFontSz}px sans-serif`;
+    const { press, hover } = canPress && pressedButton(player, pos, dims, key);
+
+    if (press) {
+        tryUpgrade(player.id, upgrade.id);
+    }
+
+    fillRectScreen(context, pos, dims, hover ? "#888" : "#444", 10);
+    // draw sprite
+    //const sprite = unitSprites[unit.id];
+    //const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
+    //vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
+    //drawSpriteScreen(sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
+
+    const costPos = vec(pos.x + 3,pos.y + dims.y - 5);
+    if (isMax) {
+        drawTextScreen('max', costPos, buttonFont, "#44ccff", true);
+    } else {
+        if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+            // hotKey
+            drawTextScreen(`[${key}]`, vec(pos.x + dims.x - 5, pos.y + 20), buttonFont, 'white', true, 'right');
+        }
+        let costColor = '#ffdd22';
+        if (!canAfford) {
+            const overlayColor = "rgba(20,20,20,0.6)";
+            fillRectScreen(context, pos, dims, overlayColor, 10);
+            costColor = '#ff7744';
+        }
+        drawTextScreen(`$${cost}`, costPos, buttonFont, costColor, true);
+    }
+}
+
 function unitButton(player, pos, dims, key, unit)
 {
     const unlocked = player.unitUnlocked[unit.id];
@@ -77,26 +139,9 @@ function unitButton(player, pos, dims, key, unit)
     const canPress = canAfford && !onCd;
     const buttonFontSz = 20;
     const buttonFont = `${buttonFontSz}px sans-serif`;
+    const { press, hover } = canPress && pressedButton(player, pos, dims, key);
 
-    let hover = false;
-    let pressed = false;
-    // process the input first
-    if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
-        if (gameState.mouseEnabled) {
-            if (pointInAABB(gameState.input.mouseScreenPos, pos, dims)) {
-                if (mouseLeftPressed()) {
-                    pressed = canPress;
-                } else {
-                    hover = canPress;
-                }
-            }
-        }
-        if (keyPressed(key)) {
-            pressed = canPress;
-        }
-    }
-
-    if (pressed) {
+    if (press) {
         if (unlocked) {
             tryBuildUnit(player.id, unit);
         } else {
@@ -180,9 +225,9 @@ export function doPlayerUI(player)
     xOff = UIstartX + UIOuterPadding;
     yOff += buttonDims.y + UIInnerpadding;
 
-    // unit buttons and hotkeys
-    for (const [key, unitId] of Object.entries(hotKeys[player.id].units)) {
-        unitButton(player, vec(xOff, yOff), buttonDims, key, units[unitId]);
+    // upgrade buttons and hotkeys
+    for (const [key, upgradeId] of Object.entries(hotKeys[player.id].upgrades)) {
+        upgradeButton(player, vec(xOff, yOff), buttonDims, key, upgrades[upgradeId]);
         xOff += buttonDims.x + buttonXGap;
     }
 

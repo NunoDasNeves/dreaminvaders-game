@@ -899,6 +899,24 @@ export function tryUnlockUnit(playerId, unit)
     return true;
 }
 
+export function tryUpgrade(playerId, upgradeId)
+{
+    const player = gameState.players[playerId];
+    const upgrade = upgrades[upgradeId];
+    const currLevel = player.upgradeLevels[upgradeId];
+    const maxLevel = upgrade.goldCost.length - 1;
+    if (currLevel >= maxLevel) {
+        return false;
+    }
+    const cost = upgrade.goldCost[currLevel + 1];
+    if (player.gold < cost) {
+        return false;
+    }
+    player.gold -= cost;
+    player.upgradeLevels[upgradeId]++;
+    return true;
+}
+
 function updateBotPlayer(player, timeDeltaMs)
 {
     player.botState.actionTimer -= timeDeltaMs;
