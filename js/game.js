@@ -53,7 +53,7 @@ function nearestUnit(i, minRange, filterFn)
 
 function canChaseOrAttack(myIdx, theirIdx)
 {
-    const { unit, pos, team, homeIsland, hitState } = gameState.entities;
+    const { unit, pos, team, playerId, lane, hitState } = gameState.entities;
     if (hitState[theirIdx].state != HITSTATE.ALIVE) {
         return false;
     }
@@ -65,8 +65,12 @@ function canChaseOrAttack(myIdx, theirIdx)
         return false;
     }
     // ignore if they're already too far into our island
-    if (homeIsland[myIdx] && getDist(pos[theirIdx], homeIsland[myIdx].pos) < params.safePathDistFromBase) {
-        return false;
+    if (playerId[myIdx] != null) {
+        const myIsland = gameState.islands[playerId[myIdx]];
+        if (    getDist(pos[theirIdx], myIsland.pos) < params.laneDistFromBase &&
+                getDist(pos[theirIdx], lane[myIdx].spawnPos) > params.spawnPlatRadius) {
+            return false;
+        }
     }
     return true;
 }
@@ -215,7 +219,7 @@ function updateAiState()
                     decel(i); // stand still
                     break;
                 }
-                if (distToEnemyIsland < params.safePathDistFromBase) {
+                if (distToEnemyIsland < (params.laneDistFromBase + params.spawnPlatRadius)) {
                     // keep proceeding
                 } else if (nearestAtkTarget.isValid()) {
                     aiState[i].state = AISTATE.ATTACK;
@@ -309,7 +313,7 @@ function updateAiState()
                     goDir = vecNormalize(vecSub(nextPoint, currPoint));
                 }
                 accel[i] = vecMul(goDir, unit[i].accel);
-                if (!isOnIsland(i)) {
+                if (!isOnEnemyIsland(i)) {
                     accelAwayFromEdge(i);
                 }
                 target[i].invalidate();
@@ -454,6 +458,24 @@ function isOnIsland(i)
         if (getDist(pos[i], island.pos) < params.islandRadius) {
             return true;
         }
+    }
+    return false;
+}
+
+function isOnEnemyIsland(i)
+{
+    const { pos, playerId, lane } = gameState.entities;
+    if (getDist(pos[i], gameState.players[lane[i].otherPlayerIdx].island.pos) < params.islandRadius) {
+        return true;
+    }
+    return false;
+}
+
+function isOnOwnIsland(i)
+{
+    const { pos, playerId } = gameState.entities;
+    if (getDist(pos[i], gameState.players[playerId[i]].island.pos) < params.islandRadius) {
+        return true;
     }
     return false;
 }

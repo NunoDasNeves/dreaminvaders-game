@@ -64,7 +64,6 @@ export const params = Object.freeze(
         }
         obj.laneDistFromBase = obj.islandRadius - 50;
         obj.spawnPlatRadius = obj.laneWidth * 0.75;
-        obj.safePathDistFromBase = obj.laneDistFromBase - obj.laneWidth*0.5;
         return obj;
     }()
 );
