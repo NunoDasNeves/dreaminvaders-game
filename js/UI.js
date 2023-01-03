@@ -52,12 +52,12 @@ function drawSpriteScreen(sprite, row, col, pos, colorOverlay = null)
     }
 }
 
-function drawTextScreen(string, pos, sizePx, fillStyle, stroke=false, align='left')
+function drawTextScreen(string, pos, sizePx, fillStyle, stroke=false, align='left', baseline='alphabetic')
 {
     if (stroke) {
-        strokeTextScreen(context, string, pos, sizePx, 3, 'black', align);
+        strokeTextScreen(context, string, pos, sizePx, 3, 'black', align, baseline);
     }
-    fillTextScreen(context, string, pos, sizePx, fillStyle, align);
+    fillTextScreen(context, string, pos, sizePx, fillStyle, align, baseline);
 }
 
 function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='center')
@@ -75,6 +75,8 @@ function unitButton(player, pos, dims, key, unit)
     const canAfford = player.gold >= cost;
     const onCd = player.unitCds[unit.id] > 0;
     const canPress = canAfford && !onCd;
+    const buttonFontSz = 20;
+    const buttonFont = `${buttonFontSz}px sans-serif`;
 
     let hover = false;
     let pressed = false;
@@ -111,7 +113,7 @@ function unitButton(player, pos, dims, key, unit)
 
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         // hotKey
-        drawTextScreen(`[${key}]`, vec(pos.x + dims.x - 5, pos.y + 20), 20, 'white', true, 'right');
+        drawTextScreen(`[${key}]`, vec(pos.x + dims.x - 5, pos.y + 20), buttonFont, 'white', true, 'right');
     }
 
     if (onCd) {
@@ -128,31 +130,74 @@ function unitButton(player, pos, dims, key, unit)
         costColor = '#ff7744';
     }
 
-    drawTextScreen(`$${cost}`, vec(pos.x + 3,pos.y + dims.y - 5), 20, costColor, true);
+    drawTextScreen(`$${cost}`, vec(pos.x + 3,pos.y + dims.y - 5), buttonFont, costColor, true);
 }
 
 export function doPlayerUI(player)
 {
-    const UIwidth = canvas.width/3 + 64; // TODO compute this based on unit hotkeys n stuff - currently based on lighthouse HP bars
+    // UI layout:
+    //  gold
+    //  unit buttons
+    //  upgrade buttons
+    //  lighthouse HP
+    const UIInnerpadding = 16;
+    const UIOuterPadding = 20;
+    const goldFontSz = 30;
+    const goldFont = `${goldFontSz}px sans-serif`;
+    const goldFontMetrics = getTextDims(context, "$00", goldFont, 'left', 'top');
+    const goldHeight = goldFontMetrics.actualHeight;
     const buttonDims = vec(64,64);
+    const buttonXGap = UIInnerpadding;
+    const numUnitButtons = Object.keys(hotKeys[player.id].units).length;
+    const numUpgradeButtons = Object.keys(hotKeys[player.id].upgrades).length;
+    const lhHpHeight = 16;
+    const lhHpMaxWidth = canvas.width / 3;
+    const UIwidth = Math.max(
+        lhHpMaxWidth,
+        numUnitButtons * buttonDims.x + (numUnitButtons - 1) * buttonXGap,
+        numUpgradeButtons * buttonDims.x + (numUpgradeButtons - 1) * buttonXGap,
+    ) + UIOuterPadding * 2;
+    const UIheight = goldFontSz + 2 * buttonDims.y + lhHpHeight + 3 * UIInnerpadding + 2 * UIOuterPadding;
     const UIstartX = player.id == 0 ? 0 : canvas.width - UIwidth;
-    const buttonStart = vec(UIstartX + 32, canvas.height-48-buttonDims.y);
-    const buttonXGap = 16;
-    let xoff = 0;
+    const UIstartY = canvas.height - UIheight;
+    //strokeRectScreen(context, vec(UIstartX, UIstartY), vec(UIwidth, UIheight), "red");
+    let xOff = UIstartX + UIOuterPadding;
+    let yOff = UIstartY + UIOuterPadding;
+    //strokeRectScreen(context, vec(xOff, yOff), vec(goldFontMetrics.width, goldHeight), "red");
+
+    // gold
+    const goldStart = vec(xOff, yOff);
+    drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, goldFont, player.color, true, 'left', 'top');
+
+    yOff += UIInnerpadding + goldHeight;
 
     // unit buttons and hotkeys
     for (const [key, unitId] of Object.entries(hotKeys[player.id].units)) {
-        const pos = vec(
-            buttonStart.x + xoff,
-            buttonStart.y
-        );
-        unitButton(player, pos, buttonDims, key, units[unitId]);
-        xoff += buttonDims.x + buttonXGap;
+        unitButton(player, vec(xOff, yOff), buttonDims, key, units[unitId]);
+        xOff += buttonDims.x + buttonXGap;
     }
 
-    // gold
-    const goldStart = vec(UIstartX + 32, canvas.height-32-buttonDims.y-32);
-    drawTextScreen(`$${Math.floor(player.gold)}`, goldStart, 30, player.color, true);
+    xOff = UIstartX + UIOuterPadding;
+    yOff += buttonDims.y + UIInnerpadding;
+
+    // unit buttons and hotkeys
+    for (const [key, unitId] of Object.entries(hotKeys[player.id].units)) {
+        unitButton(player, vec(xOff, yOff), buttonDims, key, units[unitId]);
+        xOff += buttonDims.x + buttonXGap;
+    }
+
+    xOff = UIstartX + UIOuterPadding;
+    yOff += buttonDims.y + UIInnerpadding;
+
+    // lighthouse health bars
+    const { unit, hp } = gameState.entities;
+    const lighthouseHp = hp[player.island.idx];
+    const f = clamp(lighthouseHp / unit[player.island.idx].maxHp, 0, 1);
+    const greenWidth = lhHpMaxWidth * f;
+    const redStartX = xOff + greenWidth;
+    const redWidth = lhHpMaxWidth * (1 - f);
+    fillRectScreen(context, vec(xOff, yOff), vec(greenWidth, lhHpHeight), '#00ff00');
+    fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, lhHpHeight), '#ff0000');
 
     // lane indicators and hotkeys
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
@@ -171,19 +216,6 @@ export function doPlayerUI(player)
             }
         }
     }
-
-    // lighthouse health bars
-    const { unit, hp } = gameState.entities;
-    const lighthouseHp = hp[player.island.idx];
-    const f = lighthouseHp / unit[player.island.idx].maxHp;
-    const maxWidth = canvas.width / 3;
-    const barStartX = UIstartX + 32;
-    const barY = canvas.height - 32;
-    const greenWidth = maxWidth * f;
-    const redStartX = barStartX + greenWidth;
-    const redWidth = maxWidth * (1 - f);
-    fillRectScreen(context, vec(barStartX, barY), vec(greenWidth, 16), '#00ff00');
-    fillRectScreen(context, vec(redStartX, barY), vec(redWidth, 16), '#ff0000');
 }
 
 export function processMouseInput()

@@ -9,37 +9,58 @@ function makeFont(sz)
     return `${sz}px sans-serif`
 }
 
-export function strokeTextScreen(ctx, string, pos, font, width, strokeStyle, align='left')
+export function getTextDims(ctx, string, font, align='left', baseline='alphabetic')
 {
     ctx.font = font;
     ctx.textAlign = align;
+    ctx.textBaseline = baseline;
+    const metrics = ctx.measureText(string);
+    return {
+        fontHeight: metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent,
+        actualHeight: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
+        width: metrics.width,
+    };
+}
+
+export function strokeTextScreen(ctx, string, pos, font, width, strokeStyle, align='left', baseline='alphabetic')
+{
+    ctx.font = font;
+    ctx.textAlign = align;
+    ctx.textBaseline = baseline;
     ctx.strokeStyle = strokeStyle;
     ctx.setLineDash([]);
     ctx.lineWidth = width;
     ctx.strokeText(string, pos.x, pos.y);
 }
 
-export function fillTextScreen(ctx, string, pos, font, fillStyle, align='left')
+export function fillTextScreen(ctx, string, pos, font, fillStyle, align='left', baseline='alphabetic')
 {
     ctx.font = font;
     ctx.textAlign = align;
+    ctx.textBaseline = baseline;
     ctx.fillStyle = fillStyle;
     ctx.fillText(string, pos.x, pos.y);
 }
 
-export function fillTextWorld(ctx, string, pos, sizePx, fillStyle, align='left')
+export function fillTextWorld(ctx, string, pos, sizePx, fillStyle, align='left', baseline='alphabetic')
 {
     const scaledSize = sizePx / gameState.camera.scale;
     const coords = worldVecToCamera(pos);
-    fillTextScreen(ctx, string, coords, makeFont(scaledSize), fillStyle, align);
+    fillTextScreen(ctx, string, coords, makeFont(scaledSize), fillStyle, align, baseline);
 }
 
-export function strokeTextWorld(ctx, string, pos, sizePx, width, strokeStyle, align='left')
+export function strokeTextWorld(ctx, string, pos, sizePx, width, strokeStyle, align='left', baseline='alphabetic')
 {
     const scaledSize = sizePx / gameState.camera.scale;
     const scaledWidth = width / gameState.camera.scale;
     const coords = worldVecToCamera(pos);
-    strokeTextScreen(ctx, string, coords, makeFont(scaledSize), scaledWidth, strokeStyle, align);
+    strokeTextScreen(ctx, string, coords, makeFont(scaledSize), scaledWidth, strokeStyle, align, baseline);
+}
+
+export function strokeRectScreen(ctx, pos, dims, strokeStyle)
+{
+    ctx.strokeStyle = strokeStyle;
+    ctx.strokeRect(pos.x, pos.y, dims.x, dims.y);
 }
 
 export function fillRectScreen(ctx, pos, dims, fillStyle, cornerRadii = 0)
