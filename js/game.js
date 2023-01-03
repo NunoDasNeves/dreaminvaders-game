@@ -864,7 +864,7 @@ function updateGame(timeDeltaMs)
     updatePlayerState(timeDeltaMs);
 }
 
-export function tryBuildUnit(playerId, unit)
+export function canBuildUnit(playerId, unit)
 {
     const player = gameState.players[playerId];
     if (!player.unitUnlocked[unit.id]) {
@@ -879,6 +879,15 @@ export function tryBuildUnit(playerId, unit)
     if (player.unitCds[unit.id] > 0) {
         return false;
     }
+    return true;
+}
+
+export function tryBuildUnit(playerId, unit)
+{
+    if (!canBuildUnit(playerId, unit)) {
+        return false;
+    }
+    const player = gameState.players[playerId];
     let idx = INVALID_ENTITY_INDEX;
     let iters = 100;
     while (idx == INVALID_ENTITY_INDEX && iters > 0) {
@@ -893,7 +902,7 @@ export function tryBuildUnit(playerId, unit)
     return true;
 }
 
-export function tryUnlockUnit(playerId, unit)
+export function canUnlockUnit(playerId, unit)
 {
     const player = gameState.players[playerId];
     if (player.unitUnlocked[unit.id]) {
@@ -902,13 +911,22 @@ export function tryUnlockUnit(playerId, unit)
     if (player.gold < unit.unlockCost) {
         return false;
     }
+    return true;
+}
+
+export function tryUnlockUnit(playerId, unit)
+{
+    if (!canUnlockUnit(playerId, unit)) {
+        return false;
+    }
+    const player = gameState.players[playerId];
     player.gold -= unit.unlockCost;
     player.unitUnlocked[unit.id] = true;
     player.unitCds[unit.id] = unit.cdTimeMs;
     return true;
 }
 
-export function tryUpgrade(playerId, upgradeId)
+export function canUpgrade(playerId, upgradeId)
 {
     const player = gameState.players[playerId];
     const upgrade = upgrades[upgradeId];
@@ -921,8 +939,20 @@ export function tryUpgrade(playerId, upgradeId)
     if (player.gold < cost) {
         return false;
     }
-    player.gold -= cost;
+    return true;
+}
+
+export function tryUpgrade(playerId, upgradeId)
+{
+    if (!canUpgrade(playerId, upgradeId)) {
+        return false;
+    }
+    const player = gameState.players[playerId];
     player.upgradeLevels[upgradeId]++;
+    const newLevel = player.upgradeLevels[upgradeId];
+    const upgrade = upgrades[upgradeId];
+    const cost = upgrade.goldCost[newLevel];
+    player.gold -= cost;
     return true;
 }
 
@@ -934,14 +964,24 @@ function updateBotPlayer(player, timeDeltaMs)
     }
     player.botState.actionTimer += params.botActionTimeMs;
     player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
-    const unitIds = Object.values(hotKeys[player.id].units);
-    const unitId = randFromArray(unitIds);
-    const unit = units[unitId];
-    if (player.unitUnlocked[unit.id]) {
-        tryBuildUnit(player.id, unit);
-    } else {
-        tryUnlockUnit(player.id, unit);
-    }
+    const botActions = [()=>{},()=>{}]; // do nothing actions, keep it somewhat easy
+    Object.values(Data.hotKeys[player.id].units)
+        .forEach(unitId => {
+            const unit = units[unitId];
+            if (canUnlockUnit(player.id, unit)) {
+                botActions.push(() => tryUnlockUnit(player.id, unit));
+            } else if (canBuildUnit(player.id, unit)) {
+                botActions.push(() => tryBuildUnit(player.id, unit));
+            }
+        });
+    Object.values(Data.hotKeys[player.id].upgrades)
+        .forEach(upgradeId => {
+            if (canUpgrade(player.id, upgradeId)) {
+                botActions.push(() => tryUpgrade(player.id, upgradeId));
+            }
+        });
+    const action = randFromArray(botActions);
+    action();
 }
 
 function updatePlayersActionsAndUI(timeDeltaMs)
