@@ -3,7 +3,7 @@ import * as App from './app.js';
 import { SCREEN } from './data.js';
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
-let context = null;
+let audioContext = null;
 let currMusic = null;
 
 const musicRequired = [ 'id', 'filename' ];
@@ -32,7 +32,7 @@ function play(id)
     const m = music[id];
     if (m.asset.loaded) {
         const node = m.audioNode;
-        node.connect(context.destination);
+        node.connect(audioContext.destination);
         node.loop = m.loop;
         m.asset.sound.play();
         return m;
@@ -58,21 +58,21 @@ export function start()
             currMusic = play(MUSIC.MENU);
         }
     }
-    context.resume();
+    audioContext.resume();
 }
 
 export function stop()
 {
     //pause(currMusic.id);
-    context.suspend();
+    audioContext.suspend();
     currMusic = null;
 }
 
 export function init()
 {
-    context = new AudioContext();
+    audioContext = new AudioContext();
 
     for (const m of Object.values(music)) {
-        m.audioNode = context.createMediaElementSource(m.asset.sound);
+        m.audioNode = audioContext.createMediaElementSource(m.asset.sound);
     }
 }

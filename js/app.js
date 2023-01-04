@@ -20,6 +20,10 @@ const elemData = [
         screen: SCREEN.TITLE,
         fn: updateMusic,
     },{
+        id: 'checkboxEnableSfx',
+        screen: SCREEN.TITLE,
+        fn: updateSfx,
+    },{
         id: 'buttonStartPvE',
         fn: startGamePvE,
         screen: SCREEN.TITLE,
@@ -70,6 +74,8 @@ export function init()
 {
     state = {
         screen: SCREEN.TITLE,
+        musicEnabled: false,
+        sfxEnabled: true,
     };
     for (const screenName of Object.values(SCREEN)) {
         screenElems[screenName] = [];
@@ -122,8 +128,21 @@ function updateMusic()
     const enable = elem.checked;
     if (enable) {
         Music.start();
+        state.musicEnabled = true;
     } else {
         Music.stop();
+        state.musicEnabled = false;
+    }
+}
+
+function updateSfx()
+{
+    const elem = elemById['checkboxEnableSfx'];
+    const enable = elem.checked;
+    if (enable) {
+        state.sfxEnabled = true;
+    } else {
+        state.sfxEnabled = false;
     }
 }
 
@@ -165,6 +184,7 @@ export function gameOver(winnerName, color)
 function backToTitle()
 {
     changeScreen(SCREEN.TITLE);
+    updateMusic();
 }
 
 export function pause()

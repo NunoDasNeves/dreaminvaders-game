@@ -3,6 +3,7 @@ import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as App from './app.js';
 import * as UI from './UI.js';
+import * as Music from './music.js';
 import { assets } from "./assets.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
@@ -577,13 +578,14 @@ export function endCurrentGame(winningPlayer)
         UI.startFrame();
         updatePlayersActionsAndUI(0);
         App.gameOver(winningPlayer.name, winningPlayer.color);
+        Music.stop();
                 // any local human win == victory
         if (    winningPlayer.controller == PLAYER_CONTROLLER.LOCAL_HUMAN ||
                 // both bots = victory
                 (gameState.players.filter( ({controller}) => controller == PLAYER_CONTROLLER.BOT).length == 2)) {
-            assets.sfx.victory.sound.play();
+            playSfx('victory');
         } else {
-            assets.sfx.defeat.sound.play();
+            playSfx('defeat');
         }
     });
 }
@@ -879,6 +881,13 @@ function updateGame(timeDeltaMs)
     updatePlayerState(timeDeltaMs);
 }
 
+function playSfx(name)
+{
+    if (App.state.sfxEnabled) {
+        assets.sfx[name].sound.cloneNode().play();
+    }
+}
+
 export function canBuildUnit(playerId, unit)
 {
     const player = gameState.players[playerId];
@@ -912,6 +921,7 @@ export function tryBuildUnit(playerId, unit)
     if (idx == INVALID_ENTITY_INDEX) {
         return false;
     }
+    playSfx('spawn');
     player.gold -= unit.goldCost;
     player.unitCds[unit.id] = unit.cdTimeMs;
     return true;
