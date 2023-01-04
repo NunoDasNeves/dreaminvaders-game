@@ -15,6 +15,16 @@ function getAssetPath(filename)
     return `assets/${filename}`;
 }
 
+function getMusicPath(filename)
+{
+    return getAssetPath(`music/${filename}`);
+}
+
+function getSfxPath(filename)
+{
+    return getAssetPath(`sfx/${filename}`);
+}
+
 // these images are non-sprite images... see sprites in data for that.
 const imageData = {
     lighthouse: {
@@ -25,7 +35,19 @@ const imageData = {
     },
 };
 
-function loadAudioAsset(filename, loop = false)
+const sfxData = {
+    victory: {
+        filename: 'victory.mp3',
+    },
+    defeat: {
+        filename: 'defeat.mp3',
+    },
+    spawn: {
+        filename: 'spawn.mp3',
+    },
+};
+
+function loadAudioAsset(path, loop = false)
 {
     const sound = new Audio();
 
@@ -36,7 +58,7 @@ function loadAudioAsset(filename, loop = false)
     });
 
     sound.loop = loop;
-    sound.src = getAssetPath(filename);
+    sound.src = path;
     sound.load();
 
     return audioAsset;
@@ -90,8 +112,13 @@ export function init()
     }
     for (const [name, data] of Object.entries(music)) {
         const { filename } = data;
-        const asset = loadAudioAsset(filename, data.loop ? true : false);
+        const asset = loadAudioAsset(getMusicPath(filename), data.loop ? true : false);
         assets.music[name] = asset;
         data.asset = asset;
+    }
+    for (const [name, data] of Object.entries(sfxData)) {
+        const { filename } = data;
+        const asset = loadAudioAsset(getSfxPath(filename), false);
+        assets.sfx[name] = asset;
     }
 }
