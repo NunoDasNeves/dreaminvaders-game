@@ -3,6 +3,7 @@ import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as App from './app.js';
 import * as UI from './UI.js';
+import { assets } from "./assets.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
@@ -544,12 +545,7 @@ function updateHitState(timeDeltaMs)
                             hitState[i].hitTimer = params.hitFadeTimeMs;
                             hitState[i].hpBarTimer = params.hpBarTimeMs;
                             if ( hp[enemyLighthouseIdx] <= 0 ) {
-                                deferUpdate(() => {
-                                    // TODO this is a hack so the lighthouse HP shows as 0 when game ends
-                                    UI.startFrame();
-                                    updatePlayersActionsAndUI(timeDeltaMs);
-                                    App.gameOver(gameState.players[playerId[i]].name, color[i]);
-                                });
+                                endCurrentGame(gameState.players[playerId[i]]);
                             }
                             // instantly disappear this frame
                             freeable[i] = true;
@@ -569,6 +565,25 @@ function updateHitState(timeDeltaMs)
                 }
                 break;
             }
+        }
+    });
+}
+
+export function endCurrentGame(winningPlayer)
+{
+    deferUpdate(() => {
+        const localPlayer = getLocalPlayer();
+        // TODO this is a hack so the lighthouse HP shows as 0 when game ends
+        UI.startFrame();
+        updatePlayersActionsAndUI(0);
+        App.gameOver(winningPlayer.name, winningPlayer.color);
+                // any local human win == victory
+        if (    winningPlayer.controller == PLAYER_CONTROLLER.LOCAL_HUMAN ||
+                // both bots = victory
+                (gameState.players.filter( ({controller}) => controller == PLAYER_CONTROLLER.BOT).length == 2)) {
+            assets.sfx.victory.sound.play();
+        } else {
+            assets.sfx.defeat.sound.play();
         }
     });
 }

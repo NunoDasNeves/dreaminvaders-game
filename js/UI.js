@@ -3,6 +3,7 @@ import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as Draw from './draw.js';
 import * as App from './app.js';
+import * as Game from './game.js';
 import { tryBuildUnit, tryUnlockUnit, tryUpgrade } from "./game.js"
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
@@ -323,7 +324,7 @@ const debugHotKeys = [
         text: 'advance 1 frame (while paused)',
     }, {
         key: ',',
-        fn: () => {App.gameOver(getLocalPlayer().name, params.playerColors[0])},
+        fn: () => {Game.endCurrentGame(getLocalPlayer());},
         text: 'end game',
     }, {
         key: 'n',
