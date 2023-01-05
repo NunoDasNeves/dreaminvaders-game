@@ -1,3 +1,4 @@
+import { assets } from "./assets.js";
 import * as Utils from "./util.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
@@ -113,7 +114,7 @@ export const VFX = Object.freeze({
     TANK_SPARKS: 3,
 });
 
-const unitSpriteRequired = ['id', 'filename', 'width', 'height'];
+const unitSpriteRequired = ['id', 'assetName', 'width', 'height'];
 const unitSpriteDefaults = Object.freeze({
     imgAsset: null,
     centerOffset: vec(),
@@ -129,14 +130,14 @@ const unitAnimDefaults = Object.freeze({
 const unitSpriteData = [
     {
         id: UNIT.BASE,
-        filename: "lighthouse.png",
+        assetName: "lighthouse",
         width: 128,
         height: 256,
         centerOffset: vec(0,74),
     },
     {
         id: UNIT.CHOGORINGU,
-        filename: "chogoringu.png",
+        assetName: "chogoringu",
         imgAsset: null, // not really needed here; populated by assets.js
         // dimensions of one frame of animation
         width: 16,
@@ -167,7 +168,7 @@ const unitSpriteData = [
         },
     },{
         id: UNIT.BIGEYE,
-        filename: "bigeye.png",
+        assetName: "bigeye",
         width: 32,
         height: 32,
         centerOffset: vec(0,3),
@@ -201,7 +202,7 @@ const unitSpriteData = [
         },
     },{
         id: UNIT.TANK,
-        filename: "tank.png",
+        assetName: "tank",
         width: 64,
         height: 64,
         centerOffset: vec(0,16),
@@ -445,3 +446,12 @@ export const SCREEN = Object.freeze({
     GAMEOVER: 2,
     PAUSE: 3,
 });
+
+
+export function initSprites()
+{
+    for (const sprite of Object.values(unitSprites)) {
+        console.assert(sprite.assetName in assets.images);
+        sprite.imgAsset = assets.images[sprite.assetName];
+    }
+}

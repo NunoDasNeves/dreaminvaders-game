@@ -1,5 +1,4 @@
 import * as Utils from "./util.js";
-import { unitSprites } from "./data.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
 // all the images (and other assets later) will live here
@@ -30,7 +29,21 @@ const imageData = {
         filename: 'lighthouse.png',
         width: 128,
         height: 256,
-        centerOffset: vec(0, 74)
+    },
+    chogoringu: {
+        filename: 'chogoringu.png',
+        width: 16,
+        height: 24,
+    },
+    bigeye: {
+        filename: "bigeye.png",
+        width: 32,
+        height: 32,
+    },
+    tank: {
+        filename: "tank.png",
+        width: 64,
+        height: 64,
     },
 };
 
@@ -106,15 +119,6 @@ export function init()
         const { filename, width, height, centerOffset } = data;
         const asset = loadImageAsset(filename, width, height, centerOffset);
         assets.images[name] = asset;
-    }
-    for (const [name, sprite] of Object.entries(unitSprites)) {
-        const { filename, width, height, centerOffset } = sprite;
-        // probably not super needed but in case any sprites reuse the same image, don't load it twice
-        if (!assets.images[name]) {
-            const asset = loadImageAsset(filename, width, height, centerOffset);
-            assets.images[name] = asset;
-        }
-        sprite.imgAsset = assets.images[name];
     }
     for (const [name, data] of Object.entries(musicData)) {
         const { filename, loop } = data;

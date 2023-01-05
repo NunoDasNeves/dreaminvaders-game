@@ -5,7 +5,7 @@ import * as Render from "./render.js";
 import * as Assets from "./assets.js";
 import * as Music from "./music.js";
 import * as UI from "./UI.js";
-import { debug } from "./data.js";
+import { debug, initSprites } from "./data.js";
 
 window.onload = start;
 
@@ -75,6 +75,7 @@ function start()
 {
     // Do assets first, other modules depend on assets existing
     Assets.init();
+    initSprites();
     Music.init();
     Render.init();
     UI.init();
