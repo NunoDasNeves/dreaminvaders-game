@@ -543,8 +543,8 @@ function updateHitState(timeDeltaMs)
                         const enemyLighthouseIdx = player.island.idx;
                         if (onIsland && getDist(pos[i], pos[enemyLighthouseIdx]) < params.lighthouseRadius) {
                             hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
-                            hitState[i].hitTimer = params.hitFadeTimeMs;
-                            hitState[i].hpBarTimer = params.hpBarTimeMs;
+                            hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
+                            hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
                             if ( hp[enemyLighthouseIdx] <= 0 ) {
                                 endCurrentGame(gameState.players[playerId[i]]);
                             }
