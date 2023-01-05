@@ -73,6 +73,7 @@ function initEvents()
 
 function start()
 {
+    // Do assets first, other modules depend on assets existing
     Assets.init();
     Music.init();
     Render.init();

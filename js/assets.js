@@ -1,6 +1,5 @@
 import * as Utils from "./util.js";
 import { unitSprites } from "./data.js";
-import { music } from "./music.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
 // all the images (and other assets later) will live here
@@ -44,6 +43,13 @@ const sfxData = {
     },
     spawn: {
         filename: 'spawn.mp3',
+    },
+};
+
+const musicData = {
+    menu: {
+        filename: 'menu.mp3',
+        loop: true,
     },
 };
 
@@ -110,11 +116,10 @@ export function init()
         }
         sprite.imgAsset = assets.images[name];
     }
-    for (const [name, data] of Object.entries(music)) {
-        const { filename } = data;
-        const asset = loadAudioAsset(getMusicPath(filename), data.loop ? true : false);
+    for (const [name, data] of Object.entries(musicData)) {
+        const { filename, loop } = data;
+        const asset = loadAudioAsset(getMusicPath(filename), loop);
         assets.music[name] = asset;
-        data.asset = asset;
     }
     for (const [name, data] of Object.entries(sfxData)) {
         const { filename } = data;

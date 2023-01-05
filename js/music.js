@@ -1,12 +1,13 @@
 import * as Utils from "./util.js";
 import * as App from './app.js';
 import { SCREEN } from './data.js';
+import { assets } from "./assets.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
 let audioContext = null;
 let currMusic = null;
 
-const musicRequired = [ 'id', 'filename' ];
+const musicRequired = [ 'id', 'assetName' ];
 const musicDefaults = Object.freeze({
     loop: false,
     asset: null,
@@ -20,7 +21,7 @@ const MUSIC = Object.freeze({
 const musicData = [
     {
         id: MUSIC.MENU,
-        filename: 'menu.mp3',
+        assetName: "menu",
         loop: true,
     },
 ];
@@ -72,7 +73,9 @@ export function init()
 {
     audioContext = new AudioContext();
 
-    for (const m of Object.values(music)) {
-        m.audioNode = audioContext.createMediaElementSource(m.asset.sound);
+    for (const song of Object.values(music)) {
+        console.assert(song.assetName in assets.music);
+        song.asset = assets.music[song.assetName];
+        song.audioNode = audioContext.createMediaElementSource(song.asset.sound);
     }
 }
