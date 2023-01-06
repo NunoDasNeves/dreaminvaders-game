@@ -219,6 +219,10 @@ export function doPlayerUI(player)
     const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
     const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
     drawTextScreen(gpsText, gpsStart, goldFontSmol, player.color, true, 'left', 'top');
+    if (debug.drawUI && player.goldDamage > 0) {
+        const gdStart = vecAdd(gpsStart, vec(180, 0));
+        drawTextScreen(`-$${player.goldDamage.toFixed(2)}`, gdStart, goldFontSmol, player.color, true, 'left', 'top');
+    }
 
     yOff += UIInnerpadding + goldHeight;
 

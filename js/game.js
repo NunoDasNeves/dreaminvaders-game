@@ -545,6 +545,9 @@ function updateHitState(timeDeltaMs)
                             hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
                             hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
                             hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
+                            const goldDamage = unit[i].goldCost/3;
+                            player.goldDamage += goldDamage;
+                            player.gold = Math.max(player.gold - goldDamage, 0);
                             if ( hp[enemyLighthouseIdx] <= 0 ) {
                                 endCurrentGame(gameState.players[playerId[i]]);
                             }
@@ -989,7 +992,7 @@ function updateBotPlayer(player, timeDeltaMs)
     }
     player.botState.actionTimer += params.botActionTimeMs;
     player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
-    const botActions = [()=>{},()=>{}]; // do nothing actions, keep it somewhat easy
+    const botActions = [()=>{ return true; }]; // do nothing actions, keep it somewhat easy
     Object.values(Data.hotKeys[player.id].units)
         .forEach(unitId => {
             const unit = units[unitId];
@@ -1005,8 +1008,14 @@ function updateBotPlayer(player, timeDeltaMs)
                 botActions.push(() => tryUpgrade(player.id, upgradeId));
             }
         });
-    const action = randFromArray(botActions);
-    action();
+    if (botActions.length > 0) {
+        const action = randFromArray(botActions);
+        if (!action()) {
+            console.error("bot failed action");
+        };
+    } else {
+        console.log("no actions");
+    }
 }
 
 function updatePlayersActionsAndUI(timeDeltaMs)
