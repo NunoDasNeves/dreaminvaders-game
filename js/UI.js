@@ -219,9 +219,13 @@ export function doPlayerUI(player)
     const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
     const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
     drawTextScreen(gpsText, gpsStart, goldFontSmol, player.color, true, 'left', 'top');
-    if (debug.drawUI && player.goldDamage > 0) {
+    if (debug.drawUI) {
         const gdStart = vecAdd(gpsStart, vec(180, 0));
-        drawTextScreen(`-$${player.goldDamage.toFixed(2)}`, gdStart, goldFontSmol, player.color, true, 'left', 'top');
+        const ecoStart = vecAdd(gdStart, vec(0, 30));
+        const drmStart = vecAdd(ecoStart, vec(0, 30));
+        drawTextScreen(`dmg:      -$${player.goldDamage.toFixed(2)}`, gdStart, goldFontSmol, player.color, true, 'left', 'top');
+        drawTextScreen(`eco ups:  $${player.goldFromEcoUpgrades.toFixed(2)}`, ecoStart, goldFontSmol, player.color, true, 'left', 'top');
+        drawTextScreen(`dreamers: $${player.goldFromDreamers.toFixed(2)}`, drmStart, goldFontSmol, player.color, true, 'left', 'top');
     }
 
     yOff += UIInnerpadding + goldHeight;
@@ -269,6 +273,19 @@ export function doPlayerUI(player)
                 // TODO maybe take away this scale hack and just let it scale
                 drawText(`[${key}]`, pos, 20 * gameState.camera.scale, 'white', true);
             }
+        }
+    }
+
+    // dreamer debug earned gold
+    if (debug.drawUI) {
+        for (let i = 0; i < gameState.bridges.length; ++i) {
+            const bridge = gameState.bridges[i];
+            const dreamer = bridge.dreamer;
+            if (dreamer.goldEarned == 0) {
+                continue;
+            }
+            const pos = vecAdd(bridge.middlePos, vec(0, -params.laneWidth*2));
+            drawText(`+$${dreamer.goldEarned.toFixed(2)}`, pos, 20 * gameState.camera.scale, dreamer.color, true, 'center');
         }
     }
 }

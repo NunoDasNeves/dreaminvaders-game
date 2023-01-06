@@ -309,6 +309,8 @@ function addPlayer(name, controller, pos, team, colorIdx)
         gold: params.startingGold,
         goldPerSec: params.startingGoldPerSec,
         goldDamage: 0,
+        goldFromDreamers: 0,
+        goldFromEcoUpgrades: 0,
         island: {
             pos,
             idx: INVALID_ENTITY_INDEX,
@@ -474,7 +476,7 @@ export function initGameState(gameConfig)
         gameState.players[1].island.lanes.push(p1Lane);
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
-            dreamer: { playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, },
+            dreamer: { playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, },
             pathPoints,
             bezierPoints,
             middlePos,

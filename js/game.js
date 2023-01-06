@@ -831,9 +831,22 @@ function updateDreamerState(timeDeltaMs)
         } else if (playerCounts[playerIds[0]] < playerCounts[playerIds[1]]) {
             attackingPlayer = playerIds[1];
         }
+        const oldAttackingPlayer = dreamer.playerId;
         dreamer.playerId = attackingPlayer;
         if (attackingPlayer != NO_PLAYER_INDEX) {
-            dreamer.color = gameState.players[attackingPlayer].color;
+            const player = gameState.players[attackingPlayer];
+            dreamer.color = player.color;
+            if (oldAttackingPlayer != attackingPlayer) {
+                dreamer.goldEarned = 0;
+                dreamer.timer = 1000;
+            } else {
+                dreamer.timer -= timeDeltaMs;
+                if (dreamer.timer <= 0) {
+                    dreamer.goldEarned += params.dreamerGoldPerSec;
+                    player.goldFromDreamers += params.dreamerGoldPerSec;
+                    dreamer.timer = 1000;
+                }
+            }
         } else {
             dreamer.color = params.neutralColor;
         }
@@ -844,20 +857,25 @@ function updatePlayerState(timeDeltaMs)
 {
     const timeDeltaSec = 0.001 * timeDeltaMs;
     const ecoUpgrade = upgrades[UPGRADE.ECO];
-    // compute gold per sec
+
     for (const player of gameState.players) {
-        const upgradeLevel = player.upgradeLevels[UPGRADE.ECO];
-        const bonus = upgradeLevel < 0 ? 0 : ecoUpgrade.goldPerSecBonus[upgradeLevel];
-        player.goldPerSec = params.startingGoldPerSec + bonus;
+        player.goldPerSec = params.startingGoldPerSec;
     }
     for (const { dreamer } of gameState.bridges) {
-        if (dreamer.playerId != NO_PLAYER_INDEX) {
-            gameState.players[dreamer.playerId].goldPerSec += params.dreamerGoldPerSec;
+        if (dreamer.playerId == NO_PLAYER_INDEX) {
+            continue;
         }
+        const player = gameState.players[dreamer.playerId];
+        player.goldPerSec += params.dreamerGoldPerSec;
+
     }
     // add the income, update cooldowns
     for (const player of gameState.players) {
+        const upgradeLevel = player.upgradeLevels[UPGRADE.ECO];
+        const bonus = upgradeLevel < 0 ? 0 : ecoUpgrade.goldPerSecBonus[upgradeLevel];
+        player.goldPerSec += bonus;
         player.gold += player.goldPerSec * timeDeltaSec;
+        player.goldFromEcoUpgrades += bonus * timeDeltaSec;
         for (const unitId of Object.values(UNIT)) {
             const newVal = player.unitCds[unitId] - timeDeltaMs;
             player.unitCds[unitId] = Math.max(newVal, 0);
