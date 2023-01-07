@@ -29,6 +29,29 @@ function forAllUnits(fn)
     }
 }
 
+function nearestUnitToPos(point, maxRange, filterFn)
+{
+    const { exists, pos } = gameState.entities;
+    let best = INVALID_ENTITY_INDEX;
+    let minDist = maxRange;
+    // TODO broad phase
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.UNIT)) {
+            continue;
+        }
+        if (!filterFn(i)) {
+            continue;
+        }
+        const toUnit = vecSub(pos[i], point);
+        const dist = vecLen(toUnit);
+        if (dist < minDist) {
+            best = i;
+            minDist = dist;
+        }
+    }
+    return new EntityRef(best);
+}
+
 function nearestUnit(i, minRange, filterFn)
 {
     const { exists, unit, pos } = gameState.entities;
@@ -450,16 +473,22 @@ function updatePhysicsState()
     };
 }
 
-function hitUnit(hitter, hittee)
+function hitUnit(i, damage, armorPen=0)
 {
     const { unit, hp, hitState, playerId } = gameState.entities;
+    const armor = getUnitArmor(playerId[i], unit[i]);
+    const effectiveArmor = Math.max(armor - armorPen, 0);
+    hp[i] -= Math.max(damage - effectiveArmor, 0);
+    hitState[i].hitTimer = params.hitFadeTimeMs;
+    hitState[i].hpBarTimer = params.hpBarTimeMs;
+}
+
+function unitHitUnit(hitter, hittee)
+{
+    const { unit, playerId } = gameState.entities;
     const weapon = getUnitWeapon(unit[hitter]);
     const damage = getWeaponDamage(playerId[hitter], weapon);
-    const armor = getUnitArmor(playerId[hittee], unit[hittee]);
-    const effectiveArmor = Math.max(armor - weapon.armorPen, 0);
-    hp[hittee] -= Math.max(damage - effectiveArmor, 0);
-    hitState[hittee].hitTimer = params.hitFadeTimeMs;
-    hitState[hittee].hpBarTimer = params.hpBarTimeMs;
+    hitUnit(hittee, damage, weapon.armorPen);
 }
 
 function isOnIsland(i)
@@ -605,7 +634,7 @@ function doWeaponHit(i)
         case UNIT.TANK:
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
-                hitUnit(i, t);
+                unitHitUnit(i, t);
                 spawnVFXExplosion(pos[t], 8, 300);
             }
             break;
@@ -613,7 +642,7 @@ function doWeaponHit(i)
         case UNIT.CHOGORINGU:
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
-                hitUnit(i, t);
+                unitHitUnit(i, t);
             }
             break;
         }
@@ -621,7 +650,7 @@ function doWeaponHit(i)
         {
             for (const j of getCollidingWithCircle(atkState[i].aoeHitPos, weapon.aoeRadius)) {
                 if (team[i] != team[j]) {
-                    hitUnit(i, j);
+                    unitHitUnit(i, j);
                 }
             }
             spawnVFXExplosion(atkState[i].aoeHitPos, weapon.aoeRadius, 300);
@@ -880,6 +909,8 @@ function updatePlayerState(timeDeltaMs)
             const newVal = player.unitCds[unitId] - timeDeltaMs;
             player.unitCds[unitId] = Math.max(newVal, 0);
         }
+        const newStaticDCd = player.staticDCd - timeDeltaMs;
+        player.staticDCd = Math.max(newStaticDCd, 0);
     }
 }
 
@@ -907,6 +938,42 @@ function playSfx(name)
     if (App.state.sfxEnabled) {
         assets.sfx[name].sound.cloneNode().play();
     }
+}
+
+export function canFireStaticD(playerId)
+{
+    const player = gameState.players[playerId];
+    if (player.staticDCd <= 0) {
+        return true;
+    }
+    return false;
+}
+
+export function tryFireStaticD(playerId, targetPos)
+{
+    if (!canFireStaticD(playerId)) {
+        return false;
+    }
+    const { pos, team, hitState, hp, unit } = gameState.entities;
+    const player = gameState.players[playerId];
+    player.staticDCd = params.staticDCdMs;
+    const lighthousePos = pos[player.island.idx];
+    const lighthouseToPoint = vecSub(targetPos, lighthousePos);
+    vecClampMag(lighthouseToPoint, 0, params.staticDRange);
+    const point = vecAdd(lighthousePos, lighthouseToPoint);
+    spawnVFXExplosion(point, 8, 300);
+    const ref = nearestUnitToPos(point, params.staticDRadius, (i) => team[i] != player.team && hitState[i].state == HITSTATE.ALIVE );
+    const t = ref.getIndex();
+    if (t != INVALID_ENTITY_INDEX) {
+        hitUnit(t, params.staticDDamage);
+        // last hit
+        if (hp[t] <= 0) {
+            const gold = Math.floor(unit[t].goldCost/2.5);
+            player.gold += gold;
+            player.goldFromLastHit += gold;
+        }
+    }
+    return true;
 }
 
 export function canBuildUnit(playerId, unit)

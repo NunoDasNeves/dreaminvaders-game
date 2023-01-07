@@ -223,9 +223,11 @@ export function doPlayerUI(player)
         const gdStart = vecAdd(gpsStart, vec(180, 0));
         const ecoStart = vecAdd(gdStart, vec(0, 30));
         const drmStart = vecAdd(ecoStart, vec(0, 30));
+        const lhStart = vecAdd(drmStart, vec(0, 30));
         drawTextScreen(`dmg:      -$${player.goldDamage.toFixed(2)}`, gdStart, goldFontSmol, player.color, true, 'left', 'top');
         drawTextScreen(`eco ups:  $${player.goldFromEcoUpgrades.toFixed(2)}`, ecoStart, goldFontSmol, player.color, true, 'left', 'top');
         drawTextScreen(`dreamers: $${player.goldFromDreamers.toFixed(2)}`, drmStart, goldFontSmol, player.color, true, 'left', 'top');
+        drawTextScreen(`lasthit:  $${player.goldFromLastHit.toFixed(2)}`, lhStart, goldFontSmol, player.color, true, 'left', 'top');
     }
 
     yOff += UIInnerpadding + goldHeight;
@@ -331,6 +333,8 @@ export function processMouseInput()
             if (localPlayer.laneHovered >= 0) {
                 localPlayer.laneSelected = localPlayer.laneHovered;
             }
+            const mousePoint = vecClone(gameState.input.mousePos);
+            Game.tryFireStaticD(localPlayer.id, mousePoint);
         }
         if (debug.enableControls) {
             debug.clickedPoint = vecClone(gameState.input.mousePos);

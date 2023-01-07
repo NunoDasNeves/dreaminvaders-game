@@ -318,6 +318,7 @@ function addPlayer(name, controller, pos, team, colorIdx)
         goldDamage: 0,
         goldFromDreamers: 0,
         goldFromEcoUpgrades: 0,
+        goldFromLastHit: 0,
         island: {
             pos,
             idx: INVALID_ENTITY_INDEX,
@@ -329,6 +330,7 @@ function addPlayer(name, controller, pos, team, colorIdx)
         upgradeLevels: Object.fromEntries(Object.values(upgrades).map(({ id }) => [id, -1])),
         unitCds: Object.fromEntries(Object.values(UNIT).map(id => [id, 0])),
         unitUnlocked: Object.fromEntries(Object.values(units).map(({ id, needsUnlock }) => [id, needsUnlock ? false : true])),
+        staticDCd: 0,
         botState: {
             actionTimer: 0,
         },
