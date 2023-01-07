@@ -323,6 +323,8 @@ function addPlayer(name, controller, pos, team, colorIdx)
             idx: INVALID_ENTITY_INDEX,
             paths: [],
             lanes: [],
+            sprite: envSprites.island,
+            flipSprite: id == 1,
         },
         upgradeLevels: Object.fromEntries(Object.values(upgrades).map(({ id }) => [id, -1])),
         unitCds: Object.fromEntries(Object.values(UNIT).map(id => [id, 0])),

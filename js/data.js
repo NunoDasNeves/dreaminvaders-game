@@ -114,6 +114,17 @@ export const VFX = Object.freeze({
     TANK_SPARKS: 3,
 });
 
+export const envSprites = {
+    island: {
+        assetName: "island",
+        width: 512,
+        height: 768,
+        rows: 1,
+        centerOffset: vec(-256,-256),
+        imgAsset: null,
+    },
+};
+
 const unitSpriteRequired = ['id', 'assetName', 'width', 'height'];
 const unitSpriteDefaults = Object.freeze({
     imgAsset: null,
@@ -452,6 +463,10 @@ export const SCREEN = Object.freeze({
 export function initSprites()
 {
     for (const sprite of Object.values(unitSprites)) {
+        console.assert(sprite.assetName in assets.images);
+        sprite.imgAsset = assets.images[sprite.assetName];
+    }
+    for (const sprite of Object.values(envSprites)) {
         console.assert(sprite.assetName in assets.images);
         sprite.imgAsset = assets.images[sprite.assetName];
     }

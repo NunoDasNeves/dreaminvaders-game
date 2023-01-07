@@ -321,21 +321,24 @@ function strokeHalfCapsule(worldPos, length, radius, angle, width, strokeStyle)
 
 function drawIsland(team, island)
 {
-    const teamColor = params.playerColors[team];
+    const spr = island.sprite;
+    const sprPos = vecAdd(island.pos, spr.centerOffset);
+    drawSprite(spr, island.flipSprite ? 1 : 0, 0, sprPos);
+
+    /*const teamColor = params.playerColors[team];
     const coords = worldToCamera(island.pos.x, island.pos.y);
     var gradient = context.createRadialGradient(coords.x, coords.y, (params.islandRadius - 50) / gameState.camera.scale, coords.x, coords.y, params.islandRadius / gameState.camera.scale);
     gradient.addColorStop(0, teamColor);
     gradient.addColorStop(1, params.baseFadeColor);
-
     context.fillStyle = gradient;
     context.beginPath();
     context.arc(coords.x, coords.y, params.islandRadius / gameState.camera.scale, 0, 2 * Math.PI);
     context.fill();
 
-
     for (const path of island.paths) {
         strokePoints(path, params.pathWidth, params.pathColor);
     }
+    */
 }
 
 function drawArrow(start, end, width, strokeStyle)

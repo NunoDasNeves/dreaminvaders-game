@@ -25,6 +25,11 @@ function getSfxPath(filename)
 
 // these images are non-sprite images... see sprites in data for that.
 const imageData = {
+    island: {
+        filename: 'island.png',
+        width: 512,
+        height: 1024,
+    },
     lighthouse: {
         filename: 'lighthouse.png',
         width: 128,
