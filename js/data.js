@@ -133,6 +133,7 @@ const unitSpriteData = [
         assetName: "lighthouse",
         width: 128,
         height: 256,
+        rows: 1,
         centerOffset: vec(0,74),
     },
     {

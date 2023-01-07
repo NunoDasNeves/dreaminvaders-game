@@ -269,11 +269,18 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
 
 export function spawnUnitForPlayer(pos, playerId, unit, laneIdx=null)
 {
+    const { angle } = gameState.entities;
     const player = gameState.players[playerId];
     const teamId = player.team;
     const color = player.color;
     const island = player.island;
-    return spawnUnit(pos, teamId, playerId, color, unit, island, laneIdx);
+    const idx =  spawnUnit(pos, teamId, playerId, color, unit, island, laneIdx);
+    if (idx != INVALID_ENTITY_INDEX) {
+        if (playerId > 0) {
+            angle[idx] = Math.PI;
+        }
+    }
+    return idx;
 }
 
 export function spawnUnitInLane(laneIdx, playerId, unit)
