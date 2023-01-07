@@ -1,16 +1,16 @@
 ## TODO
-- display unit stats on mouseover
+- static defense; mouse click laser with cooldown, does some damage, limited range. auto for bot and shared keyboard
+- make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
+- display unit stats on mouseover?
 - weapons: have a 'hit' time, instead of having to be at end of swing ?
 - make animations optionally loop or not loop? gives some flexibility for pausing at end of swing state, recover, etc...
 - sort units for drawing back to front
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
-- fix resolution; default camera scale should look the best
 - more weapon types?
     - projectile weapon need a projectile entity
 - production queue for each lane? 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
-- make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - better collision or AI for collision
     - less jittering/bouncing
     - support pushing (when we want it) - use unit mass or something
@@ -21,6 +21,11 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- units damage lighthouse damage gold too
+- display debug info about income
+- update art and music
+- fix: lighthouse HP bar not appearing
+- add some basic sfx - victory, defeat, spawn unit
 - add eco upgrades
 - add attack upgrade/add armor upgrades
 - lock units behind upgrades
