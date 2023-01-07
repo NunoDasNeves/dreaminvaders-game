@@ -389,6 +389,8 @@ export function initGameState(gameConfig)
     gameState.camera = {
             pos: vec(),
             scale: 1, // scale +++ means zoom out
+            currScaleIdx: 7,
+            scaleFactors: [ 1/8, 1/7, 1/6, 1/5, 1/4, 1/3, 1/2, 1, 1.25, 1.5, 2 ],
             easeFactor: 0.1
         };
     gameState.players = [];

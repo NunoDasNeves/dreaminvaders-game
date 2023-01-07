@@ -293,7 +293,13 @@ export function doPlayerUI(player)
 export function processMouseInput()
 {
     // camera
-    gameState.camera.scale = clamp(gameState.camera.scale + gameState.input.mouseScrollDelta, 0.1, 5);
+    const mouseScrollDelta = gameState.input.mouseScrollDelta;
+    if (mouseScrollDelta != 0) {
+        const scaleDir = mouseScrollDelta > 0 ? 1 : -1;
+        const scaleIdx = clamp(gameState.camera.currScaleIdx + scaleDir, 0, gameState.camera.scaleFactors.length - 1);
+        gameState.camera.currScaleIdx = scaleIdx;
+        gameState.camera.scale = gameState.camera.scaleFactors[scaleIdx];
+    }
     if (gameState.input.mouseMiddle) {
         const delta = vecMul(vecSub(gameState.input.mouseScreenPos, gameState.lastInput.mouseScreenPos), gameState.camera.scale);
         if (vecLen(delta)) {
