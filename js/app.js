@@ -150,6 +150,8 @@ function startGame()
 {
     updateDebug();
     changeScreen(SCREEN.GAME);
+    Music.stop();
+    updateMusic();
 }
 
 function startGamePvP()

@@ -69,6 +69,10 @@ const musicData = {
         filename: 'menu.mp3',
         loop: true,
     },
+    game: {
+        filename: 'game.mp3',
+        loop: true,
+    },
 };
 
 function loadAudioAsset(path, loop = false)

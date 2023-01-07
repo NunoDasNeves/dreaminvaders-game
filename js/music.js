@@ -4,78 +4,61 @@ import { SCREEN } from './data.js';
 import { assets } from "./assets.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 
+const music = {};
+
 let audioContext = null;
-let currMusic = null;
+let currSong = null;
 
-const musicRequired = [ 'id', 'assetName' ];
-const musicDefaults = Object.freeze({
-    loop: false,
-    asset: null,
-    audioNode: null,
-});
-
-const MUSIC = Object.freeze({
-    MENU: 0,
-});
-
-const musicData = [
-    {
-        id: MUSIC.MENU,
-        assetName: "menu",
-        loop: true,
-    },
-];
-
-export const music = makeFromDefaults("music", musicData, musicDefaults, musicRequired);
-
-function play(id)
+function play(song)
 {
-    const m = music[id];
-    if (m.asset.loaded) {
-        const node = m.audioNode;
-        node.connect(audioContext.destination);
-        node.loop = m.loop;
-        m.asset.sound.play();
-        return m;
+    if (song.asset.loaded) {
+        const node = song.audioNode;
+        node.loop = song.asset.loop;
+        song.asset.sound.play();
+        return song;
     } else {
-        console.warn("Can't play music because not yet loaded");
+        console.warn("Can't play song because not yet loaded");
         return null;
     }
 }
 
-function pause(id)
+function pause(song)
 {
-    const m = music[id];
-    if (m.asset.loaded) {
-        m.audioNode.disconnect();
-        m.asset.sound.pause();
+    if (song.asset.loaded) {
+        song.asset.sound.pause();
     }
 }
 
 export function start()
 {
     if (App.state.screen == SCREEN.TITLE) {
-        if (currMusic == null || currMusic.id != MUSIC.MENU) {
-            currMusic = play(MUSIC.MENU);
-        }
+        currSong = play(music.menu);
+    } else if (App.state.screen == SCREEN.GAME) {
+        currSong = play(music.game);
     }
     audioContext.resume();
 }
 
 export function stop()
 {
-    //pause(currMusic.id);
+    if (currSong != null) {
+        pause(currSong);
+    }
     audioContext.suspend();
-    currMusic = null;
+    currSong = null;
 }
 
 export function init()
 {
     audioContext = new AudioContext();
 
-    for (const song of Object.values(music)) {
-        console.assert(song.assetName in assets.music);
-        song.asset = assets.music[song.assetName];
-        song.audioNode = audioContext.createMediaElementSource(song.asset.sound);
+    for (const [key, asset] of Object.entries(assets.music)) {
+        const audioNode = audioContext.createMediaElementSource(asset.sound);
+        audioNode.connect(audioContext.destination);
+        music[key] = {
+            name: key,
+            asset,
+            audioNode,
+        };
     }
 }
