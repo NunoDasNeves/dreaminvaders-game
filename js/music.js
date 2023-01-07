@@ -9,32 +9,45 @@ const music = {};
 let audioContext = null;
 let currSong = null;
 
-function play(song)
+const fadeInSec = 0.01;
+const fadeOutSec = 0.01;
+
+function fadeInSong(song, fromStart = true)
 {
-    if (song.asset.loaded) {
-        const node = song.audioNode;
-        node.loop = song.asset.loop;
-        song.asset.sound.play();
-        return song;
-    } else {
+    if (!song.asset.loaded) {
         console.warn("Can't play song because not yet loaded");
         return null;
     }
+    if (fromStart) {
+        song.asset.sound.currentTime = 0;
+    }
+    song.asset.sound.play();
+    song.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    song.gainNode.gain.linearRampToValueAtTime(song.volume, audioContext.currentTime + fadeInSec);
+    return song;
 }
 
-function pause(song)
+function fadeOutSong(song, suspendCtx=false)
 {
-    if (song.asset.loaded) {
-        song.asset.sound.pause();
+    if (!song.asset.loaded) {
+        return;
     }
+    song.gainNode.gain.setValueAtTime(song.volume, audioContext.currentTime);
+    song.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + fadeOutSec);
+    setTimeout(() => {
+        song.asset.sound.pause();
+        if (suspendCtx) {
+            audioContext.suspend();
+        }
+    }, fadeOutSec * 1000);
 }
 
 export function start()
 {
     if (App.state.screen == SCREEN.TITLE) {
-        currSong = play(music.menu);
+        currSong = fadeInSong(music.menu);
     } else if (App.state.screen == SCREEN.GAME) {
-        currSong = play(music.game);
+        currSong = fadeInSong(music.game);
     }
     audioContext.resume();
 }
@@ -42,9 +55,8 @@ export function start()
 export function stop()
 {
     if (currSong != null) {
-        pause(currSong);
+        fadeOutSong(currSong);
     }
-    audioContext.suspend();
     currSong = null;
 }
 
@@ -54,11 +66,16 @@ export function init()
 
     for (const [key, asset] of Object.entries(assets.music)) {
         const audioNode = audioContext.createMediaElementSource(asset.sound);
-        audioNode.connect(audioContext.destination);
+        audioNode.loop = asset.loop;
+        const gainNode = audioContext.createGain();
+        audioNode.connect(gainNode);
+        gainNode.connect(audioContext.destination);
         music[key] = {
             name: key,
             asset,
             audioNode,
+            gainNode,
+            volume: 1,
         };
     }
 }
