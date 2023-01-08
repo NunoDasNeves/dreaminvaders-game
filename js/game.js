@@ -574,9 +574,10 @@ function updateHitState(timeDeltaMs)
                             hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
                             hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
                             hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
-                            const goldDamage = unit[i].goldCost/3;
+                            const goldDamage = Math.floor(unit[i].goldCost/3);
                             player.goldDamage += goldDamage;
                             player.gold = Math.max(player.gold - goldDamage, 0);
+                            spawnVFXLastHitText(`-$${goldDamage}`, pos[enemyLighthouseIdx], 20, player.color);
                             if ( hp[enemyLighthouseIdx] <= 0 ) {
                                 endCurrentGame(gameState.players[playerId[i]]);
                             }
