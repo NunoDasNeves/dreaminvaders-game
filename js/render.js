@@ -131,11 +131,6 @@ function drawUnit(i)
     if (debug.drawSightRange && unit[i].sightRange > 0) {
         strokeCircleWorld(context, pos[i], unit[i].sightRange + unit[i].radius, 1, 'yellow');
     }
-    // TODO remove
-    if (debugState[i].velPreColl) {
-        const arrowLine = vecMul(debugState[i].velPreColl, 10);
-        drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, "#00ffff");
-    }
     /*if (debugState[i].stopRange) {
         const arrowLine = debugState[i].stopRange;
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, debugState[i].stopping ? 'red' : '#00ff00');
@@ -147,6 +142,10 @@ function drawUnit(i)
     if (debug.drawVel) {
         const arrowLine = vecMul(vel[i], 10);
         drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, '#0066ff');
+        if (debugState[i].velPreColl) {
+            const arrowLine = vecMul(debugState[i].velPreColl, 10);
+            drawArrow(pos[i], vecAdd(pos[i], arrowLine), 1, "#00ffff");
+        }
     }
     if (debug.drawAccel) {
         const arrowLine = vecMul(accel[i], 10);
