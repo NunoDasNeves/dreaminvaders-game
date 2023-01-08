@@ -221,8 +221,23 @@ function drawVFX(i)
             strokeLineWorld(context, pos[i], vfx.endPos, f*10, vfx.color);
             break;
         }
+        case (VFX.TEXT):
+        {
+            const f = clamp(vfx.timeMs / vfx.totalTimeMs, 0, 1);
+            const textPos = vecAdd(pos[i], vec(0, (1-f)*-20));
+            drawText(vfx.string, textPos, vfx.textSize, vfx.color, true);
+            break;
+        }
         default:
     }
+}
+
+function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='center')
+{
+    if (stroke) {
+        strokeTextWorld(context, string, worldPos, sizePx, 3, 'black', align);
+    }
+    fillTextWorld(context, string, worldPos, sizePx, fillStyle, align);
 }
 
 function drawWeapon(i)

@@ -970,6 +970,7 @@ export function tryFireStaticD(playerId, targetPos)
             const gold = Math.floor(unit[t].goldCost/2.5);
             player.gold += gold;
             player.goldFromLastHit += gold;
+            spawnVFXLastHitText(`+$${gold}`, point, 20, player.color);
         }
     }
     spawnVFXStaticDBeam(vecAdd(lighthousePos, vec(0, -148)), point, player.color);

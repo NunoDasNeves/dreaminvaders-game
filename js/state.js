@@ -155,6 +155,22 @@ export function createEntity(eType)
     return idx;
 }
 
+export function spawnVFXLastHitText(string, point, textSize, color)
+{
+    const { pos, vfxState } = gameState.entities;
+    const idx = createEntity(ENTITY.VFX);
+    pos[idx] = point;
+    vfxState[idx] = {
+        type: VFX.TEXT,
+        color,
+        textSize,
+        string,
+        timeMs: 500,
+        totalTimeMs: 500,
+    };
+}
+
+
 export function spawnVFXStaticDBeam(startPos, endPos, color)
 {
     const { pos, vfxState } = gameState.entities;

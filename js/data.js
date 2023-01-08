@@ -117,6 +117,7 @@ export const VFX = Object.freeze({
     BIGEYE_BEAM: 2,
     TANK_SPARKS: 3,
     STATICD_BEAM: 4,
+    TEXT: 5,
 });
 
 export const envSprites = {
