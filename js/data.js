@@ -63,7 +63,7 @@ export const params = Object.freeze(
             dreamerGoldPerSec: 0.5,
             botActionTimeMs: 2000,
             staticDCdMs: 1000,
-            staticDRange: 1000,
+            staticDRange: 650,
             staticDDamage: 8,
             staticDRadius: 10,
         }
@@ -116,6 +116,7 @@ export const VFX = Object.freeze({
     EXPLOSION: 1,
     BIGEYE_BEAM: 2,
     TANK_SPARKS: 3,
+    STATICD_BEAM: 4,
 });
 
 export const envSprites = {

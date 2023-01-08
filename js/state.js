@@ -155,6 +155,21 @@ export function createEntity(eType)
     return idx;
 }
 
+export function spawnVFXStaticDBeam(startPos, endPos, color)
+{
+    const { pos, vfxState } = gameState.entities;
+    const idx = createEntity(ENTITY.VFX);
+    pos[idx] = startPos;
+    vfxState[idx] = {
+        type: VFX.STATICD_BEAM,
+        color,
+        endPos,
+        timeMs: 300,
+        totalTimeMs: 300,
+    };
+    return idx;
+}
+
 export function spawnVFXBigEyeBeam(i, hitPos)
 {
     const { pos, vfxState } = gameState.entities;

@@ -961,7 +961,6 @@ export function tryFireStaticD(playerId, targetPos)
     const lighthouseToPoint = vecSub(targetPos, lighthousePos);
     vecClampMag(lighthouseToPoint, 0, params.staticDRange);
     const point = vecAdd(lighthousePos, lighthouseToPoint);
-    spawnVFXExplosion(point, 8, 300);
     const ref = nearestUnitToPos(point, params.staticDRadius, (i) => team[i] != player.team && hitState[i].state == HITSTATE.ALIVE );
     const t = ref.getIndex();
     if (t != INVALID_ENTITY_INDEX) {
@@ -973,6 +972,8 @@ export function tryFireStaticD(playerId, targetPos)
             player.goldFromLastHit += gold;
         }
     }
+    spawnVFXStaticDBeam(vecAdd(lighthousePos, vec(0, -148)), point, player.color);
+    spawnVFXExplosion(point, 8, 300);
     return true;
 }
 

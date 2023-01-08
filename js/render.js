@@ -215,6 +215,13 @@ function drawVFX(i)
             drawTraceParticles(pos[i], vfx.traceParticles);
             break;
         }
+        case (VFX.STATICD_BEAM):
+        {
+            const f = clamp(vfx.timeMs / vfx.totalTimeMs, 0, 1);
+            const colorLaser = `rgb(255,${255*f},255)`;
+            strokeLineWorld(context, pos[i], vfx.endPos, f*10, vfx.color);
+            break;
+        }
         default:
     }
 }
