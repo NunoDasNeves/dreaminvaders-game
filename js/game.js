@@ -974,7 +974,9 @@ export function tryFireStaticD(playerId, targetPos)
         }
     }
     spawnVFXStaticDBeam(vecAdd(lighthousePos, vec(0, -148)), point, player.color);
-    spawnVFXExplosion(point, 8, 300);
+    setTimeout(() => {
+        spawnVFXExplosion(point, 8, 300);
+    }, 100);
     return true;
 }
 
