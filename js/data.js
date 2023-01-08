@@ -337,7 +337,7 @@ const unitData = [
         goldCost: 10,
         cdTimeMs: 300,
         needsUnlock: true,
-        unlockCost: 20,
+        unlockCost: 15,
     },{
         id: UNIT.TANK,
         maxSpeed: 0.8,
@@ -354,7 +354,7 @@ const unitData = [
         goldCost: 25,
         cdTimeMs: 1500,
         needsUnlock: true,
-        unlockCost: 40,
+        unlockCost: 30,
     }
 ];
 
@@ -397,8 +397,8 @@ export const UPGRADE = Object.freeze({
 export const upgrades = Object.freeze({
     [UPGRADE.ECO]: {
         id: UPGRADE.ECO,
-        goldCost: [10, 20, 30],
-        goldPerSecBonus: [0.5,1,2],
+        goldCost: [15, 20, 30],
+        goldPerSecBonus: [0.5,1,1.5],
     },
     [UPGRADE.ATK]: {
         id: UPGRADE.ATK,
