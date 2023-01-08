@@ -53,12 +53,12 @@ function drawSpriteScreen(sprite, row, col, pos, colorOverlay = null)
     }
 }
 
-function drawTextScreen(string, pos, sizePx, fillStyle, stroke=false, align='left', baseline='alphabetic')
+function drawTextScreen(string, pos, font, fillStyle, stroke=false, align='left', baseline='alphabetic')
 {
     if (stroke) {
-        strokeTextScreen(context, string, pos, sizePx, 3, 'black', align, baseline);
+        strokeTextScreen(context, string, pos, font, 3, 'black', align, baseline);
     }
-    fillTextScreen(context, string, pos, sizePx, fillStyle, align, baseline);
+    fillTextScreen(context, string, pos, font, fillStyle, align, baseline);
 }
 
 function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='center')
@@ -186,6 +186,7 @@ export function doPlayerUI(player)
     //  unit buttons
     //  upgrade buttons
     //  lighthouse HP
+    //  energy
     const UIInnerpadding = 16;
     const UIOuterPadding = 20;
     const goldFontSz = 30;
@@ -198,13 +199,25 @@ export function doPlayerUI(player)
     const numUnitButtons = Object.keys(hotKeys[player.id].units).length;
     const numUpgradeButtons = Object.keys(hotKeys[player.id].upgrades).length;
     const lhHpHeight = 16;
+    const energyHeight = 8;
     const lhHpMaxWidth = canvas.width / 3;
+    const energyMaxWidth = lhHpMaxWidth;
     const UIwidth = Math.max(
         lhHpMaxWidth,
         numUnitButtons * buttonDims.x + (numUnitButtons - 1) * buttonXGap,
         numUpgradeButtons * buttonDims.x + (numUpgradeButtons - 1) * buttonXGap,
     ) + UIOuterPadding * 2;
-    const UIheight = goldFontSz + 2 * buttonDims.y + lhHpHeight + 3 * UIInnerpadding + 2 * UIOuterPadding;
+    const UIheight =
+        UIOuterPadding +
+        goldFontSz +
+        UIInnerpadding +
+        buttonDims.y +
+        UIInnerpadding +
+        buttonDims.y +
+        UIInnerpadding +
+        lhHpHeight +
+        energyHeight +
+        UIOuterPadding;
     const UIstartX = player.id == 0 ? 0 : canvas.width - UIwidth;
     const UIstartY = canvas.height - UIheight;
     //strokeRectScreen(context, vec(UIstartX, UIstartY), vec(UIwidth, UIheight), "red");
@@ -251,14 +264,33 @@ export function doPlayerUI(player)
     yOff += buttonDims.y + UIInnerpadding;
 
     // lighthouse health bars
-    const { unit, hp } = gameState.entities;
-    const lighthouseHp = hp[player.island.idx];
-    const f = clamp(lighthouseHp / unit[player.island.idx].maxHp, 0, 1);
-    const greenWidth = lhHpMaxWidth * f;
-    const redStartX = xOff + greenWidth;
-    const redWidth = lhHpMaxWidth * (1 - f);
-    fillRectScreen(context, vec(xOff, yOff), vec(greenWidth, lhHpHeight), '#00ff00');
-    fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, lhHpHeight), '#ff0000');
+    {
+        const { unit, hp } = gameState.entities;
+        const lighthouseHp = hp[player.island.idx];
+        const f = clamp(lighthouseHp / unit[player.island.idx].maxHp, 0, 1);
+        const greenWidth = lhHpMaxWidth * f;
+        const redStartX = xOff + greenWidth;
+        const redWidth = lhHpMaxWidth * (1 - f);
+        fillRectScreen(context, vec(xOff, yOff), vec(greenWidth, lhHpHeight), '#00ff00');
+        fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, lhHpHeight), '#ff0000');
+    }
+
+    yOff += lhHpHeight;
+
+    // energy bar/staticD cooldown
+    {
+        const time = player.staticDCd;
+        const cd = params.staticDCdMs;
+        const f = clamp(1 - time/cd, 0, 1);
+        const energyWidth = energyMaxWidth * f;
+        const redStartX = xOff + energyWidth;
+        const redWidth = energyMaxWidth * (1 - f);
+        fillRectScreen(context, vec(xOff, yOff), vec(energyWidth, energyHeight), player.color);
+        fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, energyHeight), '#000000');
+        if (time <= 0) {
+            drawTextScreen('[spacebar]', vecAdd(vec(xOff, yOff), vec(energyMaxWidth/2, 0)), '12px sans-serif', 'white', true, 'center', 'top');
+        }
+    }
 
     // lane indicators and hotkeys
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
@@ -333,13 +365,15 @@ export function processMouseInput()
             if (localPlayer.laneHovered >= 0) {
                 localPlayer.laneSelected = localPlayer.laneHovered;
             }
-            const mousePoint = vecClone(gameState.input.mousePos);
-            Game.tryFireStaticD(localPlayer.id, mousePoint);
         }
         if (debug.enableControls) {
             debug.clickedPoint = vecClone(gameState.input.mousePos);
             debug.closestLanePoint = minStuff.point;
         }
+    }
+    if (keyPressed(' ')) {
+        const mousePoint = vecClone(gameState.input.mousePos);
+        Game.tryFireStaticD(localPlayer.id, mousePoint);
     }
 }
 
