@@ -112,6 +112,12 @@ function upgradeButton(player, pos, dims, key, upgrade)
     //const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
     //vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
     //drawSpriteScreen(sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
+    const ecoText = {
+        [UPGRADE.ECO]: '$$$',
+        [UPGRADE.ATK]: 'ATK',
+        [UPGRADE.DEF]: 'DEF',
+    }
+    drawTextScreen(ecoText[upgrade.id], vecAdd(pos, vec(dims.x/2, dims.y/2)), buttonFont, 'lightgray', false, 'center', 'middle');
 
     const costPos = vec(pos.x + 3,pos.y + dims.y - 5);
     if (isMax) {
