@@ -245,6 +245,7 @@ const weaponDefaults = Object.freeze({
     armorPen: 0,
     // can't miss twice in a row, so it's less really
     missChance: 1,
+    sfxName: 'dummy',
 });
 
 const weaponData = [
@@ -258,6 +259,7 @@ const weaponData = [
         recoverMs: 300,
         damage: 6,
         missChance: 0.15,
+        sfxName: 'chogoringuAtk',
     },{
         id: UNIT.BIGEYE,
         range: 90,
@@ -268,6 +270,7 @@ const weaponData = [
         aoeRadius: 20, // radius around the hit point
         aoeMissRadius: 30, // how far away from target we might hit
         aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
+        sfxName: 'bigeyeAtk',
     },{
         id: UNIT.TANK,
         range: 100,
@@ -277,6 +280,7 @@ const weaponData = [
         damage: 34,
         armorPen: 2,
         missChance: 0.1,
+        sfxName: 'tankAtk',
     },
 ];
 
@@ -393,6 +397,7 @@ export const upgrades = Object.freeze({
         id: UPGRADE.ECO,
         goldCost: [15, 20, 30],
         goldPerSecBonus: [0.5,1,1.5],
+        sfxName: 'upgradeEco',
     },
     [UPGRADE.ATK]: {
         id: UPGRADE.ATK,
@@ -402,6 +407,7 @@ export const upgrades = Object.freeze({
             [UNIT.BIGEYE]: [2,4],
             [UNIT.TANK]: [2,5],
         },
+        sfxName: 'upgradeAtk',
     },
     [UPGRADE.DEF]: {
         id: UPGRADE.DEF,
@@ -411,6 +417,7 @@ export const upgrades = Object.freeze({
             [UNIT.BIGEYE]: [1,3],
             [UNIT.TANK]: [2,4],
         },
+        sfxName: 'upgradeDef',
     },
 });
 

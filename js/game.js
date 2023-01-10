@@ -579,6 +579,7 @@ function updateHitState(timeDeltaMs)
                             player.goldDamage += goldDamage;
                             player.gold = Math.max(player.gold - goldDamage, 0);
                             spawnVFXLastHitText(`-$${goldDamage}`, pos[enemyLighthouseIdx], 20, player.color);
+                            playSfx('lighthouseHit');
                             if ( hp[enemyLighthouseIdx] <= 0 ) {
                                 endCurrentGame(gameState.players[playerId[i]]);
                             }
@@ -691,10 +692,11 @@ function startWeaponSwing(i)
             const hitPos = vecAdd(targetPos, offVec);
             atkState[i].aoeHitPos = hitPos;
             spawnVFXBigEyeBeam(i, vecClone(hitPos));
-            playSfx('bigeyeatk');
             break;
         }
     }
+
+    playSfx(weapon.sfxName);
 }
 
 function updateAtkState(timeDeltaMs)
@@ -977,6 +979,7 @@ export function tryFireStaticD(playerId, targetPos)
         }
     }
     spawnVFXStaticDBeam(vecAdd(lighthousePos, vec(0, -148)), point, player.color);
+    playSfx('staticDatk');
     setTimeout(() => {
         spawnVFXExplosion(point, 8, 300);
     }, 100);
@@ -1043,6 +1046,7 @@ export function tryUnlockUnit(playerId, unit)
     player.gold -= unit.unlockCost;
     player.unitUnlocked[unit.id] = true;
     player.unitCds[unit.id] = unit.cdTimeMs;
+    playSfx('unlockUnit');
     return true;
 }
 
@@ -1073,6 +1077,7 @@ export function tryUpgrade(playerId, upgradeId)
     const upgrade = upgrades[upgradeId];
     const cost = upgrade.goldCost[newLevel];
     player.gold -= cost;
+    playSfx(upgrade.sfxName);
     return true;
 }
 

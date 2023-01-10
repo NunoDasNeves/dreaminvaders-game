@@ -5,7 +5,7 @@ Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 export const assets = {
     images: {},
     music: {},
-    sfx: {}, // TODO
+    sfx: {},
 };
 
 function getAssetPath(filename)
@@ -23,7 +23,6 @@ function getSfxPath(filename)
     return getAssetPath(`sfx/${filename}`);
 }
 
-// these images are non-sprite images... see sprites in data for that.
 const imageData = {
     island: {
         filename: 'island.png',
@@ -68,13 +67,13 @@ const sfxData = {
     death: {
         filename: 'death.mp3',
     },
-    chogoringuatk: {
+    chogoringuAtk: {
         filename: 'dummy.mp3',
     },
-    bigeyeatk: {
+    bigeyeAtk: {
         filename: 'bigeyelaser.mp3',
     },
-    tankatk: {
+    tankAtk: {
         filename: 'dummy.mp3',
     },
     staticDatk: {
@@ -91,7 +90,10 @@ const sfxData = {
     },
     upgradeDef: {
         filename: 'dummy.mp3',
-    }
+    },
+    lighthouseHit: {
+        filename: 'dummy.mp3',
+    },
 };
 
 const musicData = {
