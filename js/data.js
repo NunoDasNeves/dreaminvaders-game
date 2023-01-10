@@ -41,7 +41,8 @@ export const params = Object.freeze(
             numLanes: 3, // min 1, max ~6
             minNumLaneSegs: 8,
             minUnitVelocity: 0.5,
-            backgroundColor: "#1f1f1f",
+            backgroundGradientTop: "#160f12",
+            backgroundGradientBottom: "#0d0e1b",
             baseFadeColor: "#101010",
             laneColor: "#888",
             laneHoveredColor: "#aaa",

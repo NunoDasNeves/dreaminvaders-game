@@ -476,7 +476,10 @@ export function draw(realTimeMs, timeDeltaMs)
     canvas.height = window.innerHeight;
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    context.fillStyle = params.backgroundColor;
+    const bgGradient = context.createLinearGradient(0, canvas.height, 0, 0);
+    bgGradient.addColorStop(0, params.backgroundGradientBottom);
+    bgGradient.addColorStop(1, params.backgroundGradientTop);
+    context.fillStyle = bgGradient;
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     for (const [team, base] of Object.entries(gameState.islands)) {
