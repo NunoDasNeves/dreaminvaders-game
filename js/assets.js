@@ -53,6 +53,9 @@ const imageData = {
 };
 
 const sfxData = {
+    dummy: {
+        filename: 'dummy.mp3',
+    },
     victory: {
         filename: 'victory.mp3',
     },
@@ -60,8 +63,35 @@ const sfxData = {
         filename: 'defeat.mp3',
     },
     spawn: {
-        filename: 'spawn.mp3',
+        filename: 'dummy.mp3',
     },
+    death: {
+        filename: 'death.mp3',
+    },
+    chogoringuatk: {
+        filename: 'dummy.mp3',
+    },
+    bigeyeatk: {
+        filename: 'bigeyelaser.mp3',
+    },
+    tankatk: {
+        filename: 'dummy.mp3',
+    },
+    staticDatk: {
+        filename: 'dummy.mp3',
+    },
+    unlockUnit: {
+        filename: 'dummy.mp3',
+    },
+    upgradeEco: {
+        filename: 'dummy.mp3',
+    },
+    upgradeAtk: {
+        filename: 'dummy.mp3',
+    },
+    upgradeDef: {
+        filename: 'dummy.mp3',
+    }
 };
 
 const musicData = {
