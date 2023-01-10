@@ -1,5 +1,14 @@
 ## TODO
-- static defense; mouse click laser with cooldown, does some damage, limited range. auto for bot and shared keyboard
+- dummy sounds
+- 
+- auto static D firing - for bot and 2 player local
+- tank design
+- attack anim
+- death anim
+- fall anim?
+- pixel art spawn platforms
+- death sound
+- ditch lane select; mouse click to spawn unit (or keyboard tap?)
 - make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - display unit stats on mouseover?
 - weapons: have a 'hit' time, instead of having to be at end of swing ?
@@ -21,6 +30,8 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- basic icons or text or something for upgrades
+- static defense; mouse click laser with cooldown, does some damage, limited range. auto for bot and shared keyboard
 - units damage lighthouse damage gold too
 - display debug info about income
 - update art and music
