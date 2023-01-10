@@ -1,13 +1,25 @@
 ## TODO
-- dummy sounds
-- 
-- auto static D firing - for bot and 2 player local
+- background gradient
 - tank design
 - attack anim
 - death anim
 - fall anim?
 - pixel art spawn platforms
-- death sound
+- island inlets design
+- make dreamers move around a bit - toward lane controller
+- auto static D firing - for bot and 2 player local
+- make dreams fly around - from dreamers, up from the void..from killed nightmares..etc..
+    - basically an ellipse that flies along a curve; straight ahead, fixed angular speed probably
+    - maybe trails little particles that disappear - 'twinkle's
+- unit spawn vfx - flash of light
+    - 'twinkle's
+- change victory & defeat sounds to music, so we can stop them when going back to main menu
+    - no loop tho
+- audio system upgrade - use audio.js for music and sfx, since they'll share most stuff
+    - play music by name from game/app code, don't read App state
+        - maintain state of playing, not playing, which song etc...
+    - use audio api and audio nodes for sfx - gain, fadeout etc... reuse from music
+    - use sound pool for sfx - max of same sfx playing at once; 3-5, so we aren't cloneNode()ing constantly
 - ditch lane select; mouse click to spawn unit (or keyboard tap?)
 - make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
 - display unit stats on mouseover?
@@ -30,6 +42,8 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- dummy sounds
+- sfx volume param
 - basic icons or text or something for upgrades
 - static defense; mouse click laser with cooldown, does some damage, limited range. auto for bot and shared keyboard
 - units damage lighthouse damage gold too
