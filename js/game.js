@@ -544,6 +544,7 @@ function updateHitState(timeDeltaMs)
                     physState[i].canCollide = false;
                     vecClear(vel[i]);
                     vecClear(accel[i]);
+                    playSfx('death');
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
                     const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePoints);
@@ -690,6 +691,7 @@ function startWeaponSwing(i)
             const hitPos = vecAdd(targetPos, offVec);
             atkState[i].aoeHitPos = hitPos;
             spawnVFXBigEyeBeam(i, vecClone(hitPos));
+            playSfx('bigeyeatk');
             break;
         }
     }
