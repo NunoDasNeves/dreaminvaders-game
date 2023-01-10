@@ -51,15 +51,19 @@ const imageData = {
     },
 };
 
+const sfxDefaultVolume = 0.7; // 0-1
+
 const sfxData = {
     dummy: {
         filename: 'dummy.mp3',
     },
     victory: {
         filename: 'victory.mp3',
+        volume: 1,
     },
     defeat: {
         filename: 'defeat.mp3',
+        volume: 1,
     },
     spawn: {
         filename: 'dummy.mp3',
@@ -107,11 +111,11 @@ const musicData = {
     },
 };
 
-function loadAudioAsset(path, loop = false)
+function loadAudioAsset(path, loop = false, volume = 1)
 {
     const sound = new Audio();
 
-    const audioAsset = { sound, loaded: false } ;
+    const audioAsset = { sound, loaded: false, volume } ;
 
     sound.addEventListener("canplaythrough", function() {
         audioAsset.loaded = true;
@@ -168,7 +172,8 @@ export function init()
     }
     for (const [name, data] of Object.entries(sfxData)) {
         const { filename } = data;
-        const asset = loadAudioAsset(getSfxPath(filename), false);
+        const volume = 'volume' in data ? data.volume : sfxDefaultVolume;
+        const asset = loadAudioAsset(getSfxPath(filename), false, volume);
         assets.sfx[name] = asset;
     }
 }

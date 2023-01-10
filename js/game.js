@@ -941,7 +941,10 @@ function updateGame(timeDeltaMs)
 function playSfx(name)
 {
     if (App.state.sfxEnabled) {
-        assets.sfx[name].sound.cloneNode().play();
+        const asset = assets.sfx[name];
+        const audio = asset.sound.cloneNode();
+        audio.volume = asset.volume;
+        audio.play();
     }
 }
 
