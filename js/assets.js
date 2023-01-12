@@ -72,7 +72,8 @@ const sfxData = {
         filename: 'death.mp3',
     },
     chogoringuAtk: {
-        filename: 'dummy.mp3',
+        filename: 'chogoringuAtk.mp3',
+        volume: 0.3
     },
     bigeyeAtk: {
         filename: 'bigeyelaser.mp3',
