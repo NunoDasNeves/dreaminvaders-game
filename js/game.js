@@ -1128,6 +1128,19 @@ function updatePlayersActionsAndUI(timeDeltaMs)
         if (!debug.paused && player.controller == PLAYER_CONTROLLER.BOT) {
             updateBotPlayer(player, timeDeltaMs);
         }
+        if (    gameState.automaticStaticD ||
+                player.controller == PLAYER_CONTROLLER.BOT) {
+            const { pos, team, hitState } = gameState.entities;
+            const lighthousePos = pos[player.island.idx];
+            const ref = nearestUnitToPos(lighthousePos,
+                                         params.staticDRange,
+                                         (i) => team[i] != player.team && hitState[i].state == HITSTATE.ALIVE );
+            if (ref.isValid()) {
+                const targetPos = vecClone(pos[ref.getIndex()]);
+                vecAddTo(targetPos, vecMulBy(vecRand(), params.staticDRadius * 2));
+                tryFireStaticD(player.id, targetPos);
+            }
+        }
     }
 }
 
