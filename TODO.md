@@ -7,7 +7,6 @@
 - pixel art spawn platforms
 - island inlets design
 - make dreamers move around a bit - toward lane controller
-- auto static D firing - for bot and 2 player local
 - make dreams fly around - from dreamers, up from the void..from killed nightmares..etc..
     - basically an ellipse that flies along a curve; straight ahead, fixed angular speed probably
     - maybe trails little particles that disappear - 'twinkle's
@@ -42,6 +41,7 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- auto static D firing - for bot and 2 player local
 - dummy sounds
 - sfx volume param
 - basic icons or text or something for upgrades
