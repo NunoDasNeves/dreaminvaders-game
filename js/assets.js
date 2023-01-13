@@ -79,25 +79,25 @@ const sfxData = {
         filename: 'bigeyelaser.mp3',
     },
     tankAtk: {
-        filename: 'dummy.mp3',
+        filename: 'Cannon Sound V2.mp3',
     },
     staticDatk: {
-        filename: 'dummy.mp3',
+        filename: 'Lighthouse Laser.mp3',
     },
     unlockUnit: {
-        filename: 'dummy.mp3',
+        filename: 'spawn.mp3',
     },
     upgradeEco: {
-        filename: 'dummy.mp3',
+        filename: 'spawn_old.mp3',
     },
     upgradeAtk: {
-        filename: 'dummy.mp3',
+        filename: 'spawn_old.mp3',
     },
     upgradeDef: {
-        filename: 'dummy.mp3',
+        filename: 'spawn_old.mp3',
     },
     lighthouseHit: {
-        filename: 'dummy.mp3',
+        filename: 'Lighthouse Hit.mp3',
     },
 };
 
