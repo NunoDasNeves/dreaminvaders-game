@@ -70,19 +70,22 @@ const sfxData = {
     },
     death: {
         filename: 'death.mp3',
+        volume: 1
     },
     chogoringuAtk: {
         filename: 'chogoringuAtk.mp3',
-        volume: 0.3
+        volume: 0.1
     },
     bigeyeAtk: {
         filename: 'bigeyelaser.mp3',
     },
     tankAtk: {
         filename: 'Cannon Sound V2.mp3',
+        volume: 0.3
     },
     staticDatk: {
         filename: 'Lighthouse Laser.mp3',
+        volume: 0.2
     },
     unlockUnit: {
         filename: 'spawn.mp3',
