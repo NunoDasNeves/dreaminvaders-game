@@ -236,11 +236,35 @@ const unitSpriteData = [
     },{
         id: UNIT.TANK,
         assetName: "tank",
-        width: 64,
+        width: 128,
         height: 64,
         centerOffset: vec(0,16),
-        rows: 1,
-        anims: { /* use defaults; see above */ },
+        rows: 3,
+        anims: {
+            [ANIM.WALK]: {
+                row: 1,
+                frames: 4,
+                frameDur: 200,
+            },
+            [ANIM.ATK_AIM]: {
+                row: 2,
+                col: 0,
+                frames: 1,
+                frameDur: 400,
+            },
+            [ANIM.ATK_SWING]: {
+                row: 2,
+                col: 1,
+                frames: 1,
+                frameDur: 200,
+            },
+            [ANIM.ATK_RECOVER]: {
+                row: 2,
+                col: 2,
+                frames: 1,
+                frameDur: 800,
+            },
+        },
     },
 ];
 
