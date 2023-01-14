@@ -162,7 +162,7 @@ const unitSpriteData = [
         width: 16,
         height: 24,
         centerOffset: vec(0,8), // additional offset so we draw it in the right spot in relation to entity position
-        rows: 2, // not including flipped/recolored frames; used to get flip offset
+        rows: 3, // not including flipped/recolored frames; used to get flip offset
         playerColors: true,
         anims: {
             // all the animations will be populated by defaults if not specified
@@ -180,9 +180,23 @@ const unitSpriteData = [
                 frames: 4,
                 frameDur: 100,
             },
+            [ANIM.ATK_AIM]: {
+                row: 2,
+                col: 0,
+                frames: 1,
+                frameDur: 140,
+            },
             [ANIM.ATK_SWING]: {
+                row: 2,
+                col: 1,
                 frames: 2,
-                frameDur: 400,
+                frameDur: 140,
+            },
+            [ANIM.ATK_RECOVER]: {
+                row: 2,
+                col: 3,
+                frames: 2,
+                frameDur: 140,
             },
         },
     },{
@@ -255,9 +269,9 @@ const weaponData = [
     },{
         id: UNIT.CHOGORINGU,
         range: 10,
-        aimMs: 200,
-        swingMs: 200,
-        recoverMs: 300,
+        aimMs: 140,
+        swingMs: 280,
+        recoverMs: 280,
         damage: 6,
         missChance: 0.15,
         sfxName: 'chogoringuAtk',
