@@ -1,7 +1,6 @@
 ## TODO
-- background gradient
-- tank design
-- attack anim
+- refactor atk states - just one state, swing time, hit time, other stuff if needed
+- slime tank anims
 - death anim
 - fall anim?
 - pixel art spawn platforms
@@ -41,6 +40,9 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- mannon tank anims (draft)
+- chogoringu attack anim
+- background gradient
 - auto static D firing - for bot and 2 player local
 - dummy sounds
 - sfx volume param
