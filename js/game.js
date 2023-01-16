@@ -223,6 +223,14 @@ function accelAwayFromEdge(i)
     }
 }
 
+function startAtk(i, targetRef)
+{
+    const { aiState, target, atkState } = gameState.entities;
+    aiState[i].state = AISTATE.ATTACK;
+    atkState[i].state = ATKSTATE.AIM;
+    target[i] = targetRef;
+}
+
 function updateAiState()
 {
     const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
@@ -253,10 +261,7 @@ function updateAiState()
                 if (distToEnemyIsland < (params.laneDistFromBase + params.spawnPlatRadius)) {
                     // keep proceeding
                 } else if (nearestAtkTarget.isValid()) {
-                    aiState[i].state = AISTATE.ATTACK;
-                    target[i] = nearestAtkTarget;
-                    atkState[i].timer = weapon.aimMs;
-                    atkState[i].state = ATKSTATE.AIM;
+                    startAtk(i, nearestAtkTarget);
                 } else if (nearestChaseTarget.isValid()) {
                     aiState[i].state = AISTATE.CHASE;
                     target[i] = nearestChaseTarget;
@@ -270,15 +275,10 @@ function updateAiState()
                 // their vel going to almostZero, so this kinda fixes that
                 const mostlyStopped = vecLen(vel[i]) < (unit[i].maxSpeed * 0.5);
                 if (nearestAtkTarget.isValid() && mostlyStopped) {
-                    aiState[i].state = AISTATE.ATTACK;
-                    target[i] = nearestAtkTarget;
-                    atkState[i].timer = weapon.aimMs;
-                    atkState[i].state = ATKSTATE.AIM;
-
+                    startAtk(i, nearestAtkTarget);
                 // otherwise always chase nearest
                 } else if (nearestChaseTarget.isValid()) {
                     target[i] = nearestChaseTarget;
-
                 // otherwise... continue on
                 } else {
                     aiState[i].state = AISTATE.PROCEED;
@@ -297,10 +297,7 @@ function updateAiState()
                  */
                 if (!target[i].isValid() && atkState[i].state != ATKSTATE.RECOVER) {
                     if (nearestAtkTarget.isValid()) {
-                        target[i] = nearestAtkTarget;
-                        atkState[i].timer = weapon.aimMs;
-                        atkState[i].state = ATKSTATE.AIM;
-
+                        startAtk(i, nearestAtkTarget);
                     } else if (nearestChaseTarget.isValid()) {
                         aiState[i].state = AISTATE.CHASE;
                         target[i] = nearestChaseTarget;
@@ -349,6 +346,7 @@ function updateAiState()
                 }
                 target[i].invalidate();
                 atkState[i].state = ATKSTATE.NONE;
+                playUnitAnim(i, ANIM.WALK);
                 break;
             }
             case AISTATE.CHASE:
@@ -386,6 +384,7 @@ function updateAiState()
                     decel(i);
                 }
                 accelAwayFromEdge(i);
+                playUnitAnim(i, ANIM.WALK);
                 break;
             }
             case AISTATE.ATTACK:
@@ -393,6 +392,7 @@ function updateAiState()
                 const t = target[i].getIndex();
                 console.assert(t != INVALID_ENTITY_INDEX || atkState[i].state == ATKSTATE.RECOVER);
                 decel(i); // stand still
+                playUnitAnim(i, ANIM.ATK);
             }
             break;
         }
@@ -701,106 +701,78 @@ function startWeaponSwing(i)
 
 function updateAtkState(timeDeltaMs)
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
-
     forAllUnits((i) => {
-        const newTime = atkState[i].timer - timeDeltaMs;
-        if (newTime > 0) {
-            atkState[i].timer = newTime;
-            return;
-        }
-        const weapon = getUnitWeapon(unit[i]);
-        // timer has expired
-        switch (atkState[i].state) {
+        const unit = gameState.entities.unit[i];
+        const atkState = gameState.entities.atkState[i];
+        const animState = gameState.entities.animState[i];
+        const attackAnim = getUnitAnim(unit, ANIM.ATK);
+
+        switch (atkState.state) {
             case ATKSTATE.NONE:
             {
-                atkState[i].timer = 0;
                 break;
             }
             case ATKSTATE.AIM:
             {
-                atkState[i].state = ATKSTATE.SWING;
-                atkState[i].timer = newTime + weapon.swingMs; // there may be remaining negative time; remove that from the timer by adding here
-                startWeaponSwing(i);
+                if (animState.timer >= attackAnim.swingTime) {
+                    atkState.state = ATKSTATE.SWING;
+                    startWeaponSwing(i);
+                }
                 break;
             }
             case ATKSTATE.SWING:
             {
-                atkState[i].state = ATKSTATE.RECOVER;
-                atkState[i].timer = newTime + weapon.recoverMs;
-                doWeaponHit(i);
+                if (animState.timer >= attackAnim.hitTime) {
+                    atkState.state = ATKSTATE.RECOVER;
+                    doWeaponHit(i);
+                }
                 break;
             }
             case ATKSTATE.RECOVER:
             {
-                atkState[i].state = ATKSTATE.AIM;
-                atkState[i].timer = newTime + weapon.aimMs;
+                if (animState.timer == 0) { // its been reset
+                    atkState.state = ATKSTATE.AIM;
+                }
                 break;
             }
         }
     });
 }
 
+function resetUnitAnim(i, animName, loop = true)
+{
+    const animState = gameState.entities.animState[i];
+    animState.anim = animName;
+    animState.frame = 0;
+    animState.timer = 0;
+    animState.loop = loop;
+}
+
+function playUnitAnim(i, animName, reset = false, loop = true)
+{
+    const animState = gameState.entities.animState[i];
+    if (reset || animState.anim != animName) {
+        resetUnitAnim(i, animName, loop);
+    // prob don't need this
+    } else if (loop != animState.loop) {
+        animState.loop = true;
+    }
+}
+
 function updateAnimState(timeDeltaMs)
 {
-    const { exists, unit, aiState, atkState, animState } = gameState.entities;
-
     forAllUnits((i) => {
-        const aState = animState[i];
-        const sprite = unitSprites[unit[i].id];
-        if (!sprite) {
-            return;
-        }
-        aState.timer -= timeDeltaMs;
-        // TODO this properly... this is all placeholder
-        const oldAnimName = aState.anim;
-        switch (aiState[i].state) {
-            case AISTATE.PROCEED:
-            case AISTATE.CHASE:
-            {
-                aState.anim = ANIM.WALK;
-                break;
+        const unit = gameState.entities.unit[i];
+        const aState = gameState.entities.animState[i];
+        const anim = getUnitAnim(unit, aState.anim);
+        const duration = anim.frames * anim.frameDur;
+        aState.timer += timeDeltaMs;
+        aState.frame = Math.floor(clamp(aState.timer / duration, 0, 0.9999) * anim.frames);
+        if (aState.timer >= duration) {
+            if (aState.loop) {
+                aState.frame = 0;
+                aState.timer = 0;
             }
-            case AISTATE.ATTACK:
-            {
-                aState.anim = ANIM.ATK_AIM;
-                switch (atkState[i].state) {
-                    case ATKSTATE.NONE:
-                    {
-                        break;
-                    }
-                    case ATKSTATE.AIM:
-                    {
-                        aState.anim = ANIM.ATK_AIM;
-                        break;
-                    }
-                    case ATKSTATE.SWING:
-                    {
-                        aState.anim = ANIM.ATK_SWING;
-                        break;
-                    }
-                    case ATKSTATE.RECOVER:
-                    {
-                        aState.anim = ANIM.ATK_RECOVER;
-                        break;
-                    }
-                }
-                break;
-            }
-            default:
-            {
-                aState.anim = ANIM.IDLE;
-                break;
-            }
-        }
-        const anim = sprite.anims[aState.anim];
-        if (oldAnimName != aState.anim) {
-            aState.frame = 0;
-            aState.timer = anim.frameDur;
-        }
-        if (aState.timer <= 0) {
-            aState.timer += anim.frameDur;
-            aState.frame = (aState.frame + 1) % anim.frames;
         }
     });
 }
@@ -925,9 +897,9 @@ function updateGame(timeDeltaMs)
 
     // order here matters!
     updatePhysicsState();
-    updateAtkState(timeDeltaMs);
     updateAiState();
     updateAnimState(timeDeltaMs);
+    updateAtkState(timeDeltaMs);
     updateVFXState(timeDeltaMs);
 
     // this should come right before reap

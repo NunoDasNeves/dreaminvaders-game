@@ -273,7 +273,6 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     };
     atkState[idx]   = {
         state: ATKSTATE.NONE,
-        timer: 0,
     };
     hitState[idx]   = {
         state: HITSTATE.ALIVE,
@@ -290,7 +289,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     animState[idx]  = {
         anim: ANIM.IDLE,
         frame: 0,
-        timer: 0,
+        timer: 0, // counts UP
         loop: true,
     };
     debugState[idx] = {}; // misc debug stuff

@@ -100,11 +100,9 @@ export const HITSTATE = Object.freeze({
 export const ANIM = Object.freeze({
     IDLE: 0,
     WALK: 1,
-    ATK_AIM: 2,
-    ATK_SWING: 3,
-    ATK_RECOVER: 4,
-    DIE: 5,
-    FALL: 6,
+    ATK: 2,
+    DIE: 3,
+    FALL: 4,
 });
 export const UNIT = Object.freeze({
     INVALID: 0,
@@ -180,23 +178,14 @@ const unitSpriteData = [
                 frames: 4,
                 frameDur: 100,
             },
-            [ANIM.ATK_AIM]: {
+            [ANIM.ATK]: {
                 row: 2,
                 col: 0,
-                frames: 1,
+                frames: 5,
                 frameDur: 140,
-            },
-            [ANIM.ATK_SWING]: {
-                row: 2,
-                col: 1,
-                frames: 2,
-                frameDur: 140,
-            },
-            [ANIM.ATK_RECOVER]: {
-                row: 2,
-                col: 3,
-                frames: 2,
-                frameDur: 140,
+                // specific to ANIM.ATK:
+                swingTime: 140, // time swing starts
+                hitTime: 420, // time hit registers
             },
         },
     },{
@@ -216,53 +205,32 @@ const unitSpriteData = [
                 frames: 2,
                 frameDur: 300,
             },
-            [ANIM.ATK_AIM]: {
+            [ANIM.ATK]: {
                 row: 1,
-                frames: 1,
-                frameDur: 200,
-            },
-            [ANIM.ATK_SWING]: {
-                row: 1,
-                frames: 4,
-                frameDur: 100,
-            },
-            [ANIM.ATK_RECOVER]: {
-                row: 1,
-                col: 3, // same frame as end of swing; i.e. double the length of that frame in anim
-                frames: 4,
-                frameDur: 100,
+                frames: 7,
+                frameDur: 150,
+                swingTime: 300,
+                hitTime: 700,
             },
         },
     },{
         id: UNIT.TANK,
         assetName: "tank",
-        width: 128,
-        height: 64,
-        centerOffset: vec(0,16),
-        rows: 3,
+        width: 72,
+        height: 48,
+        centerOffset: vec(0,8),
+        rows: 1,
+        playerColors: true,
         anims: {
             [ANIM.WALK]: {
-                row: 1,
-                frames: 4,
+                frames: 6,
                 frameDur: 200,
             },
-            [ANIM.ATK_AIM]: {
-                row: 2,
-                col: 0,
-                frames: 1,
-                frameDur: 400,
-            },
-            [ANIM.ATK_SWING]: {
-                row: 2,
-                col: 1,
+            [ANIM.ATK]: {
                 frames: 1,
                 frameDur: 200,
-            },
-            [ANIM.ATK_RECOVER]: {
-                row: 2,
-                col: 2,
-                frames: 1,
-                frameDur: 800,
+                swingTime: 400,
+                hitTime: 600,
             },
         },
     },
@@ -272,12 +240,6 @@ const weaponRequired = ['id'];
 const weaponDefaults = Object.freeze({
     // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
     range: 0,
-    // time from deciding to attack until starting attack
-    aimMs: Infinity,
-    // time from starting attack til attack hits
-    swingMs: Infinity,
-    // time after attack hits til can attack again
-    recoverMs: Infinity,
     // damage to HP, reduced by effective armor (after armorPen)
     damage: 0,
     // flat armor reduction, before damage is applied
@@ -293,18 +255,12 @@ const weaponData = [
     },{
         id: UNIT.CHOGORINGU,
         range: 10,
-        aimMs: 140,
-        swingMs: 280,
-        recoverMs: 280,
         damage: 6,
         missChance: 0.15,
         sfxName: 'chogoringuAtk',
     },{
         id: UNIT.BIGEYE,
         range: 90,
-        aimMs: 300,
-        swingMs: 400,
-        recoverMs: 600,
         damage: 9,
         aoeRadius: 20, // radius around the hit point
         aoeMissRadius: 30, // how far away from target we might hit
@@ -313,9 +269,6 @@ const weaponData = [
     },{
         id: UNIT.TANK,
         range: 100,
-        aimMs: 400,
-        swingMs: 200,
-        recoverMs: 800,
         damage: 34,
         armorPen: 2,
         missChance: 0.1,
@@ -405,7 +358,9 @@ for (const sprite of Object.values(unitSprites)) {
     // add all the missing anims
     for (const animName of Object.values(ANIM)) {
         if (!(animName in sprite.anims)) {
-            sprite.anims[animName] = {};
+            sprite.anims[animName] = {
+                id: animName,
+            };
         }
         // add all the missing anim properties
         const anim = sprite.anims[animName];
@@ -415,6 +370,11 @@ for (const sprite of Object.values(unitSprites)) {
             }
         }
     }
+}
+
+export function getUnitAnim(unit, animName)
+{
+    return unitSprites[unit.id].anims[animName];
 }
 
 export const weapons = makeFromDefaults("weapon", weaponData, weaponDefaults, weaponRequired);
