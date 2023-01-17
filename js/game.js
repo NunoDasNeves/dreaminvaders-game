@@ -680,7 +680,6 @@ function startWeaponSwing(i)
         case UNIT.TANK:
         {
             atkState[i].didHit = canAttackTarget(i) && (!atkState[i].didHit || Math.random() > weapon.missChance);
-            spawnVFXTankSparks(i, pos[t]);
             break;
         }
         case UNIT.BIGEYE:
