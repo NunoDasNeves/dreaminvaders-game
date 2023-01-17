@@ -45,7 +45,7 @@ const imageData = {
         height: 32,
     },
     tank: {
-        filename: "tank.png",
+        filename: "slimetank.png",
         width: 64,
         height: 64,
     },
