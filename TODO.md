@@ -1,6 +1,4 @@
 ## TODO
-- refactor atk states - just one state, swing time, hit time, other stuff if needed
-- slime tank anims
 - death anim
 - fall anim?
 - pixel art spawn platforms
@@ -40,6 +38,8 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- refactor animation system/status - dont do special stuff for atk except hold some data for when swing is, hit, etc..
+- basic/rough slime tank anims
 - mannon tank anims (draft)
 - chogoringu attack anim
 - background gradient
