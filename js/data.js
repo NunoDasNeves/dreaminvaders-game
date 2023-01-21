@@ -105,10 +105,14 @@ export const ANIM = Object.freeze({
 });
 export const UNIT = Object.freeze({
     INVALID: 0,
+    // special base/lighthouse unit
     BASE: 1,
+    // normal units
     CHOGORINGU: 2,
     BIGEYE: 3,
     TANK: 4,
+    // buildings
+    TOWER: 5,
 });
 export const VFX = Object.freeze({
     EXPLOSION: 1,
@@ -234,6 +238,21 @@ const unitSpriteData = [
                 hitTime: 300,
             },
         },
+    },{
+        id: UNIT.TOWER,
+        assetName: "tower",
+        width: 32,
+        height: 32,
+        centerOffset: vec(0,8),
+        rows: 1,
+        playerColors: true,
+        anims: {
+            [ANIM.IDLE]: {
+                row: 1,
+                frames: 3,
+                frameDur: 200,
+            },
+        }
     },
 ];
 
@@ -274,6 +293,13 @@ const weaponData = [
         armorPen: 2,
         missChance: 0.1,
         sfxName: 'tankAtk',
+    },{
+        id: UNIT.TOWER,
+        staticDCdMs: 1000,
+        range: 650,
+        damage: 5,
+        missChance: 0.1,
+        sfxName: 'staticDatk',
     },
 ];
 
@@ -346,7 +372,14 @@ const unitData = [
         cdTimeMs: 1500,
         needsUnlock: true,
         unlockCost: 30,
-    }
+    },{
+        id: UNIT.TOWER,
+        maxHp: 1,
+        radius: 1,
+        collides: false,
+        canFall: false,
+        sightRange: 650,
+    },
 ];
 
 export const unitSprites = makeFromDefaults("unit sprite", unitSpriteData,
