@@ -74,7 +74,7 @@ const sfxData = {
     },
     chogoringuAtk: {
         filename: 'chogoringuAtk.mp3',
-        volume: 0.1
+        volume: 0.07
     },
     bigeyeAtk: {
         filename: 'bigeyelaser.mp3',
