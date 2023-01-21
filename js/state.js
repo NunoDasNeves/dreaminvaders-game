@@ -345,10 +345,14 @@ function addPlayer(name, controller, pos, team, colorIdx)
         team,
         gold: params.startingGold,
         goldPerSec: params.startingGoldPerSec,
+        /* track how much gold from different sources */
+        goldBaseEarned: 0,
         goldDamage: 0,
         goldFromDreamers: 0,
         goldFromEcoUpgrades: 0,
         goldFromLastHit: 0,
+        goldEarned: 0,
+        /* */
         island: {
             pos,
             idx: INVALID_ENTITY_INDEX,

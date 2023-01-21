@@ -239,14 +239,19 @@ export function doPlayerUI(player)
     const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
     drawTextScreen(gpsText, gpsStart, goldFontSmol, player.color, true, 'left', 'top');
     if (debug.drawUI) {
-        const gdStart = vecAdd(gpsStart, vec(180, 0));
-        const ecoStart = vecAdd(gdStart, vec(0, 30));
-        const drmStart = vecAdd(ecoStart, vec(0, 30));
-        const lhStart = vecAdd(drmStart, vec(0, 30));
-        drawTextScreen(`dmg:      -$${player.goldDamage.toFixed(2)}`, gdStart, goldFontSmol, player.color, true, 'left', 'top');
-        drawTextScreen(`eco ups:  $${player.goldFromEcoUpgrades.toFixed(2)}`, ecoStart, goldFontSmol, player.color, true, 'left', 'top');
-        drawTextScreen(`dreamers: $${player.goldFromDreamers.toFixed(2)}`, drmStart, goldFontSmol, player.color, true, 'left', 'top');
-        drawTextScreen(`lasthit:  $${player.goldFromLastHit.toFixed(2)}`, lhStart, goldFontSmol, player.color, true, 'left', 'top');
+        const strPos = vecAdd(gpsStart, vec(180, 0));
+        const lineOffset = vec(0, 30);
+        let str = ''
+        str += `base:        $${player.goldBaseEarned.toFixed(2)}\n`;
+        str += `dmg:         $${player.goldDamage.toFixed(2)}\n`;
+        str += `eco ups:     $${player.goldFromEcoUpgrades.toFixed(2)}\n`;
+        str += `dreamers:    $${player.goldFromDreamers.toFixed(2)}\n`;
+        str += `lasthit:     $${player.goldFromLastHit.toFixed(2)}\n`;
+        str += `totalEarned: $${player.goldEarned.toFixed(2)}\n`;
+        for (const s of str.split('\n')) {
+            drawTextScreen(s, strPos, goldFontSmol, player.color, true, 'left', 'top');
+            vecAddTo(strPos, lineOffset);
+        }
     }
 
     yOff += UIInnerpadding + goldHeight;

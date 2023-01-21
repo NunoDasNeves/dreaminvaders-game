@@ -566,22 +566,24 @@ function updateHitState(timeDeltaMs)
                     }
                 // 'die' by scoring
                 } else {
-                    for (const player of gameState.players) {
-                        if (player.team == team[i]) {
+                    for (const enemyPlayer of gameState.players) {
+                        if (enemyPlayer.team == team[i]) {
                             continue;
                         }
-                        const enemyLighthouseIdx = player.island.idx;
+                        const player = gameState.players[playerId[i]];
+                        const enemyLighthouseIdx = enemyPlayer.island.idx;
                         if (onIsland && getDist(pos[i], pos[enemyLighthouseIdx]) < params.lighthouseRadius) {
                             hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
                             hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
                             hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
                             const goldDamage = Math.floor(unit[i].goldCost/3);
                             player.goldDamage += goldDamage;
-                            player.gold = Math.max(player.gold - goldDamage, 0);
-                            spawnVFXLastHitText(`-$${goldDamage}`, pos[enemyLighthouseIdx], 20, player.color);
+                            player.goldEarned += goldDamage;
+                            player.gold += goldDamage;
+                            spawnVFXLastHitText(`$${goldDamage}`, pos[enemyLighthouseIdx], 20, player.color);
                             playSfx('lighthouseHit');
                             if ( hp[enemyLighthouseIdx] <= 0 ) {
-                                endCurrentGame(gameState.players[playerId[i]]);
+                                endCurrentGame(player);
                             }
                             // instantly disappear this frame
                             freeable[i] = true;
@@ -848,7 +850,6 @@ function updateDreamerState(timeDeltaMs)
                 dreamer.timer -= timeDeltaMs;
                 if (dreamer.timer <= 0) {
                     dreamer.goldEarned += params.dreamerGoldPerSec;
-                    player.goldFromDreamers += params.dreamerGoldPerSec;
                     dreamer.timer = 1000;
                 }
             }
@@ -863,24 +864,35 @@ function updatePlayerState(timeDeltaMs)
     const timeDeltaSec = 0.001 * timeDeltaMs;
     const ecoUpgrade = upgrades[UPGRADE.ECO];
 
+    // set base gold rate
     for (const player of gameState.players) {
         player.goldPerSec = params.startingGoldPerSec;
+        // track base gold
+        player.goldBaseEarned += params.startingGoldPerSec * timeDeltaSec;
     }
+    // add dreamer gold
     for (const { dreamer } of gameState.bridges) {
         if (dreamer.playerId == NO_PLAYER_INDEX) {
             continue;
         }
         const player = gameState.players[dreamer.playerId];
         player.goldPerSec += params.dreamerGoldPerSec;
-
+        // track dreamer gold
+        player.goldFromDreamers += params.dreamerGoldPerSec * timeDeltaSec;
     }
-    // add the income, update cooldowns
     for (const player of gameState.players) {
+        // add eco gold
         const upgradeLevel = player.upgradeLevels[UPGRADE.ECO];
-        const bonus = upgradeLevel < 0 ? 0 : ecoUpgrade.goldPerSecBonus[upgradeLevel];
-        player.goldPerSec += bonus;
-        player.gold += player.goldPerSec * timeDeltaSec;
-        player.goldFromEcoUpgrades += bonus * timeDeltaSec;
+        const ecoGoldPerSec = upgradeLevel < 0 ? 0 : ecoUpgrade.goldPerSecBonus[upgradeLevel];
+        player.goldPerSec += ecoGoldPerSec;
+        // update gold and tracking
+        const goldTotalThisFrame = player.goldPerSec * timeDeltaSec;
+        player.gold += goldTotalThisFrame;
+        player.goldEarned += goldTotalThisFrame;
+        // just eco
+        player.goldFromEcoUpgrades += ecoGoldPerSec * timeDeltaSec;
+
+        // cooldowns
         for (const unitId of Object.values(UNIT)) {
             const newVal = player.unitCds[unitId] - timeDeltaMs;
             player.unitCds[unitId] = Math.max(newVal, 0);
@@ -949,6 +961,7 @@ export function tryFireStaticD(playerId, targetPos)
             const gold = Math.floor(unit[t].goldCost/2.5);
             player.gold += gold;
             player.goldFromLastHit += gold;
+            player.goldEarned += gold;
             spawnVFXLastHitText(`+$${gold}`, point, 20, player.color);
         }
     }
