@@ -99,6 +99,9 @@ const sfxData = {
     upgradeDef: {
         filename: 'spawn_old.mp3',
     },
+    upgradeTower: {
+        filename: 'spawn_old.mp3',
+    },
     lighthouseHit: {
         filename: 'Lighthouse Hit.mp3',
     },

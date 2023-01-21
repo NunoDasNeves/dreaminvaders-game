@@ -390,9 +390,15 @@ export const UPGRADE = Object.freeze({
     ECO: 0,
     ATK: 1,
     DEF: 2,
+    TOWER: 3,
 });
 
 export const upgrades = Object.freeze({
+    [UPGRADE.TOWER]: {
+        id: UPGRADE.TOWER,
+        goldCost: [15],
+        sfxName: 'upgradeTower',
+    },
     [UPGRADE.ECO]: {
         id: UPGRADE.ECO,
         goldCost: [15, 20, 30],
@@ -434,9 +440,10 @@ export const hotKeys = {
             'e': UNIT.TANK,
         },
         upgrades: {
-            'a': UPGRADE.ECO,
-            's': UPGRADE.ATK,
-            'd': UPGRADE.DEF,
+            'a': UPGRADE.TOWER,
+            's': UPGRADE.ECO,
+            'd': UPGRADE.ATK,
+            'f': UPGRADE.DEF,
         }
     },
     [1]: {
@@ -451,9 +458,10 @@ export const hotKeys = {
             'p': UNIT.TANK,
         },
         upgrades: {
-            'k': UPGRADE.ECO,
-            'l': UPGRADE.ATK,
-            ';': UPGRADE.DEF,
+            'k': UPGRADE.TOWER,
+            'l': UPGRADE.ECO,
+            ';': UPGRADE.ATK,
+            '\'': UPGRADE.DEF,
         }
     }
 };

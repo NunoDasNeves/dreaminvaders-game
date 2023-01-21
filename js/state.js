@@ -440,13 +440,11 @@ export function initGameState(gameConfig)
     gameState.bridges = [];
     gameState.localPlayerId = 0;
     gameState.mouseEnabled = true;
-    gameState.automaticStaticD = true;
     gameState.input = makeInput();
     gameState.lastInput = makeInput();
     if (gameConfig.players[0].controller == PLAYER_CONTROLLER.LOCAL_HUMAN &&
         gameConfig.players[1].controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         gameState.mouseEnabled = false;
-        gameState.automaticStaticD = true;
     }
     addPlayer(gameConfig.players[0].name, gameConfig.players[0].controller, vec(-600, 0), 0, 0);
     addPlayer(gameConfig.players[1].name, gameConfig.players[1].controller, vec(600, 0), 1, 1);

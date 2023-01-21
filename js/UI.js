@@ -113,6 +113,7 @@ function upgradeButton(player, pos, dims, key, upgrade)
     //vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
     //drawSpriteScreen(sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
     const ecoText = {
+        [UPGRADE.TOWER]: 'PEW',
         [UPGRADE.ECO]: '$$$',
         [UPGRADE.ATK]: 'ATK',
         [UPGRADE.DEF]: 'DEF',

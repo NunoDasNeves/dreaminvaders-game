@@ -1167,8 +1167,7 @@ function updatePlayersActionsAndUI(timeDeltaMs)
         if (!debug.paused && player.controller == PLAYER_CONTROLLER.BOT) {
             updateBotPlayer(player, timeDeltaMs);
         }
-        if (    gameState.automaticStaticD ||
-                player.controller == PLAYER_CONTROLLER.BOT) {
+        if (player.upgradeLevels[UPGRADE.TOWER] >= 0) {
             const { pos, team, hitState } = gameState.entities;
             const lighthousePos = pos[player.island.idx];
             const ref = nearestUnitToPos(lighthousePos,
