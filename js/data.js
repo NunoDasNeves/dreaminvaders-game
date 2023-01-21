@@ -78,7 +78,7 @@ export const NO_PLAYER_INDEX = -1;
 export const NO_TEAM_INDEX = -1;
 
 export const AISTATE = Object.freeze({
-    DO_NOTHING: 0,
+    IDLE: 0,
     PROCEED: 1,
     CHASE: 2,
     ATTACK: 3,
@@ -97,11 +97,12 @@ export const HITSTATE = Object.freeze({
 /* Unit data */
 
 export const ANIM = Object.freeze({
-    IDLE: 0,
-    WALK: 1,
-    ATK: 2,
-    DIE: 3,
-    FALL: 4,
+    DO_NOTHING: 0,
+    IDLE: 1,
+    WALK: 2,
+    ATK: 3,
+    DIE: 4,
+    FALL: 5,
 });
 export const UNIT = Object.freeze({
     INVALID: 0,
