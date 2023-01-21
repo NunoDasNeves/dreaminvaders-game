@@ -62,7 +62,6 @@ export const params = Object.freeze(
             startingGold: 10,
             startingGoldPerSec: 1,
             dreamerGoldPerSec: 0.5,
-            botActionTimeMs: 2000,
             staticDCdMs: 1000,
             staticDRange: 650,
             staticDDamage: 8,

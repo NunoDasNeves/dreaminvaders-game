@@ -1068,37 +1068,92 @@ export function tryUpgrade(playerId, upgradeId)
     return true;
 }
 
+function selectRandomLane(player)
+{
+    player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
+}
+
+function botRandomAction(player, timeDeltaMs)
+{
+    const botActions = [()=>{ return true; }]; // do nothing actions, keep it somewhat easy
+    Object.values(Data.hotKeys[player.id].units)
+        .forEach(unitId => {
+            const unit = units[unitId];
+            if (canUnlockUnit(player.id, unit)) {
+                botActions.push(() => {
+                    selectRandomLane(player);
+                    return tryUnlockUnit(player.id, unit)
+                });
+            } else if (canBuildUnit(player.id, unit)) {
+                botActions.push(() => {
+                    selectRandomLane(player);
+                    return tryBuildUnit(player.id, unit)
+                });
+            }
+        });
+    Object.values(Data.hotKeys[player.id].upgrades)
+        .forEach(upgradeId => {
+            if (canUpgrade(player.id, upgradeId)) {
+                botActions.push(() => {
+                    selectRandomLane(player);
+                    return tryUpgrade(player.id, upgradeId)
+                });
+            }
+        });
+    if (botActions.length > 0) {
+        return randFromArray(botActions);
+    }
+    return null;
+}
+
+function botAggroAction(player, timeDeltaMs)
+{
+    player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
+    const botActions = [
+        ()=>{ return true; } // do nothing action, keep it somewhat easy
+    ];
+    const unit = units[UNIT.CHOGORINGU];
+    if (canBuildUnit(player.id, unit)) {
+        botActions.push(() => {
+            selectRandomLane(player);
+            return tryBuildUnit(player.id, unit);
+        });
+    }
+    if (botActions.length > 0) {
+        return randFromArray(botActions);
+    }
+    return null;
+}
+
 function updateBotPlayer(player, timeDeltaMs)
 {
     player.botState.actionTimer -= timeDeltaMs;
     if (player.botState.actionTimer > 0) {
         return;
     }
-    player.botState.actionTimer += params.botActionTimeMs;
-    player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
-    const botActions = [()=>{ return true; }]; // do nothing actions, keep it somewhat easy
-    Object.values(Data.hotKeys[player.id].units)
-        .forEach(unitId => {
-            const unit = units[unitId];
-            if (canUnlockUnit(player.id, unit)) {
-                botActions.push(() => tryUnlockUnit(player.id, unit));
-            } else if (canBuildUnit(player.id, unit)) {
-                botActions.push(() => tryBuildUnit(player.id, unit));
-            }
-        });
-    Object.values(Data.hotKeys[player.id].upgrades)
-        .forEach(upgradeId => {
-            if (canUpgrade(player.id, upgradeId)) {
-                botActions.push(() => tryUpgrade(player.id, upgradeId));
-            }
-        });
-    if (botActions.length > 0) {
-        const action = randFromArray(botActions);
-        if (!action()) {
+    let botAction = null;
+    switch (player.botState.strategy) {
+        case BOT.RANDOM:
+            botAction = botRandomAction(player, timeDeltaMs);
+            player.botState.actionTimer += 2000;
+            break;
+        case BOT.AGGRO:
+            botAction = botAggroAction(player, timeDeltaMs);
+            player.botState.actionTimer += 1000;
+            break;
+        /*case BOT.ECO:
+            botEcoAction(player, timeDeltaMs);
+            break;
+        case BOT.TECH:
+            botTechAction(player, timeDeltaMs);
+            break;*/
+    }
+    if (botAction != null) {
+        if (!botAction()) {
             console.error("bot failed action");
-        };
+        }
     } else {
-        console.log("no actions");
+        console.log("bot no action");
     }
 }
 

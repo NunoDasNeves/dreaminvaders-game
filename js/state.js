@@ -331,6 +331,11 @@ export const PLAYER_CONTROLLER = Object.freeze({
     BOT: 1,
 });
 
+export const BOT = Object.freeze({
+    RANDOM: 0,
+    AGGRO: 1
+});
+
 function addPlayer(name, controller, pos, team, colorIdx)
 {
     const id = gameState.players.length;
@@ -367,6 +372,7 @@ function addPlayer(name, controller, pos, team, colorIdx)
         staticDCd: 0,
         botState: {
             actionTimer: 0,
+            strategy: BOT.AGGRO,
         },
     });
     return id;
