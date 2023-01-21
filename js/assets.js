@@ -49,6 +49,11 @@ const imageData = {
         width: 64,
         height: 64,
     },
+    tower: {
+        filename: "tower.png",
+        width: 32,
+        height: 32,
+    },
 };
 
 const sfxDefaultVolume = 0.7; // 0-1
