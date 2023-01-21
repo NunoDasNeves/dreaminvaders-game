@@ -64,7 +64,7 @@ export const params = Object.freeze(
             dreamerGoldPerSec: 0.5,
             staticDCdMs: 1000,
             staticDRange: 650,
-            staticDDamage: 8,
+            staticDDamage: 5,
             staticDRadius: 10,
         }
         obj.laneDistFromBase = obj.islandRadius - 50;

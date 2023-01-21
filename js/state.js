@@ -440,7 +440,7 @@ export function initGameState(gameConfig)
     gameState.bridges = [];
     gameState.localPlayerId = 0;
     gameState.mouseEnabled = true;
-    gameState.automaticStaticD = false;
+    gameState.automaticStaticD = true;
     gameState.input = makeInput();
     gameState.lastInput = makeInput();
     if (gameConfig.players[0].controller == PLAYER_CONTROLLER.LOCAL_HUMAN &&
