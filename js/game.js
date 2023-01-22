@@ -680,12 +680,20 @@ function doWeaponHit(i)
             spawnVFXExplosion(atkState[i].aoeHitPos, weapon.aoeRadius, 300);
             break;
         }
+        case UNIT.TOWER:
+        {
+            if (canAttackTarget(i) && atkState[i].didHit) {
+                unitHitUnit(i, t);
+                spawnVFXExplosion(atkState[i].aoeHitPos, weapon.aoeRadius, 300);
+            }
+            break;
+        }
     }
 }
 
 function startWeaponSwing(i)
 {
-    const { exists, team, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
+    const { exists, team, playerId, unit, hp, pos, vel, angle, angVel, state, lane, target, atkState, physState } = gameState.entities;
     console.assert(atkState[i].state == ATKSTATE.SWING);
     const t = target[i].getIndex();
     console.assert(t != INVALID_ENTITY_INDEX);
@@ -712,6 +720,20 @@ function startWeaponSwing(i)
             const hitPos = vecAdd(targetPos, offVec);
             atkState[i].aoeHitPos = hitPos;
             spawnVFXBigEyeBeam(i, vecClone(hitPos));
+            break;
+        }
+        case UNIT.TOWER:
+        {
+            const player = gameState.players[playerId[i]];
+            const hitPos = vecClone(pos[t]);
+            atkState[i].didHit = canAttackTarget(i) && (!atkState[i].didHit || Math.random() > weapon.missChance);
+            if (!atkState[i].didHit) {
+                const offDist = unit[t].radius + weapon.aoeRadius + weapon.aoeMissRadius * Math.random();
+                const offVec = vecMulBy(vecRandDir(), offDist);
+                vecAddTo(hitPos, offVec);
+            }
+            atkState[i].aoeHitPos = hitPos;
+            spawnVFXStaticDBeam(pos[i], hitPos, player.color);
             break;
         }
     }
@@ -1040,6 +1062,12 @@ export function tryUpgrade(playerId, upgradeId)
     const cost = upgrade.goldCost[newLevel];
     player.gold -= cost;
     playSfx(upgrade.sfxName);
+    if (upgradeId == UPGRADE.TOWER) {
+        const { pos } = gameState.entities;
+        const unit = units[UNIT.TOWER];
+        const lightPos = vecAdd(pos[player.island.idx], vec(0,-148));
+        spawnUnitForPlayer(lightPos, playerId, unit);
+    }
     return true;
 }
 

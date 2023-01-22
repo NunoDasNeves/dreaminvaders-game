@@ -253,6 +253,13 @@ const unitSpriteData = [
                 frames: 3,
                 frameDur: 200,
             },
+            [ANIM.ATK]: {
+                row: 1,
+                frames: 3,
+                frameDur: 200,
+                swingTime: 0,
+                hitTime: 100,
+            },
         }
     },
 ];
@@ -297,10 +304,16 @@ const weaponData = [
         sfxName: 'tankAtk',
     },{
         id: UNIT.TOWER,
-        staticDCdMs: 1000,
+        // TODO use these
+        atkMs: 1000, // total time taken to attack - should agree with anim
+        swingTime: 0, // 'swing' start time
+        hitTime: 100, // hit time
+        //
         range: 650,
         damage: 5,
         missChance: 0.1,
+        aoeRadius: 10, // looks like AOE but is actually single target
+        aoeMissRadius: 30,
         sfxName: 'staticDatk',
     },
 ];
@@ -376,8 +389,12 @@ const unitData = [
         unlockCost: 17,
     },{
         id: UNIT.TOWER,
+        maxSpeed: 0,
+        accel: 0,
+        angSpeed: 0,
         maxHp: 1,
         radius: 1,
+        defaultAiState: AISTATE.IDLE,
         collides: false,
         canFall: false,
         sightRange: 650,
