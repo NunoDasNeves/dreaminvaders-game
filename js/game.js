@@ -79,30 +79,34 @@ function nearestUnit(i, minRange, filterFn)
 function canChaseOrAttack(myIdx, theirIdx)
 {
     const { unit, pos, team, playerId, lane, laneIdx, hitState } = gameState.entities;
-    if (hitState[theirIdx].state != HITSTATE.ALIVE) {
-        return false;
-    }
-    if (team[myIdx] == team[theirIdx]) {
+    // only units can attack/chase each other
+    if (!entityExists(myIdx, ENTITY.UNIT) || !entityExists(theirIdx, ENTITY.UNIT)) {
         return false;
     }
     // ignore bases
     if (unit[theirIdx].id == UNIT.BASE) {
         return false;
     }
+    if (hitState[theirIdx].state != HITSTATE.ALIVE) {
+        return false;
+    }
+    if (team[myIdx] == team[theirIdx]) {
+        return false;
+    }
     // ignore if they're already too far into our island
-    if (playerId[myIdx] != null) {
+    if (playerId[myIdx] != null && laneIdx[myIdx] != null) {
         const myIsland = gameState.islands[playerId[myIdx]];
         if (    getDist(pos[theirIdx], myIsland.pos) < params.laneDistFromBase &&
                 getDist(pos[theirIdx], lane[myIdx].spawnPos) > params.spawnPlatRadius) {
             return false;
         }
     }
+    // ignore units in other lanes
     if (laneIdx[myIdx] != null && laneIdx[theirIdx] != null) {
         if (laneIdx[theirIdx] != laneIdx[myIdx]) {
             return false;
         }
     }
-
     return true;
 }
 
