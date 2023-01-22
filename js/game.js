@@ -659,7 +659,7 @@ function doWeaponHit(i)
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
                 unitHitUnit(i, t);
-                spawnVFXExplosion(pos[t], 8, 300);
+                spawnVFXExplosion(pos[t], weapon.aoeRadius, 300);
             }
             break;
         }

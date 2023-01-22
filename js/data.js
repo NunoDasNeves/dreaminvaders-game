@@ -293,6 +293,7 @@ const weaponData = [
         damage: 25,
         armorPen: 2,
         missChance: 0.1,
+        aoeRadius: 10, // looks like AOE but is actually single target
         sfxName: 'tankAtk',
     },{
         id: UNIT.TOWER,
