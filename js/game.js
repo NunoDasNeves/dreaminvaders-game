@@ -329,6 +329,7 @@ function updateAiState()
         switch (aiState[i].state) {
             case AISTATE.IDLE: {
                 decel(i);
+                playUnitAnim(i, ANIM.IDLE);
                 break;
             }
             case AISTATE.PROCEED:
