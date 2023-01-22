@@ -271,8 +271,7 @@ function updateAiState()
             case AISTATE.PROCEED:
             {
                 if (distToEnemyLighthouse < unit[i].radius) {
-                    aiState[i].state = AISTATE.DO_NOTHING;
-                    vecClear(vel[i]); // instantly stop
+                    aiState[i].state = AISTATE.IDLE;
                     break;
                 }
                 if (distToEnemyIsland < (params.laneDistFromBase + params.spawnPlatRadius)) {
@@ -298,7 +297,7 @@ function updateAiState()
                     target[i] = nearestChaseTarget;
                 // otherwise... continue on
                 } else {
-                    aiState[i].state = AISTATE.PROCEED;
+                    aiState[i].state = unit[i].defaultAiState;
                 }
                 break;
             }
@@ -320,7 +319,7 @@ function updateAiState()
                         target[i] = nearestChaseTarget;
 
                     } else {
-                        aiState[i].state = AISTATE.PROCEED;
+                        aiState[i].state = unit[i].defaultAiState;
                     }
                 }
                 break;
