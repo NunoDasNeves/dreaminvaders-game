@@ -248,7 +248,7 @@ function updateAiState()
         }
         const player = gameState.players[playerId[i]];
         // assumption all lanes lead to same enemy for units without a lane
-        const laneToEnemy = lane[i] != null ? lane[i] || player.island.lanes[0];
+        const laneToEnemy = lane[i] != null ? lane[i] : player.island.lanes[0];
         const enemyIsland = gameState.players[laneToEnemy.otherPlayerIdx].island;
         const enemyLighthousePos = pos[enemyIsland.idx];
         const distToEnemyIsland = getDist(pos[i], enemyIsland.pos);
