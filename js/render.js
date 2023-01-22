@@ -432,19 +432,91 @@ function dotPoints(arr, radius, fillStyle)
     }
 }
 
+function drawUnderBridge(laneIdx)
+{
+    const underColor = "rgb(50,50,50)";
+    const bridge = gameState.bridges[laneIdx];
+    const bridgePointsR2L = bridge.playerLanes[1].bridgePoints.map(vecClone);
+    const bridgeUnderPoints = bridgePointsR2L.map(vecClone);
+    const bridgeThickness = 55 + laneIdx*14;
+    const bridgeArchHeight = 300;
+    bridgeUnderPoints.unshift(vecAdd(bridgeUnderPoints[0], vec(0, bridgeThickness + bridgeArchHeight)));
+    bridgeUnderPoints.push(vecAdd(bridgeUnderPoints[bridgeUnderPoints.length - 1], vec(0, bridgeThickness + bridgeArchHeight)));
+    const archPointsOnBez = [
+        vecClone(bridgePointsR2L[bridgePointsR2L.length - 2]),
+        cubicBezierPoint(bridge.bezierPoints, 0.48),
+        cubicBezierPoint(bridge.bezierPoints, 0.52),
+        vecClone(bridgePointsR2L[1]),
+    ].map(v => vecAddTo(v, vec(0, bridgeThickness)));
+    // get the midpoints by average
+    const archMidPoints = [
+        vecMulBy(vecAdd(archPointsOnBez[0], archPointsOnBez[1]), 0.5),
+        vecMulBy(vecAdd(archPointsOnBez[2], archPointsOnBez[3]), 0.5),
+    ];
+
+    const archBez = [
+        [
+            vecAdd(archPointsOnBez[0], vec(0, bridgeArchHeight)),
+            archPointsOnBez[0],
+            archPointsOnBez[0],
+            archMidPoints[0],
+        ],[
+            archMidPoints[0],
+            archPointsOnBez[1],
+            archPointsOnBez[1],
+            vecAdd(archPointsOnBez[1], vec(0, bridgeArchHeight)),
+        ],[
+            vecAdd(archPointsOnBez[2], vec(0, bridgeArchHeight)),
+            archPointsOnBez[2],
+            archPointsOnBez[2],
+            archMidPoints[1],
+        ],[
+            archMidPoints[1],
+            archPointsOnBez[3],
+            archPointsOnBez[3],
+            vecAdd(archPointsOnBez[3], vec(0, bridgeArchHeight)),
+        ],
+    ];
+
+    context.beginPath();
+    const startPoint = worldVecToCamera(vec(bridgeUnderPoints[0].x, bridgeUnderPoints[0].y));
+    context.moveTo(startPoint.x, startPoint.y);
+    for (const point of bridgeUnderPoints) {
+        const coord = worldVecToCamera(point);
+        context.lineTo(coord.x, coord.y);
+    }
+    for (const archBezArr of archBez) {
+        const bezArr = archBezArr.map(worldVecToCamera);
+        context.lineTo(bezArr[0].x, bezArr[0].y);
+        context.bezierCurveTo(bezArr[1].x, bezArr[1].y, bezArr[2].x, bezArr[2].y, bezArr[3].x, bezArr[3].y);
+    }
+    const gradStartY = worldVecToCamera(archPointsOnBez[0]).y;
+    const gradEndY = worldVecToCamera(archBez[1][3]).y - 150;
+    const grad = context.createLinearGradient(0, gradStartY, 0, gradEndY);
+    grad.addColorStop(1, "#0000");
+    grad.addColorStop(0, underColor);
+    context.fillStyle = grad;
+    context.fill();
+
+    //dotPoints(bridgePointsR2L, 3, 'purple');
+    //dotPoints(archPointsOnBez, 3, 'yellow');
+    //dotPoints(archMidPoints, 3, 'cyan');
+}
+
 function drawBridge(laneIdx, hovered)
 {
     const bridge = gameState.bridges[laneIdx];
-    // lanes; bezier curves
+    const bezPoints = bridge.bezierPoints.map(worldVecToCamera);
+
     context.setLineDash([]);
     context.lineWidth = params.laneWidth / gameState.camera.scale;
     context.strokeStyle = params.laneColor;
     context.beginPath();
-    const bezPoints = bridge.bezierPoints.map(v => worldVecToCamera(v));
     context.moveTo(bezPoints[0].x, bezPoints[0].y);
     context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
     context.stroke();
 
+    // spawn platforms
     fillCircleWorld(context, bridge.playerLanes[0].spawnPos, params.spawnPlatRadius, hovered ? params.laneHoveredColor : params.laneColor);
     fillCircleWorld(context, bridge.playerLanes[1].spawnPos, params.spawnPlatRadius, params.laneColor);
 
@@ -484,6 +556,10 @@ export function draw(realTimeMs, timeDeltaMs)
     bgGradient.addColorStop(1, params.backgroundGradientTop);
     context.fillStyle = bgGradient;
     context.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < gameState.bridges.length; ++i) {
+        drawUnderBridge(i);
+    }
 
     for (const [team, base] of Object.entries(gameState.islands)) {
         drawIsland(team, base);
