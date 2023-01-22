@@ -240,6 +240,7 @@ function drawText(string, worldPos, sizePx, fillStyle, stroke=false, align='cent
     fillTextWorld(context, string, worldPos, sizePx, fillStyle, align);
 }
 
+// TODO this is really drawDebugWeapon - currently does nothing without debug draw enabled
 function drawWeapon(i)
 {
     const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
