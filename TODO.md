@@ -38,6 +38,7 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- make tower a unit with weapon instead of special case
 - make tower an upgrade
 - refactor animation system/status - dont do special stuff for atk except hold some data for when swing is, hit, etc..
 - basic/rough slime tank anims
