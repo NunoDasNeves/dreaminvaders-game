@@ -237,7 +237,7 @@ function startAtk(i, targetRef)
 
 function updateAiState()
 {
-    const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
+    const { exists, team, playerId, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.UNIT)) {
@@ -246,7 +246,10 @@ function updateAiState()
         if (aiState[i].state == AISTATE.DO_NOTHING) {
             continue;
         }
-        const enemyIsland = gameState.players[lane[i].otherPlayerIdx].island;
+        const player = gameState.players[playerId[i]];
+        // assumption all lanes lead to same enemy for units without a lane
+        const laneToEnemy = lane[i] != null ? lane[i] || player.island.lanes[0];
+        const enemyIsland = gameState.players[laneToEnemy.otherPlayerIdx].island;
         const enemyLighthousePos = pos[enemyIsland.idx];
         const distToEnemyIsland = getDist(pos[i], enemyIsland.pos);
         const toEnemyLighthouse = vecSub(enemyLighthousePos, pos[i]);
@@ -255,11 +258,21 @@ function updateAiState()
         const nearestChaseTarget = nearestEnemyInSightRange(i);
         const weapon = getUnitWeapon(unit[i]);
         switch (aiState[i].state) {
+            case AISTATE.IDLE:
+            {
+                if (nearestAtkTarget.isValid()) {
+                    startAtk(i, nearestAtkTarget);
+                } else if (nearestChaseTarget.isValid()) {
+                    aiState[i].state = AISTATE.CHASE;
+                    target[i] = nearestChaseTarget;
+                }
+                break;
+            }
             case AISTATE.PROCEED:
             {
                 if (distToEnemyLighthouse < unit[i].radius) {
                     aiState[i].state = AISTATE.DO_NOTHING;
-                    decel(i); // stand still
+                    vecClear(vel[i]); // instantly stop
                     break;
                 }
                 if (distToEnemyIsland < (params.laneDistFromBase + params.spawnPlatRadius)) {
@@ -315,8 +328,13 @@ function updateAiState()
         }
         // make decisions based on state
         switch (aiState[i].state) {
+            case AISTATE.IDLE: {
+                decel(i);
+                break;
+            }
             case AISTATE.PROCEED:
             {
+                // TODO assumes lane[i] is not null
                 const bridgePoints = lane[i].bridgePoints;
                 const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
                 let currIdx = baseIdx;
