@@ -915,8 +915,6 @@ function updatePlayerState(timeDeltaMs)
             const newVal = player.unitCds[unitId] - timeDeltaMs;
             player.unitCds[unitId] = Math.max(newVal, 0);
         }
-        const newStaticDCd = player.staticDCd - timeDeltaMs;
-        player.staticDCd = Math.max(newStaticDCd, 0);
     }
 }
 
@@ -947,48 +945,6 @@ function playSfx(name)
         audio.volume = asset.volume;
         audio.play();
     }
-}
-
-export function canFireStaticD(playerId)
-{
-    const player = gameState.players[playerId];
-    if (player.staticDCd <= 0) {
-        return true;
-    }
-    return false;
-}
-
-export function tryFireStaticD(playerId, targetPos)
-{
-    if (!canFireStaticD(playerId)) {
-        return false;
-    }
-    const { pos, team, hitState, hp, unit } = gameState.entities;
-    const player = gameState.players[playerId];
-    player.staticDCd = params.staticDCdMs;
-    const lighthousePos = pos[player.island.idx];
-    const lighthouseToPoint = vecSub(targetPos, lighthousePos);
-    vecClampMag(lighthouseToPoint, 0, params.staticDRange);
-    const point = vecAdd(lighthousePos, lighthouseToPoint);
-    const ref = nearestUnitToPos(point, params.staticDRadius, (i) => team[i] != player.team && hitState[i].state == HITSTATE.ALIVE );
-    const t = ref.getIndex();
-    if (t != INVALID_ENTITY_INDEX) {
-        hitUnit(t, params.staticDDamage);
-        // last hit
-        if (hp[t] <= 0) {
-            const gold = Math.floor(unit[t].goldCost/2.5);
-            player.gold += gold;
-            player.goldFromLastHit += gold;
-            player.goldEarned += gold;
-            spawnVFXLastHitText(`+$${gold}`, point, 20, player.color);
-        }
-    }
-    spawnVFXStaticDBeam(vecAdd(lighthousePos, vec(0, -148)), point, player.color);
-    playSfx('staticDatk');
-    setTimeout(() => {
-        spawnVFXExplosion(point, 8, 300);
-    }, 100);
-    return true;
 }
 
 export function canBuildUnit(playerId, unit)
@@ -1184,18 +1140,6 @@ function updatePlayersActionsAndUI(timeDeltaMs)
         // don't let bot play while paused
         if (!debug.paused && player.controller == PLAYER_CONTROLLER.BOT) {
             updateBotPlayer(player, timeDeltaMs);
-        }
-        if (player.upgradeLevels[UPGRADE.TOWER] >= 0) {
-            const { pos, team, hitState } = gameState.entities;
-            const lighthousePos = pos[player.island.idx];
-            const ref = nearestUnitToPos(lighthousePos,
-                                         params.staticDRange,
-                                         (i) => team[i] != player.team && hitState[i].state == HITSTATE.ALIVE );
-            if (ref.isValid()) {
-                const targetPos = vecClone(pos[ref.getIndex()]);
-                vecAddTo(targetPos, vecMulBy(vecRand(), params.staticDRadius * 2));
-                tryFireStaticD(player.id, targetPos);
-            }
         }
     }
 }

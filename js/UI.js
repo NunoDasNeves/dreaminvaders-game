@@ -290,7 +290,7 @@ export function doPlayerUI(player)
     yOff += lhHpHeight;
 
     // energy bar/staticD cooldown
-    {
+    /*{
         const time = player.staticDCd;
         const cd = params.staticDCdMs;
         const f = clamp(1 - time/cd, 0, 1);
@@ -299,10 +299,7 @@ export function doPlayerUI(player)
         const redWidth = energyMaxWidth * (1 - f);
         fillRectScreen(context, vec(xOff, yOff), vec(energyWidth, energyHeight), player.color);
         fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, energyHeight), '#000000');
-        if (time <= 0) {
-            drawTextScreen('[spacebar]', vecAdd(vec(xOff, yOff), vec(energyMaxWidth/2, 0)), '12px sans-serif', 'white', true, 'center', 'top');
-        }
-    }
+    }*/
 
     // lane indicators and hotkeys
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
@@ -382,10 +379,6 @@ export function processMouseInput()
             debug.clickedPoint = vecClone(gameState.input.mousePos);
             debug.closestLanePoint = minStuff.point;
         }
-    }
-    if (keyPressed(' ')) {
-        const mousePoint = vecClone(gameState.input.mousePos);
-        Game.tryFireStaticD(localPlayer.id, mousePoint);
     }
 }
 

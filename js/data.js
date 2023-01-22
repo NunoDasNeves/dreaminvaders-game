@@ -67,10 +67,6 @@ export const params = Object.freeze(
             startingGold: 10,
             startingGoldPerSec: 1,
             dreamerGoldPerSec: 0.5,
-            staticDCdMs: 1000,
-            staticDRange: 650,
-            staticDDamage: 5,
-            staticDRadius: 10,
         }
         obj.laneDistFromBase = obj.islandRadius - 50;
         obj.spawnPlatRadius = obj.laneWidth * 0.75;
