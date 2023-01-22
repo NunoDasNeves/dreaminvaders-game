@@ -458,8 +458,8 @@ export function initGameState(gameConfig)
     gameState.islands = islands;
     const islandPos = islands.map(island => island.pos);
     const lighthouseOffsets = [
-        vec(-50, -25),
-        vec(50, -25),
+        vec(params.lighthouseOffsetX, params.lighthouseOffsetY),
+        vec(-params.lighthouseOffsetX, params.lighthouseOffsetY),
     ];
     const lighthousePos = [
         vecAdd(islandPos[0], lighthouseOffsets[0]),

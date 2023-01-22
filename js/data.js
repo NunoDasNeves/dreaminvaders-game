@@ -50,8 +50,13 @@ export const params = Object.freeze(
             laneSelectDist: 80,
             pathWidth: 40,
             pathColor: "#443322",
-            lighthouseRadius: 50,
             islandRadius: 200,
+            lighthouseRadius: 50,
+            // where to put center of lighthouse
+            lighthouseOffsetX: -50,
+            lighthouseOffsetY: -25,
+            // where to put the light
+            lightHouseLightOffsetY: -148,
             neutralColor: "#dfdfdf",
             playerColors: [ "#ff9933", "#3399ff" ],
             hpBarTimeMs: 2000,
