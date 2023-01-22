@@ -89,10 +89,9 @@ export const AISTATE = Object.freeze({
     ATTACK: 3,
 });
 export const ATKSTATE = Object.freeze({
-    NONE: 0,
-    AIM: 1,
-    SWING: 2,
-    RECOVER: 3,
+    AIM: 0,
+    SWING: 1,
+    RECOVER: 2,
 });
 export const HITSTATE = Object.freeze({
     ALIVE: 0,

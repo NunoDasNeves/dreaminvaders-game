@@ -244,13 +244,15 @@ function drawWeapon(i)
 {
     const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
     const weapon = getUnitWeapon(unit[i]);
-    if (atkState[i] == ATKSTATE.NONE || weapon.id <= UNIT.BASE) {
+    if (aiState[i].state != AISTATE.ATK) {
         return;
     }
 
     switch(weapon.id) {
-        case (UNIT.CHOGORINGU):
-        case (UNIT.TANK):
+        case UNIT.BASE:
+            break;
+        case UNIT.CHOGORINGU:
+        case UNIT.TANK:
         {
             if (!debug.drawUI || !debug.drawSwing) {
                 break;

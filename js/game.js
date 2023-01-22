@@ -367,7 +367,6 @@ function updateAiState()
                     accelAwayFromEdge(i);
                 }
                 target[i].invalidate();
-                atkState[i].state = ATKSTATE.NONE;
                 playUnitAnim(i, ANIM.WALK);
                 break;
             }
@@ -562,7 +561,6 @@ function updateHitState(timeDeltaMs)
                     hitState[i].deadTimer = params.deathTimeMs;
                     hitState[i].state = HITSTATE.DEAD;
                     aiState[i].state = AISTATE.DO_NOTHING;
-                    atkState[i].state = ATKSTATE.NONE;
                     physState[i].canCollide = false;
                     vecClear(vel[i]);
                     vecClear(accel[i]);
@@ -581,7 +579,6 @@ function updateHitState(timeDeltaMs)
                         hitState[i].deadTimer = params.fallTimeMs; // same as fall time!
                         hitState[i].state = HITSTATE.DEAD;
                         aiState[i].state = AISTATE.DO_NOTHING;
-                        atkState[i].state = ATKSTATE.NONE;
                         physState[i].canCollide = false;
                         vecClear(vel[i]);
                         vecClear(accel[i]);
@@ -726,15 +723,15 @@ function updateAtkState(timeDeltaMs)
 {
     forAllUnits((i) => {
         const unit = gameState.entities.unit[i];
+        const aiState = gameState.entities.aiState[i];
+        if (aiState.state != AISTATE.ATTACK) {
+            return;
+        }
         const atkState = gameState.entities.atkState[i];
         const animState = gameState.entities.animState[i];
         const attackAnim = getUnitAnim(unit, ANIM.ATK);
 
         switch (atkState.state) {
-            case ATKSTATE.NONE:
-            {
-                break;
-            }
             case ATKSTATE.AIM:
             {
                 if (animState.timer >= attackAnim.swingTime) {

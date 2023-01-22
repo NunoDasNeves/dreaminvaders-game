@@ -272,7 +272,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
         state: unit[idx].defaultAiState
     };
     atkState[idx]   = {
-        state: ATKSTATE.NONE,
+        state: ATKSTATE.AIM,
     };
     hitState[idx]   = {
         state: HITSTATE.ALIVE,
