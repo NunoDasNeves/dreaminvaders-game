@@ -289,6 +289,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
         canCollide: unit[idx].collides,
         colliding: false,
         canFall: unit[idx].canFall,
+        collRadius: unit[idx].radius,
     };
     animState[idx]  = {
         anim: ANIM.IDLE,

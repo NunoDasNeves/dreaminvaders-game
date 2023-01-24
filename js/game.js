@@ -158,7 +158,7 @@ function getCollidingWith(i)
             continue;
         }
         const dist = getDist(pos[i], pos[j]);
-        if (dist < unit[i].radius + unit[j].radius) {
+        if (dist < physState[i].collRadius + physState[j].collRadius) {
             colls.push(j);
         }
     }
@@ -185,7 +185,7 @@ function updateAllCollidingPairs(pairs)
                 continue;
             }
             const dist = getDist(pos[i], pos[j]);
-            if (dist < unit[i].radius + unit[j].radius) {
+            if (dist < physState[i].collRadius + physState[j].collRadius) {
                 pairs.push([i, j]);
             }
         }
@@ -422,13 +422,13 @@ function updateAiState()
 
 function updatePhysicsState()
 {
-    const { exists, team, unit, hp, pos, vel, maxVel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState, debugState } = gameState.entities;
+    const { exists, team, hp, pos, vel, maxVel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState, debugState } = gameState.entities;
 
     // very simple collisions, just reset position
     const pairs = [];
     // move, collide
     for (let i = 0; i < exists.length; ++i) {
-        if (!entityExists(i, ENTITY.UNIT)) {
+        if (!(exists[i] && pos[i] != null && physState[i] != null && vel[i] != null && accel[i] != null && maxVel[i] != null)) {
             continue;
         }
         physState[i].colliding = false;
@@ -437,7 +437,9 @@ function updatePhysicsState()
         if (vecAlmostZero(vel[i])) {
             vecClear(vel[i]);
         }
-        debugState[i].velPreColl = vecClone(vel[i]);
+        if (debugState[i] != null) {
+            debugState[i].velPreColl = vecClone(vel[i]);
+        }
         vecAddTo(pos[i], vel[i]);
     };
 
@@ -462,8 +464,10 @@ function updatePhysicsState()
             velif = veliLen / velSum;
             veljf = veljLen / velSum;
         }
-        const correctioni = (unit[i].radius + unit[j].radius - len) * velif;
-        const correctionj = (unit[i].radius + unit[j].radius - len) * veljf;
+        const radiusi = physState[i].collRadius;
+        const radiusj = physState[j].collRadius;
+        const correctioni = (radiusi + radiusi - len) * velif;
+        const correctionj = (radiusj + radiusj - len) * veljf;
         const corrPos = vecMul(dir, correctionj);
         const dirNeg = vecMul(dir, -1);
         const corrNeg = vecMul(dirNeg, correctioni);
@@ -485,7 +489,7 @@ function updatePhysicsState()
 
     // rotate to face vel
     for (let i = 0; i < exists.length; ++i) {
-        if (!entityExists(i, ENTITY.UNIT)) {
+        if (!(exists[i] && vel[i] != null && angle[i] != null)) {
             continue;
         }
         if (vecLen(vel[i]) > params.minUnitVelocity) {
