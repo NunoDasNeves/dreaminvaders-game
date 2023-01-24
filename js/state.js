@@ -93,7 +93,9 @@ const entityDefaults = Object.freeze({
     hp: null,
     pos: null,
     vel: null,
+    maxVel: null,
     accel: null,
+    maxAccel: null,
     angle: null,
     angVel: null,
     target: null,
@@ -243,7 +245,7 @@ export function spawnVFXExplosion(aPos, radius, timeMs)
 
 export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland = null, aLaneIdx = null)
 {
-    const { homeIsland, team, color, playerId, unit, hp, pos, vel, accel, angle, angVel, target, lane, laneIdx, atkState, aiState, physState, hitState, animState, debugState } = gameState.entities;
+    const { homeIsland, team, color, playerId, unit, hp, pos, vel, maxVel, accel, maxAccel, angle, angVel, target, lane, laneIdx, atkState, aiState, physState, hitState, animState, debugState } = gameState.entities;
 
     if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
@@ -260,7 +262,9 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     hp[idx]         = aUnit.maxHp;
     pos[idx]        = vecClone(aPos);
     vel[idx]        = vec();
-    accel[idx]      = vec(); // not used yet
+    maxVel[idx]     = unit[idx].maxSpeed;
+    accel[idx]      = vec();
+    maxAccel[idx]   = unit[idx].accel;
     angle[idx]      = 0;
     angVel[idx]     = 0; // not used yet
     // possibly lane, and probably target, should be in aiState
