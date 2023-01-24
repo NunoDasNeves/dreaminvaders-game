@@ -491,7 +491,7 @@ function drawUnderBridge(laneIdx)
         context.bezierCurveTo(bezArr[1].x, bezArr[1].y, bezArr[2].x, bezArr[2].y, bezArr[3].x, bezArr[3].y);
     }
     const gradStartY = worldVecToCamera(archPointsOnBez[0]).y;
-    const gradEndY = worldVecToCamera(archBez[1][3]).y - 150;
+    const gradEndY = worldVecToCamera(vecAdd(archBez[1][3], vec(0, -150))).y;
     const grad = context.createLinearGradient(0, gradStartY, 0, gradEndY);
     grad.addColorStop(1, "#0000");
     grad.addColorStop(0, underColor);
