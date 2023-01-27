@@ -341,12 +341,13 @@ export const BOT = Object.freeze({
     AGGRO: 1
 });
 
-function addPlayer(name, controller, pos, team, colorIdx)
+function addPlayer({name, controller}, pos, team, colorIdx)
 {
     const id = gameState.players.length;
     gameState.players.push({
         name,
         controller,
+        mouseEnabled: false,
         laneSelected: 0,
         laneHovered: -1,
         id,
@@ -445,15 +446,16 @@ export function initGameState(gameConfig)
     gameState.islands = [];
     gameState.bridges = [];
     gameState.localPlayerId = 0;
-    gameState.mouseEnabled = true;
     gameState.input = makeInput();
     gameState.lastInput = makeInput();
-    if (gameConfig.players[0].controller == PLAYER_CONTROLLER.LOCAL_HUMAN &&
-        gameConfig.players[1].controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
-        gameState.mouseEnabled = false;
+    const playerConfigs = gameConfig.players;
+    addPlayer(playerConfigs[0], vec(-600, 0), 0, 0);
+    addPlayer(playerConfigs[1], vec(600, 0), 1, 1);
+    if (playerConfigs[0].controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+        if (playerConfigs[1].controller != PLAYER_CONTROLLER.LOCAL_HUMAN) {
+            gameState.players[0].mouseEnabled = true;
+        }
     }
-    addPlayer(gameConfig.players[0].name, gameConfig.players[0].controller, vec(-600, 0), 0, 0);
-    addPlayer(gameConfig.players[1].name, gameConfig.players[1].controller, vec(600, 0), 1, 1);
     // compute the lane start and end points (bezier curves)
     // line segements approximating the curve (for gameplay code) + paths to the lighthouse
     // NOTE: assumes 2 players, PLAYER.ONE on the left, PLAYER.TWO on the right

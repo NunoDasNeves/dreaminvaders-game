@@ -74,7 +74,7 @@ function pressedButton(player, pos, dims, key)
     let hover = false;
     let press = false;
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
-        if (gameState.mouseEnabled) {
+        if (player.mouseEnabled) {
             if (pointInAABB(gameState.input.mouseScreenPos, pos, dims)) {
                 if (mouseLeftPressed()) {
                     press = true;
@@ -386,13 +386,13 @@ export function processMouseInput()
             minStuff = stuff;
         }
     }
-    if (gameState.mouseEnabled) {
+    if (localPlayer.mouseEnabled) {
         if (minDist < params.laneSelectDist) {
             localPlayer.laneHovered = minLane;
         }
     }
     if (mouseLeftPressed()) {
-        if (gameState.mouseEnabled) {
+        if (localPlayer.mouseEnabled) {
             if (localPlayer.laneHovered >= 0) {
                 localPlayer.laneSelected = localPlayer.laneHovered;
             }
