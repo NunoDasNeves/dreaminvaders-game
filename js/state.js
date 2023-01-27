@@ -355,7 +355,7 @@ function addPlayer(name, controller, pos, team, colorIdx)
         team,
         souls: 0,
         soulsFromUnitsKilled: 0,
-        soulsFromLighthouseHits: 0,
+        soulsFromLighthouse: 0,
         soulsEarned: 0,
         gold: params.startingGold,
         goldPerSec: params.startingGoldPerSec,

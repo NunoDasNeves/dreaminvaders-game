@@ -93,10 +93,10 @@ function pressedButton(player, pos, dims, key)
 function upgradeButton(player, pos, dims, key, upgrade)
 {
     const level = player.upgradeLevels[upgrade.id];
-    const maxLevel = upgrade.goldCost.length - 1;
+    const maxLevel = upgrade.soulsCost.length - 1;
     const isMax = level >= maxLevel;
-    const cost = isMax ? Infinity : upgrade.goldCost[level + 1];
-    const canAfford = player.gold >= cost;
+    const cost = isMax ? Infinity : upgrade.soulsCost[level + 1];
+    const canAfford = player.souls >= cost;
     const canPress = canAfford;
     const buttonFontSz = 20;
     const buttonFont = `${buttonFontSz}px sans-serif`;
@@ -134,7 +134,7 @@ function upgradeButton(player, pos, dims, key, upgrade)
             fillRectScreen(context, pos, dims, overlayColor, 10);
             costColor = '#ff7744';
         }
-        drawTextScreen(`$${cost}`, costPos, buttonFont, costColor, true);
+        drawTextScreen(`${cost}`, costPos, buttonFont, params.soulsTextColor, true);
     }
 }
 
@@ -249,8 +249,7 @@ export function doPlayerUI(player)
     // souls
     const soulsStart = vec(xOff, yOff);
     const soulsText = `${player.souls}`;
-    const soulsColor = '#86f';
-    drawTextScreen(soulsText, soulsStart, goldFont, soulsColor, true, 'left', 'top');
+    drawTextScreen(soulsText, soulsStart, goldFont, params.soulsTextColor, true, 'left', 'top');
 
     // gold + souls income
     if (debug.drawUI) {
@@ -265,10 +264,10 @@ export function doPlayerUI(player)
             vecAddTo(strPos, lineOffset);
         }
         str = ''
-        str += `lighthouse hit:  ${player.soulsFromLighthouseHit}\n`;
+        str += `lighthouse hit:  ${player.soulsFromLighthouse}\n`;
         str += `units killed:    ${player.soulsFromUnitsKilled}\n`;
         for (const s of str.split('\n')) {
-            drawTextScreen(s, strPos, goldFontSmol, player.color, true, 'left', 'top');
+            drawTextScreen(s, strPos, goldFontSmol, params.soulsTextColor, true, 'left', 'top');
             vecAddTo(strPos, lineOffset);
         }
     }
@@ -422,6 +421,14 @@ const debugHotKeys = [
         key: 'm',
         fn: () => {gameState.players[1].gold += 100},
         text: '+100 gold to player 1',
+    }, {
+        key: 'j',
+        fn: () => {gameState.players[0].souls += 10},
+        text: '+10 souls to player 0',
+    }, {
+        key: 'k',
+        fn: () => {gameState.players[1].souls += 10},
+        text: '+10 souls to player 1',
     },
 ];
 

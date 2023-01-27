@@ -67,6 +67,7 @@ export const params = Object.freeze(
             startingGold: 10,
             startingGoldPerSec: 1,
             dreamerGoldPerSec: 0.5,
+            soulsTextColor: "#86f",
         }
         obj.laneDistFromBase = obj.islandRadius - 50;
         obj.spawnPlatRadius = obj.laneWidth * 0.75;
@@ -448,17 +449,18 @@ export const UPGRADE = Object.freeze({
 export const upgrades = Object.freeze({
     [UPGRADE.TOWER]: {
         id: UPGRADE.TOWER,
-        goldCost: [15],
+        soulsCost: [10],
         sfxName: 'upgradeTower',
     },
     [UPGRADE.ECO]: {
         id: UPGRADE.ECO,
-        goldCost: [15, 20, 30],
+        soulsCost: [10, 10, 10],
         goldPerSecBonus: [0.25,0.75,1.5],
         sfxName: 'upgradeEco',
     },
     [UPGRADE.ATK]: {
         id: UPGRADE.ATK,
+        soulsCost: [0], // UNUSED
         goldCost: [15, 25],
         damageBonus: {
             [UNIT.CHOGORINGU]: [1,3],
@@ -469,6 +471,7 @@ export const upgrades = Object.freeze({
     },
     [UPGRADE.DEF]: {
         id: UPGRADE.DEF,
+        soulsCost: [0], // UNUSED
         goldCost: [15, 25],
         armorBonus: {
             [UNIT.CHOGORINGU]: [2,4],

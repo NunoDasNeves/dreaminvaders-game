@@ -603,7 +603,7 @@ function updateHitState(timeDeltaMs)
                         hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
                         const souls = 1;
                         player.souls += souls; // TODO defer until soul hits base
-                        player.soulsFromLighthouseHit += souls;
+                        player.soulsFromLighthouse += souls;
                         player.soulsEarned += souls;
                         playSfx('lighthouseHit');
                         if ( hp[enemyLighthouseIdx] <= 0 ) {
@@ -1043,12 +1043,12 @@ export function canUpgrade(playerId, upgradeId)
     const player = gameState.players[playerId];
     const upgrade = upgrades[upgradeId];
     const currLevel = player.upgradeLevels[upgradeId];
-    const maxLevel = upgrade.goldCost.length - 1;
+    const maxLevel = upgrade.soulsCost.length - 1;
     if (currLevel >= maxLevel) {
         return false;
     }
-    const cost = upgrade.goldCost[currLevel + 1];
-    if (player.gold < cost) {
+    const cost = upgrade.soulsCost[currLevel + 1];
+    if (player.souls < cost) {
         return false;
     }
     return true;
@@ -1063,8 +1063,8 @@ export function tryUpgrade(playerId, upgradeId)
     player.upgradeLevels[upgradeId]++;
     const newLevel = player.upgradeLevels[upgradeId];
     const upgrade = upgrades[upgradeId];
-    const cost = upgrade.goldCost[newLevel];
-    player.gold -= cost;
+    const cost = upgrade.soulsCost[newLevel];
+    player.souls -= cost;
     playSfx(upgrade.sfxName);
     if (upgradeId == UPGRADE.TOWER) {
         const { pos } = gameState.entities;
