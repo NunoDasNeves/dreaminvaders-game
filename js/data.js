@@ -372,7 +372,7 @@ const unitData = [
         goldCost: 10,
         cdTimeMs: 300,
         needsUnlock: true,
-        unlockCost: 12,
+        unlockCost: 5,
     },{
         id: UNIT.TANK,
         maxSpeed: 0.8,
@@ -387,7 +387,7 @@ const unitData = [
         goldCost: 20,
         cdTimeMs: 1500,
         needsUnlock: true,
-        unlockCost: 17,
+        unlockCost: 10,
     },{
         id: UNIT.TOWER,
         maxSpeed: 0,

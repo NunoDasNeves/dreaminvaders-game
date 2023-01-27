@@ -142,7 +142,7 @@ function unitButton(player, pos, dims, key, unit)
 {
     const unlocked = player.unitUnlocked[unit.id];
     const cost = unlocked ? unit.goldCost : unit.unlockCost;
-    const canAfford = player.gold >= cost;
+    const canAfford = unlocked ? player.gold >= cost : player.souls >= cost;
     const onCd = player.unitCds[unit.id] > 0;
     const canPress = canAfford && !onCd;
     const buttonFontSz = 20;
@@ -183,7 +183,12 @@ function unitButton(player, pos, dims, key, unit)
         costColor = '#ff7744';
     }
 
-    drawTextScreen(`$${cost}`, vec(pos.x + 3,pos.y + dims.y - 5), buttonFont, costColor, true);
+    let costText = `$${cost}`;
+    if (!unlocked) {
+        costColor = params.soulsTextColor;
+        costText = `${cost}`;
+    }
+    drawTextScreen(costText, vec(pos.x + 3,pos.y + dims.y - 5), buttonFont, costColor, true);
 }
 
 export function doPlayerUI(player)

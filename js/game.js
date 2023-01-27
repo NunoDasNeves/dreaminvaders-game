@@ -1019,7 +1019,7 @@ export function canUnlockUnit(playerId, unit)
     if (player.unitUnlocked[unit.id]) {
         return false;
     }
-    if (player.gold < unit.unlockCost) {
+    if (player.souls < unit.unlockCost) {
         return false;
     }
     return true;
@@ -1031,7 +1031,7 @@ export function tryUnlockUnit(playerId, unit)
         return false;
     }
     const player = gameState.players[playerId];
-    player.gold -= unit.unlockCost;
+    player.souls -= unit.unlockCost;
     player.unitUnlocked[unit.id] = true;
     player.unitCds[unit.id] = unit.cdTimeMs;
     playSfx('unlockUnit');
