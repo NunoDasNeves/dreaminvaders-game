@@ -158,7 +158,7 @@ function getCollidingWith(i)
             continue;
         }
         const dist = getDist(pos[i], pos[j]);
-        if (dist < unit[i].radius + unit[j].radius) {
+        if (dist < physState[i].collRadius + physState[j].collRadius) {
             colls.push(j);
         }
     }
@@ -185,7 +185,7 @@ function updateAllCollidingPairs(pairs)
                 continue;
             }
             const dist = getDist(pos[i], pos[j]);
-            if (dist < unit[i].radius + unit[j].radius) {
+            if (dist < physState[i].collRadius + physState[j].collRadius) {
                 pairs.push([i, j]);
             }
         }
@@ -195,7 +195,7 @@ function updateAllCollidingPairs(pairs)
 
 function decel(i)
 {
-    const { unit, vel, accel } = gameState.entities;
+    const { vel, accel, maxAccel } = gameState.entities;
     // friction: decelerate automatically if velocity with no acceleration
     const velLen = vecLen(vel[i]);
     // accel to inverse of velLen; ensures we don't undershoot and go backwards
@@ -203,14 +203,14 @@ function decel(i)
     vecCopyTo(accel[i], vel[i]);
     vecNegate(accel[i]);
     // common case; reduce vel by acceleration rate
-    if (unit[i].accel < velLen) {
-        vecSetMag(accel[i], unit[i].accel);
+    if (maxAccel[i] < velLen) {
+        vecSetMag(accel[i], maxAccel[i]);
     }
 }
 
-function accelAwayFromEdge(i)
+function accelUnitAwayFromEdge(i)
 {
-    const { unit, lane, team, pos, accel } = gameState.entities;
+    const { unit, lane, team, pos, accel, maxAccel } = gameState.entities;
     const bridgePoints = lane[i].bridgePoints;
     const { dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
     const distUntilFall = params.laneWidth*0.5 - dist;
@@ -218,12 +218,12 @@ function accelAwayFromEdge(i)
         const x =  clamp(distUntilFall / unit[i].radius, 0, 1);
         // smoothstep
         const a = x * x * (3 - 2 * x);
-        const fullIn = vecMul(dir, -unit[i].accel);
+        const fullIn = vecMul(dir, -maxAccel[i]);
         const inVec = vecMul(fullIn, 1 - a);
         const stayVec = vecMul(accel[i], a);
         const result = vecAdd(inVec, stayVec);
         vecCopyTo(accel[i], result);
-        vecClampMag(accel[i], 0, unit[i].accel);
+        vecClampMag(accel[i], 0, maxAccel[i]);
     }
 }
 
@@ -237,7 +237,7 @@ function startAtk(i, targetRef)
 
 function updateAiState()
 {
-    const { exists, team, playerId, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
+    const { exists, team, playerId, unit, hp, pos, vel, accel, maxAccel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.UNIT)) {
@@ -362,9 +362,9 @@ function updateAiState()
                     // go parallel to the bridge line
                     goDir = vecNormalize(vecSub(nextPoint, currPoint));
                 }
-                accel[i] = vecMul(goDir, unit[i].accel);
+                accel[i] = vecMul(goDir, maxAccel[i]);
                 if (!isOnEnemyIsland(i)) {
-                    accelAwayFromEdge(i);
+                    accelUnitAwayFromEdge(i);
                 }
                 target[i].invalidate();
                 playUnitAnim(i, ANIM.WALK);
@@ -378,7 +378,7 @@ function updateAiState()
                 const distToTarget = vecLen(toTarget);
                 if (almostZero(distToTarget)) {
                     decel(i);
-                    accelAwayFromEdge(i);
+                    accelUnitAwayFromEdge(i);
                     break;
                 }
                 const rangeToTarget = distToTarget - unit[i].radius - unit[t].radius;
@@ -386,7 +386,7 @@ function updateAiState()
                 const distToDesired = rangeToTarget - desiredRange;
                 if (distToDesired < 0) {
                     decel(i);
-                    accelAwayFromEdge(i);
+                    accelUnitAwayFromEdge(i);
                     break;
                 }
                 const dirToTarget = vecNorm(toTarget, 1/distToTarget);
@@ -394,17 +394,17 @@ function updateAiState()
                 // compute the approximate stopping distance
                 // ...these are kinematic equations of motion!
                 // underestimate the time it takes to stop by a frame
-                const stopFrames = Math.ceil(velTowardsTarget / unit[i].accel - 1); // v = v_0 + at, solve for t
-                const stopRange = ( velTowardsTarget + 0.5*unit[i].accel*stopFrames ) * stopFrames; // dx = v_0t + 1/2at^2
+                const stopFrames = Math.ceil(velTowardsTarget / maxAccel[i] - 1); // v = v_0 + at, solve for t
+                const stopRange = ( velTowardsTarget + 0.5*maxAccel[i]*stopFrames ) * stopFrames; // dx = v_0t + 1/2at^2
                 debugState[i].stopRange = vecMul(dirToTarget, stopRange);
                 if ( distToDesired > stopRange ) {
-                    accel[i] = vecMul(dirToTarget, Math.min(unit[i].accel, distToDesired));
+                accel[i] = vecMul(dirToTarget, Math.min(maxAccel[i], distToDesired));
                     debugState[i].stopping = false;
                 } else {
                     debugState[i].stopping = true;
                     decel(i);
                 }
-                accelAwayFromEdge(i);
+                accelUnitAwayFromEdge(i);
                 playUnitAnim(i, ANIM.WALK);
                 break;
             }
@@ -422,22 +422,24 @@ function updateAiState()
 
 function updatePhysicsState()
 {
-    const { exists, team, unit, hp, pos, vel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState, debugState } = gameState.entities;
+    const { exists, team, hp, pos, vel, maxVel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState, debugState } = gameState.entities;
 
     // very simple collisions, just reset position
     const pairs = [];
     // move, collide
     for (let i = 0; i < exists.length; ++i) {
-        if (!entityExists(i, ENTITY.UNIT)) {
+        if (!(exists[i] && pos[i] != null && physState[i] != null && vel[i] != null && accel[i] != null && maxVel[i] != null)) {
             continue;
         }
         physState[i].colliding = false;
         vecAddTo(vel[i], accel[i]);
-        vecClampMag(vel[i], 0, unit[i].maxSpeed);
+        vecClampMag(vel[i], 0, maxVel[i]);
         if (vecAlmostZero(vel[i])) {
             vecClear(vel[i]);
         }
-        debugState[i].velPreColl = vecClone(vel[i]);
+        if (debugState[i] != null) {
+            debugState[i].velPreColl = vecClone(vel[i]);
+        }
         vecAddTo(pos[i], vel[i]);
     };
 
@@ -462,8 +464,10 @@ function updatePhysicsState()
             velif = veliLen / velSum;
             veljf = veljLen / velSum;
         }
-        const correctioni = (unit[i].radius + unit[j].radius - len) * velif;
-        const correctionj = (unit[i].radius + unit[j].radius - len) * veljf;
+        const radiusi = physState[i].collRadius;
+        const radiusj = physState[j].collRadius;
+        const correctioni = (radiusi + radiusi - len) * velif;
+        const correctionj = (radiusj + radiusj - len) * veljf;
         const corrPos = vecMul(dir, correctionj);
         const dirNeg = vecMul(dir, -1);
         const corrNeg = vecMul(dirNeg, correctioni);
@@ -485,7 +489,7 @@ function updatePhysicsState()
 
     // rotate to face vel
     for (let i = 0; i < exists.length; ++i) {
-        if (!entityExists(i, ENTITY.UNIT)) {
+        if (!(exists[i] && vel[i] != null && angle[i] != null)) {
             continue;
         }
         if (vecLen(vel[i]) > params.minUnitVelocity) {
