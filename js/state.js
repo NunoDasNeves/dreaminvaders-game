@@ -552,6 +552,16 @@ export function initGameState(gameConfig)
     }
 }
 
+export function getEnemyPlayerByTeam(teamId) {
+    for (const player of gameState.players) {
+        if (player.team != teamId) {
+            return player;
+        }
+    }
+    return null;
+}
+
+
 function makeInput()
 {
     return {
