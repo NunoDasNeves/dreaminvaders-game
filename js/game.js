@@ -558,6 +558,7 @@ function updateHitState(timeDeltaMs)
                 const onIsland = isOnIsland(i);
                 // die from damage
                 if (hp[i] <= 0) {
+                    const enemyPlayer = getEnemyPlayerByTeam(team[i]);
                     // fade hpTimer fast
                     if (hitState[i].hpBarTimer > 0) {
                         hitState[i].hpBarTimer = params.deathTimeMs*0.5;
@@ -568,6 +569,10 @@ function updateHitState(timeDeltaMs)
                     physState[i].canCollide = false;
                     vecClear(vel[i]);
                     vecClear(accel[i]);
+                    const souls = 1;
+                    enemyPlayer.souls += souls;
+                    enemyPlayer.soulsFromUnitsKilled += souls;
+                    enemyPlayer.soulsEarned += souls;
                     playSfx('death');
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
@@ -589,28 +594,23 @@ function updateHitState(timeDeltaMs)
                     }
                 // 'die' by scoring
                 } else {
-                    for (const enemyPlayer of gameState.players) {
-                        if (enemyPlayer.team == team[i]) {
-                            continue;
+                    const enemyPlayer = getEnemyPlayerByTeam(team[i]);
+                    const player = gameState.players[playerId[i]];
+                    const enemyLighthouseIdx = enemyPlayer.island.idx;
+                    if (onIsland && getDist(pos[i], pos[enemyLighthouseIdx]) < params.lighthouseRadius) {
+                        hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
+                        hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
+                        hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
+                        const souls = 1;
+                        player.souls += souls; // TODO defer until soul hits base
+                        player.soulsFromLighthouseHit += souls;
+                        player.soulsEarned += souls;
+                        playSfx('lighthouseHit');
+                        if ( hp[enemyLighthouseIdx] <= 0 ) {
+                            endCurrentGame(player);
                         }
-                        const player = gameState.players[playerId[i]];
-                        const enemyLighthouseIdx = enemyPlayer.island.idx;
-                        if (onIsland && getDist(pos[i], pos[enemyLighthouseIdx]) < params.lighthouseRadius) {
-                            hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
-                            hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
-                            hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
-                            const goldDamage = Math.floor(unit[i].goldCost/3);
-                            player.goldDamage += goldDamage;
-                            player.goldEarned += goldDamage;
-                            player.gold += goldDamage;
-                            spawnVFXLastHitText(`$${goldDamage}`, pos[enemyLighthouseIdx], 20, player.color);
-                            playSfx('lighthouseHit');
-                            if ( hp[enemyLighthouseIdx] <= 0 ) {
-                                endCurrentGame(player);
-                            }
-                            // instantly disappear this frame
-                            freeable[i] = true;
-                        }
+                        // instantly disappear this frame
+                        freeable[i] = true;
                     }
                 }
                 break;

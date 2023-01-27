@@ -190,6 +190,7 @@ export function doPlayerUI(player)
 {
     // UI layout:
     //  gold
+    //  souls
     //  unit buttons
     //  upgrade buttons
     //  lighthouse HP
@@ -201,6 +202,7 @@ export function doPlayerUI(player)
     const goldFontSmol = `20px sans-serif`;
     const goldFontMetrics = getTextDims(context, '$00', goldFont, 'left', 'top');
     const goldHeight = goldFontMetrics.actualHeight;
+    const soulsHeight = goldHeight;
     const buttonDims = vec(64,64);
     const buttonXGap = UIInnerpadding;
     const numUnitButtons = Object.keys(hotKeys[player.id].units).length;
@@ -216,7 +218,9 @@ export function doPlayerUI(player)
     ) + UIOuterPadding * 2;
     const UIheight =
         UIOuterPadding +
-        goldFontSz +
+        goldHeight +
+        UIInnerpadding +
+        soulsHeight +
         UIInnerpadding +
         buttonDims.y +
         UIInnerpadding +
@@ -239,23 +243,37 @@ export function doPlayerUI(player)
     const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
     const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
     drawTextScreen(gpsText, gpsStart, goldFontSmol, player.color, true, 'left', 'top');
+
+    yOff += UIInnerpadding + goldHeight;
+
+    // souls
+    const soulsStart = vec(xOff, yOff);
+    const soulsText = `${player.souls}`;
+    const soulsColor = '#86f';
+    drawTextScreen(soulsText, soulsStart, goldFont, soulsColor, true, 'left', 'top');
+
+    // gold + souls income
     if (debug.drawUI) {
         const strPos = vecAdd(gpsStart, vec(180, 0));
         const lineOffset = vec(0, 30);
         let str = ''
         str += `base:        $${player.goldBaseEarned.toFixed(2)}\n`;
-        str += `dmg:         $${player.goldDamage.toFixed(2)}\n`;
-        str += `eco ups:     $${player.goldFromEcoUpgrades.toFixed(2)}\n`;
         str += `dreamers:    $${player.goldFromDreamers.toFixed(2)}\n`;
-        str += `lasthit:     $${player.goldFromLastHit.toFixed(2)}\n`;
         str += `totalEarned: $${player.goldEarned.toFixed(2)}\n`;
+        for (const s of str.split('\n')) {
+            drawTextScreen(s, strPos, goldFontSmol, player.color, true, 'left', 'top');
+            vecAddTo(strPos, lineOffset);
+        }
+        str = ''
+        str += `lighthouse hit:  ${player.soulsFromLighthouseHit}\n`;
+        str += `units killed:    ${player.soulsFromUnitsKilled}\n`;
         for (const s of str.split('\n')) {
             drawTextScreen(s, strPos, goldFontSmol, player.color, true, 'left', 'top');
             vecAddTo(strPos, lineOffset);
         }
     }
 
-    yOff += UIInnerpadding + goldHeight;
+    yOff += UIInnerpadding + soulsHeight;
 
     // unit buttons and hotkeys
     for (const [key, unitId] of Object.entries(hotKeys[player.id].units)) {

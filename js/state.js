@@ -353,14 +353,16 @@ function addPlayer(name, controller, pos, team, colorIdx)
         color: params.playerColors[colorIdx],
         colorIdx, // need this for sprites that use playerColors
         team,
+        souls: 0,
+        soulsFromUnitsKilled: 0,
+        soulsFromLighthouseHits: 0,
+        soulsEarned: 0,
         gold: params.startingGold,
         goldPerSec: params.startingGoldPerSec,
         /* track how much gold from different sources */
         goldBaseEarned: 0,
-        goldDamage: 0,
         goldFromDreamers: 0,
         goldFromEcoUpgrades: 0,
-        goldFromLastHit: 0,
         goldEarned: 0,
         /* */
         island: {
