@@ -494,8 +494,6 @@ export const hotKeys = {
         upgrades: {
             'a': UPGRADE.TOWER,
             's': UPGRADE.ECO,
-            'd': UPGRADE.ATK,
-            'f': UPGRADE.DEF,
         }
     },
     [1]: {
@@ -512,8 +510,6 @@ export const hotKeys = {
         upgrades: {
             'k': UPGRADE.TOWER,
             'l': UPGRADE.ECO,
-            ';': UPGRADE.ATK,
-            '\'': UPGRADE.DEF,
         }
     }
 };
