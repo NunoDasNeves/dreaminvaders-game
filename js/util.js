@@ -1,3 +1,27 @@
+export function lerp(a, b, t, do_clamp=false)
+{
+    if (do_clamp) {
+        t = clamp(t, 0, 1);
+    }
+    return a + (b - a) * t;
+}
+
+export function invLerp(a, b, x, do_clamp=false)
+{
+    if (do_clamp) {
+        const min = Math.min(a,b);
+        const max = Math.max(a,b);
+        x = clamp(x, min, max);
+    }
+    return (x - a)/(b - a);
+}
+
+export function remap(in_min, in_max, out_min, out_max, x, do_clamp=false)
+{
+    const t = invLerp(in_min, in_max, x, do_clamp);
+    return lerp(out_min, out_max, t);
+}
+
 export function randFromArray(arr)
 {
     return arr[Math.floor(Math.random() * arr.length)];

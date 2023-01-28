@@ -188,14 +188,12 @@ function drawTraceParticles(origin, particles)
 
 function drawSoul(i)
 {
-    const { playerId, pos, vel, soulState } = gameState.entities;
+    const { playerId, pos, vel, accel, soulState } = gameState.entities;
     const soul = soulState[i];
     const player = gameState.players[playerId[i]];
 
     const p = vecClone(pos[i]);
     const inc = vecMul(vecNormalize(vecClone(vel[i])), -4);
-    fillCircleWorld(context, p, 7, player.color);
-    vecAddTo(p, inc);
     fillCircleWorld(context, p, 5, params.soulsTextColor);
     vecAddTo(p, inc);
     fillCircleWorld(context, p, 3, params.soulsTextColor);

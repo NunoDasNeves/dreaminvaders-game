@@ -24,6 +24,7 @@ export const debug = {
     drawLaneSegs: false,
     drawBezierPoints: false,
     drawClickBridgeDebugArrow: false,
+    drawSoul: false,
     clickedPoint: vec(),
     closestLanePoint: vec(),
     drawFPS: true,
@@ -68,6 +69,13 @@ export const params = Object.freeze(
             startingGoldPerSec: 1,
             dreamerGoldPerSec: 0.5,
             soulsTextColor: "#86f",
+            soulMaxVel: 5,
+            soulMinAccel: 0.03,
+            soulMaxAccel: 0.5,
+            soulCollectionRadius: 20,
+            soulMaxAccelRadius: 200,
+            soulMinAccelRadius: 1500,
+            soulStagingOffset: vec(200, 300), // invert X for player[1], invert Y for souls going down instead of up
         }
         obj.laneDistFromBase = obj.islandRadius - 50;
         obj.spawnPlatRadius = obj.laneWidth * 0.75;

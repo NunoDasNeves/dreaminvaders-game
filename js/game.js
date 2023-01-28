@@ -862,14 +862,20 @@ function updateSoulState(timeDeltaMs)
             continue;
         }
         const soul = soulState[i];
-        const toTarget = vecSub(soul.targetPos, pos[i]);
+        const targetPos = soul.doneStaging ? soul.targetPos : soul.stagingPos;
+        const toTarget = vecSub(targetPos, pos[i]);
         const dist = vecLen(toTarget);
-        if (dist < 4) {
-            freeable[i] = true;
+        if (dist < params.soulCollectionRadius) {
+            if (soul.doneStaging) {
+                freeable[i] = true;
+            } else {
+                soul.doneStaging = true;
+            }
             break;
         }
+        const newAccel = remap(params.soulMinAccelRadius, params.soulMaxAccelRadius, params.soulMinAccel, params.soulMaxAccel, dist, true);
         const dir = vecMul(toTarget, 1/dist);
-        accel[i] = vecMul(dir, maxAccel[i]);
+        accel[i] = vecMul(dir, newAccel);
     }
 }
 

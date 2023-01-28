@@ -164,19 +164,27 @@ export function spawnSoul(spawnPos, player)
     const { playerId, pos, vel, maxVel, accel, maxAccel, physState, soulState } = gameState.entities;
     const targetPos = pos[player.island.idx];
     const idx = createEntity(ENTITY.SOUL);
+    const yDir = spawnPos.y >= 0 ? 1 : -1;
     playerId[idx] = player.id;
     pos[idx] = vecClone(spawnPos);
-    vel[idx] = vec();
-    maxVel[idx] = 2;
+    vel[idx] = vec(0, params.soulMaxVel * yDir);
+    maxVel[idx] = params.soulMaxVel;
     accel[idx] = vec();
-    maxAccel[idx] = 0.2;
+    maxAccel[idx] = params.soulMaxAccel;
     physState[idx]  = {
         canCollide: false,
         colliding: false,
         canFall: false,
     };
+    const stagingOffset = vecClone(params.soulStagingOffset);
+    stagingOffset.y *= yDir;
+    if (player.id > 0) {
+        stagingOffset.x *= -1;
+    }
     soulState[idx] = {
         targetPos,
+        stagingPos: vecAdd(targetPos, stagingOffset),
+        doneStaging: false,
     };
 }
 

@@ -491,6 +491,12 @@ export function debugUI(timeDeltaMs)
         const updatesStr= `updates/frame: ${Number(debug.avgUpdates).toFixed(2)}`;
         drawDebugTextScreen(updatesStr, vec(canvas.width - 10,40), 'right');
     }
+    if (debug.drawSoul) {
+        const { pos } = gameState.entities;
+        for (const player of gameState.players) {
+            Draw.fillCircleWorld(context, pos[player.island.idx], params.soulCollectionRadius, '#f0f8');
+        }
+    }
 }
 
 export function getCanvas()
