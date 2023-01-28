@@ -148,16 +148,33 @@ function unitButton(player, pos, dims, key, unit)
     const buttonFontSz = 20;
     const buttonFont = `${buttonFontSz}px sans-serif`;
     const { press, hover } = canPress && pressedButton(player, pos, dims, key);
+    let selected = player.unitSelected == unit.id;
 
     if (press) {
         if (unlocked) {
-            tryBuildUnit(player.id, unit);
+            if (player.mouseEnabled) {
+                if (selected) {
+                    player.unitSelected = -1;
+                    selected = false;
+                } else {
+                    player.unitSelected = unit.id;
+                    selected = true;
+                }
+            } else {
+                tryBuildUnit(player.id, unit);
+            }
         } else {
             tryUnlockUnit(player.id, unit);
         }
     }
+    let backColor = "#444";
+    if (selected) {
+        backColor = "#bbb";
+    } else if (hover) {
+        backColor = "#888";
+    }
 
-    fillRectScreen(context, pos, dims, hover ? "#888" : "#444", 10);
+    fillRectScreen(context, pos, dims, backColor, 10);
     // draw sprite
     const sprite = unitSprites[unit.id];
     const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
@@ -323,8 +340,8 @@ export function doPlayerUI(player)
         fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, energyHeight), '#000000');
     }*/
 
-    // lane indicators and hotkeys
-    if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
+    // lane indicators and keys, for non-mouse control
+    if (!player.mouseEnabled && player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
             const lane = player.island.lanes[laneIdx];
             const pos = lane.bridgePoints[0];
@@ -373,34 +390,33 @@ export function processMouseInput()
     }
     // select lane
     const localPlayer = getLocalPlayer();
-    localPlayer.laneHovered = -1;
+    localPlayer.laneSpawnHovered = -1;
     let minLane = 0;
     let minDist = Infinity;
-    let minStuff = null;
     for (let i = 0; i < localPlayer.island.lanes.length; ++i) {
-        const lane = localPlayer.island.lanes[i];
-        const stuff = pointNearLineSegs(gameState.input.mousePos, lane.bridgePoints);
-        if (stuff.dist < minDist) {
+        const spawnPos = localPlayer.island.lanes[i].spawnPos;
+        const dist = vecLen(vecSub(gameState.input.mousePos, spawnPos));
+        if (dist < minDist) {
             minLane = i;
-            minDist = stuff.dist;
-            minStuff = stuff;
+            minDist = dist;
         }
     }
     if (localPlayer.mouseEnabled) {
-        if (minDist < params.laneSelectDist) {
-            localPlayer.laneHovered = minLane;
+        if (minDist < params.spawnPlatRadius) {
+            localPlayer.laneSpawnHovered = minLane;
         }
     }
     if (mouseLeftPressed()) {
         if (localPlayer.mouseEnabled) {
-            if (localPlayer.laneHovered >= 0) {
-                localPlayer.laneSelected = localPlayer.laneHovered;
+            if (localPlayer.unitSelected >= 0 && localPlayer.laneSpawnHovered >= 0) {
+                tryBuildUnit(localPlayer.id, units[localPlayer.unitSelected], localPlayer.laneSpawnHovered, gameState.input.mousePos);
             }
         }
         if (debug.enableControls) {
             debug.clickedPoint = vecClone(gameState.input.mousePos);
-            debug.closestLanePoint = minStuff.point;
         }
+    } else if (mouseRightPressed()) {
+        localPlayer.unitSelected = -1;
     }
 }
 

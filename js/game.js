@@ -1023,17 +1023,32 @@ export function canBuildUnit(playerId, unit)
     return true;
 }
 
-export function tryBuildUnit(playerId, unit)
+export function tryBuildUnit(playerId, unit, laneIdx=null, desiredPos=null)
 {
     if (!canBuildUnit(playerId, unit)) {
         return false;
     }
     const player = gameState.players[playerId];
     let idx = INVALID_ENTITY_INDEX;
-    let iters = 100;
-    while (idx == INVALID_ENTITY_INDEX && iters > 0) {
-        idx = spawnUnitInLane(player.laneSelected, playerId, unit);
-        iters--;
+    if (laneIdx == null) {
+        laneIdx = player.laneSelected;
+        if (laneIdx == -1) {
+            return false;
+        }
+    }
+    if (desiredPos == null) {
+        let iters = 100;
+        while (idx == INVALID_ENTITY_INDEX && iters > 0) {
+            idx = spawnUnitInLane(laneIdx, playerId, unit);
+            iters--;
+        }
+    } else {
+        const spawnPos = gameState.players[playerId].island.lanes[laneIdx].spawnPos;
+        const dist = vecLen(vecSub(desiredPos, spawnPos));
+        if (dist > params.spawnPlatRadius) {
+            return false;
+        }
+        idx = spawnUnitForPlayer(desiredPos, playerId, unit, laneIdx);
     }
     if (idx == INVALID_ENTITY_INDEX) {
         return false;

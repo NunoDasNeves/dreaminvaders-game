@@ -26,7 +26,6 @@ export const debug = {
     drawClickBridgeDebugArrow: false,
     drawSoul: false,
     clickedPoint: vec(),
-    closestLanePoint: vec(),
     drawFPS: true,
     fps: 0,
     fpsCounter: 0,

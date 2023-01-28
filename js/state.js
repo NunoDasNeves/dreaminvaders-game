@@ -380,7 +380,8 @@ function addPlayer({name, controller}, pos, team, colorIdx)
         controller,
         mouseEnabled: false,
         laneSelected: 0,
-        laneHovered: -1,
+        laneSpawnHovered: -1,
+        unitSelected: -1,
         id,
         color: params.playerColors[colorIdx],
         colorIdx, // need this for sprites that use playerColors
@@ -690,6 +691,11 @@ export function updateMouseWheel(y)
 export function mouseLeftPressed()
 {
     return gameState.input.mouseLeft && !gameState.lastInput.mouseLeft;
+}
+
+export function mouseRightPressed()
+{
+    return gameState.input.mouseRight && !gameState.lastInput.mouseRight;
 }
 
 export function keyPressed(k)
