@@ -62,6 +62,7 @@ export const ENTITY = Object.freeze({
     NONE: 0,
     UNIT: 1,
     VFX: 2,
+    SOUL: 3,
 });
 
 const entityDefaults = Object.freeze({
@@ -107,6 +108,7 @@ const entityDefaults = Object.freeze({
     hitState: null,
     animState: null,
     vfxState: null,
+    soulState: null,
     debugState: null,
 });
 
@@ -155,6 +157,27 @@ export function createEntity(eType)
     type[idx]       = eType;
 
     return idx;
+}
+
+export function spawnSoul(spawnPos, playerId)
+{
+    const { pos, vel, maxVel, accel, maxAccel, physState, soulState } = gameState.entities;
+    const player = gameState.players[playerId];
+    const targetPos = pos[player.island.idx];
+    const idx = createEntity(ENTITY.SOUL);
+    pos[idx] = spawnPos;
+    vel[idx] = vec();
+    maxVel[idx] = 2;
+    accel[idx] = vec();
+    maxAccel[idx] = 0.2;
+    physState[idx]  = {
+        canCollide: false,
+        colliding: false,
+        canFall: false,
+    };
+    soulState[idx] = {
+        targetPos,
+    };
 }
 
 export function spawnVFXLastHitText(string, point, textSize, color)
