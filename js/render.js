@@ -3,6 +3,7 @@ import * as Data from "./data.js";
 import * as State from "./state.js";
 import * as Draw from './draw.js';
 import * as UI from './UI.js';
+import { canBuildUnit } from './game.js';
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
@@ -32,40 +33,11 @@ function drawImage(imgAsset, pos)
     }
 }
 
-function drawSprite(sprite, row, col, pos)
-{
-    const asset = sprite.imgAsset;
-    const drawWidth = sprite.width / gameState.camera.scale;
-    const drawHeight = sprite.height / gameState.camera.scale;
-    const drawPos = worldToCamera(pos.x, pos.y);
-
-    if (asset.loaded) {
-        const sourceX = col * sprite.width;
-        const sourceY = row * sprite.height;
-        context.imageSmoothingEnabled = false;
-        context.drawImage(
-            asset.img,
-            sourceX, sourceY,
-            sprite.width, sprite.height,
-            drawPos.x, drawPos.y,
-            drawWidth, drawHeight);
-    } else {
-        context.fillStyle = "#000";
-        context.fillRect(drawPos.x, drawPos.y, drawWidth, drawHeight);
-    }
-}
-
 function makeOffscreenCanvas(width, height)
 {
     const c = new OffscreenCanvas(width, height);
     const ctx = c.getContext("2d");
     return [c, ctx];
-}
-
-function drawSpriteWithOverlay(sprite, row, col, pos, colorOverlay)
-{
-    // TODO
-    drawSprite(sprite, row, col, pos);
 }
 
 function drawUnitAnim(i, alpha, colorOverlay)
@@ -87,11 +59,7 @@ function drawUnitAnim(i, alpha, colorOverlay)
     const row = animObj.row + flipOffset + colorOffset;
     const drawUnitPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
     context.globalAlpha = alpha;
-    if (colorOverlay != null) {
-        drawSpriteWithOverlay(sprite, row, col, drawUnitPos, colorOverlay);
-    } else {
-        drawSprite(sprite, row, col, drawUnitPos);
-    }
+    drawSprite(context, sprite, row, col, drawUnitPos, colorOverlay);
     context.globalAlpha = 1;
 }
 
@@ -362,7 +330,7 @@ function drawIsland(team, island)
 {
     const spr = island.sprite;
     const sprPos = vecAdd(island.pos, spr.centerOffset);
-    drawSprite(spr, island.flipSprite ? 1 : 0, 0, sprPos);
+    drawSprite(context, spr, island.flipSprite ? 1 : 0, 0, sprPos);
 
     /*const teamColor = params.playerColors[team];
     const coords = worldToCamera(island.pos.x, island.pos.y);
@@ -581,7 +549,7 @@ export function draw(realTimeMs, timeDeltaMs)
     }
 
     for (let i = 0; i < gameState.bridges.length; ++i) {
-        drawBridge(i, localPlayer.laneHovered == i);
+        drawBridge(i, localPlayer.laneSpawnHovered == i);
     }
 
     const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
@@ -605,6 +573,15 @@ export function draw(realTimeMs, timeDeltaMs)
             continue;
         }
         drawSoul(i);
+    }
+    if (localPlayer.mouseEnabled) {
+        if (localPlayer.unitSelected >= 0) {
+            const unit = units[localPlayer.unitSelected];
+            const sprite = unitSprites[localPlayer.unitSelected];
+            const spriteDrawPos = vecSub(gameState.input.mousePos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
+            const overlayColor = localPlayer.laneSpawnHovered >= 0 && canBuildUnit(localPlayer.id, unit) ? "#40f8" : "#8088";
+            drawSprite(context, sprite, 0, 0, spriteDrawPos, overlayColor);
+        }
     }
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.VFX)) {

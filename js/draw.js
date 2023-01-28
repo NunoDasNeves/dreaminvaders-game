@@ -186,3 +186,59 @@ function drawImageWorld(ctx, img, pos, dims)
     drawImageScreen(ctx, img, drawPos, drawDims);
 }
 
+function drawSpriteToScratchCtx(sprite, sourcePos, colorOverlay)
+{
+    const asset = sprite.imgAsset;
+    const ctx = asset.scratchCtx;
+
+    ctx.clearRect(0, 0, sprite.width, sprite.height);
+    ctx.drawImage(
+        asset.img,
+        sourcePos.x, sourcePos.y,
+        sprite.width, sprite.height,
+        0,0,
+        sprite.width, sprite.height
+    );
+    ctx.globalCompositeOperation = "source-in";
+    ctx.fillStyle = colorOverlay;
+    ctx.fillRect(0, 0, sprite.width, sprite.height);
+    ctx.globalCompositeOperation = "source-out";
+
+    return asset.scratchCanvas;
+}
+
+export function drawSpriteScreen(context, sprite, row, col, pos, colorOverlay = null, dims = null)
+{
+    const asset = sprite.imgAsset;
+    const drawDims = dims == null ? vec(sprite.width, sprite.height) : dims;
+    if (asset.loaded) {
+        const sourcePos = vec(col * sprite.width, row * sprite.height);
+        let img = asset.img;
+        if (colorOverlay != null) {
+            img = drawSpriteToScratchCtx(sprite, sourcePos, colorOverlay);
+            vecClear(sourcePos);
+        }
+        context.imageSmoothingEnabled = false;
+        context.drawImage(
+            img,
+            sourcePos.x, sourcePos.y,
+            sprite.width, sprite.height,
+            pos.x, pos.y,
+            drawDims.x, drawDims.y);
+    } else {
+        if (colorOverlay != null) {
+            context.fillStyle = colorOverlay;
+        }
+        fillRectScreen(context, pos, drawDims, "#000");
+    }
+}
+
+export function drawSprite(context, sprite, row, col, pos, colorOverlay = null)
+{
+    const asset = sprite.imgAsset;
+    const drawWidth = sprite.width / gameState.camera.scale;
+    const drawHeight = sprite.height / gameState.camera.scale;
+    const drawPos = worldToCamera(pos.x, pos.y);
+
+    drawSpriteScreen(context, sprite, row, col, drawPos, colorOverlay, vec(drawWidth, drawHeight));
+}

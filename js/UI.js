@@ -13,46 +13,6 @@ Object.entries(Draw).forEach(([name, exported]) => window[name] = exported);
 let canvas = null;
 let context = null;
 
-function drawSpriteScreen(sprite, row, col, pos, colorOverlay = null)
-{
-    const asset = sprite.imgAsset;
-    if (asset.loaded) {
-        let sourceX = col * sprite.width;
-        let sourceY = row * sprite.height;
-        let img = asset.img;
-        if (colorOverlay != null) {
-            img = asset.scratchCanvas;
-            const ctx = asset.scratchCtx;
-            ctx.clearRect(0, 0, sprite.width, sprite.height);
-            ctx.drawImage(
-                asset.img,
-                sourceX, sourceY,
-                sprite.width, sprite.height,
-                0,0,
-                sprite.width, sprite.height
-            );
-            ctx.globalCompositeOperation = "source-in";
-            ctx.fillStyle = colorOverlay;
-            ctx.fillRect(0, 0, sprite.width, sprite.height);
-            ctx.globalCompositeOperation = "source-out";
-            sourceX = 0;
-            sourceY = 0;
-        }
-        context.imageSmoothingEnabled = false;
-        context.drawImage(
-            img,
-            sourceX, sourceY,
-            sprite.width, sprite.height,
-            pos.x, pos.y,
-            sprite.width, sprite.height);
-    } else {
-        if (colorOverlay != null) {
-            context.fillStyle = colorOverlay;
-        }
-        fillRectScreen(context, pos, vec(sprite.width, sprite.height), "#000");
-    }
-}
-
 function drawTextScreen(string, pos, font, fillStyle, stroke=false, align='left', baseline='alphabetic')
 {
     if (stroke) {
@@ -111,7 +71,7 @@ function upgradeButton(player, pos, dims, key, upgrade)
     //const sprite = unitSprites[unit.id];
     //const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
     //vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
-    //drawSpriteScreen(sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
+    //drawSpriteScreen(context, sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
     const ecoText = {
         [UPGRADE.TOWER]: 'PEW',
         [UPGRADE.ECO]: '$$$',
@@ -179,7 +139,7 @@ function unitButton(player, pos, dims, key, unit)
     const sprite = unitSprites[unit.id];
     const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
     vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
-    drawSpriteScreen(sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
+    drawSpriteScreen(context, sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
 
     if (player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         // hotKey
@@ -388,7 +348,7 @@ export function processMouseInput()
             vecSubFrom(gameState.camera.pos, delta);
         }
     }
-    // select lane
+    // hover on spawn pos, show unit icon
     const localPlayer = getLocalPlayer();
     localPlayer.laneSpawnHovered = -1;
     let minLane = 0;
