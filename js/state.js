@@ -159,13 +159,13 @@ export function createEntity(eType)
     return idx;
 }
 
-export function spawnSoul(spawnPos, playerId)
+export function spawnSoul(spawnPos, player)
 {
-    const { pos, vel, maxVel, accel, maxAccel, physState, soulState } = gameState.entities;
-    const player = gameState.players[playerId];
+    const { playerId, pos, vel, maxVel, accel, maxAccel, physState, soulState } = gameState.entities;
     const targetPos = pos[player.island.idx];
     const idx = createEntity(ENTITY.SOUL);
-    pos[idx] = spawnPos;
+    playerId[idx] = player.id;
+    pos[idx] = vecClone(spawnPos);
     vel[idx] = vec();
     maxVel[idx] = 2;
     accel[idx] = vec();

@@ -186,6 +186,23 @@ function drawTraceParticles(origin, particles)
     }
 }
 
+function drawSoul(i)
+{
+    const { playerId, pos, vel, soulState } = gameState.entities;
+    const soul = soulState[i];
+    const player = gameState.players[playerId[i]];
+
+    const p = vecClone(pos[i]);
+    const inc = vecMul(vecNormalize(vecClone(vel[i])), -4);
+    fillCircleWorld(context, p, 7, player.color);
+    vecAddTo(p, inc);
+    fillCircleWorld(context, p, 5, params.soulsTextColor);
+    vecAddTo(p, inc);
+    fillCircleWorld(context, p, 3, params.soulsTextColor);
+    vecAddTo(p, inc);
+    fillCircleWorld(context, p, 2, params.soulsTextColor);
+}
+
 function drawVFX(i)
 {
     const { pos, vfxState } = gameState.entities;
@@ -584,6 +601,12 @@ export function draw(realTimeMs, timeDeltaMs)
             continue;
         }
         drawUnit(i);
+    }
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.SOUL)) {
+            continue;
+        }
+        drawSoul(i);
     }
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.VFX)) {

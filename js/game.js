@@ -235,9 +235,9 @@ function startAtk(i, targetRef)
     target[i] = targetRef;
 }
 
-function updateAiState()
+function updateUnitAiState()
 {
-    const { exists, team, playerId, unit, hp, pos, vel, accel, maxAccel, angle, angVel, state, lane, target, aiState, atkState, physState, debugState } = gameState.entities;
+    const { exists, playerId, unit, pos, vel, accel, maxAccel, angle, angVel, lane, target, aiState, atkState, debugState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.UNIT)) {
@@ -422,10 +422,8 @@ function updateAiState()
 
 function updatePhysicsState()
 {
-    const { exists, team, hp, pos, vel, maxVel, accel, angle, angVel, state, lane, target, aiState, atkState, physState, hitState, debugState } = gameState.entities;
+    const { exists, pos, vel, maxVel, accel, angle, physState, debugState } = gameState.entities;
 
-    // very simple collisions, just reset position
-    const pairs = [];
     // move, collide
     for (let i = 0; i < exists.length; ++i) {
         if (!(exists[i] && pos[i] != null && physState[i] != null && vel[i] != null && accel[i] != null && maxVel[i] != null)) {
@@ -443,6 +441,8 @@ function updatePhysicsState()
         vecAddTo(pos[i], vel[i]);
     };
 
+    // very simple collisions, just correct position and change vel to slide along
+    const pairs = [];
     updateAllCollidingPairs(pairs);
     for (let k = 0; k < pairs.length; ++k) {
         const [i, j] = pairs[k];
@@ -573,6 +573,7 @@ function updateHitState(timeDeltaMs)
                     enemyPlayer.souls += souls;
                     enemyPlayer.soulsFromUnitsKilled += souls;
                     enemyPlayer.soulsEarned += souls;
+                    spawnSoul(pos[i], enemyPlayer);
                     playSfx('death');
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
@@ -605,6 +606,7 @@ function updateHitState(timeDeltaMs)
                         player.souls += souls; // TODO defer until soul hits base
                         player.soulsFromLighthouse += souls;
                         player.soulsEarned += souls;
+                        spawnSoul(pos[i], player);
                         playSfx('lighthouseHit');
                         if ( hp[enemyLighthouseIdx] <= 0 ) {
                             endCurrentGame(player);
@@ -745,7 +747,7 @@ function startWeaponSwing(i)
     playSfx(weapon.sfxName);
 }
 
-function updateAtkState(timeDeltaMs)
+function updateUnitAtkState(timeDeltaMs)
 {
     forAllUnits((i) => {
         const unit = gameState.entities.unit[i];
@@ -805,7 +807,7 @@ function playUnitAnim(i, animName, reset = false, loop = true)
     }
 }
 
-function updateAnimState(timeDeltaMs)
+function updateUnitAnimState(timeDeltaMs)
 {
     forAllUnits((i) => {
         const unit = gameState.entities.unit[i];
@@ -835,7 +837,7 @@ function updateTraceParticles(particles)
 
 function updateVFXState(timeDeltaMs)
 {
-    const { exists, freeable, vfxState, parent } = gameState.entities;
+    const { exists, freeable, vfxState } = gameState.entities;
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.VFX)) {
             continue;
@@ -849,6 +851,25 @@ function updateVFXState(timeDeltaMs)
         if (vfx.traceParticles) {
             updateTraceParticles(vfx.traceParticles);
         }
+    }
+}
+
+function updateSoulState(timeDeltaMs)
+{
+    const { exists, freeable, pos, vel, accel, maxAccel, soulState } = gameState.entities;
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.SOUL)) {
+            continue;
+        }
+        const soul = soulState[i];
+        const toTarget = vecSub(soul.targetPos, pos[i]);
+        const dist = vecLen(toTarget);
+        if (dist < 4) {
+            freeable[i] = true;
+            break;
+        }
+        const dir = vecMul(toTarget, 1/dist);
+        accel[i] = vecMul(dir, maxAccel[i]);
     }
 }
 
@@ -951,9 +972,13 @@ function updateGame(timeDeltaMs)
 
     // order here matters!
     updatePhysicsState();
-    updateAiState();
-    updateAnimState(timeDeltaMs);
-    updateAtkState(timeDeltaMs);
+    // units
+    updateUnitAiState();
+    updateUnitAnimState(timeDeltaMs);
+    updateUnitAtkState(timeDeltaMs);
+    // souls
+    updateSoulState(timeDeltaMs);
+    // VFX
     updateVFXState(timeDeltaMs);
 
     // this should come right before reap
