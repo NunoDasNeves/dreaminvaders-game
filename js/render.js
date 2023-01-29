@@ -579,8 +579,10 @@ export function draw(realTimeMs, timeDeltaMs)
             const unit = units[localPlayer.unitSelected];
             const sprite = unitSprites[localPlayer.unitSelected];
             const spriteDrawPos = vecSub(gameState.input.mousePos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
-            const overlayColor = localPlayer.laneSpawnHovered >= 0 && canBuildUnit(localPlayer.id, unit) ? "#40f8" : "#8088";
+            const overlayColor = localPlayer.laneSpawnHovered >= 0 && canBuildUnit(localPlayer.id, unit) ? "#20f8" : "#8088";
+            context.globalAlpha = 0.7;
             drawSprite(context, sprite, 0, 0, spriteDrawPos, overlayColor);
+            context.globalAlpha = 1;
         }
     }
     for (let i = 0; i < exists.length; ++i) {

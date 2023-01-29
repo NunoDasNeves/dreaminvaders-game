@@ -199,10 +199,11 @@ function drawSpriteToScratchCtx(sprite, sourcePos, colorOverlay)
         0,0,
         sprite.width, sprite.height
     );
-    ctx.globalCompositeOperation = "source-in";
+    const defaultOp = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = "source-atop";
     ctx.fillStyle = colorOverlay;
     ctx.fillRect(0, 0, sprite.width, sprite.height);
-    ctx.globalCompositeOperation = "source-out";
+    ctx.globalCompositeOperation = defaultOp;
 
     return asset.scratchCanvas;
 }
