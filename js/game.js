@@ -466,14 +466,14 @@ function updatePhysicsState()
         }
         const radiusi = physState[i].collRadius;
         const radiusj = physState[j].collRadius;
-        const correctioni = (radiusi + radiusi - len) * velif;
-        const correctionj = (radiusj + radiusj - len) * veljf;
-        const corrPos = vecMul(dir, correctionj);
-        const dirNeg = vecMul(dir, -1);
-        const corrNeg = vecMul(dirNeg, correctioni);
+        const correctionDist = (radiusi + radiusj - len);
+        const correctioni = -correctionDist * velif;
+        const correctionj = correctionDist * veljf;
+        const corrj = vecMul(dir, correctionj);
+        const corri = vecMul(dir, correctioni);
 
-        vecAddTo(pos[i], corrNeg);
-        vecAddTo(pos[j], corrPos);
+        vecAddTo(pos[i], corri);
+        vecAddTo(pos[j], corrj);
 
         // fix the velocity; slide by removing component normal to collision
         // only if it's > 0, otherwise we'll go toward the collision!
@@ -481,9 +481,10 @@ function updatePhysicsState()
         if (veliNormLen > 0) {
             vecSubFrom(vel[i], vecMul(dir, veliNormLen));
         }
-        const veljNormLen = vecDot(vel[j], dirNeg);
-        if (veljNormLen > 0) {
-            vecSubFrom(vel[j], vecMul(dirNeg, veljNormLen));
+        // opposite side should be against dir, so works the same except we want it to be < 0
+        const veljNormLen = vecDot(vel[j], dir);
+        if (veljNormLen < 0) {
+            vecSubFrom(vel[j], vecMul(dir, veljNormLen));
         }
     }
 
