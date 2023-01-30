@@ -1016,7 +1016,7 @@ function playSfx(name)
     }
 }
 
-export function canBuildUnit(playerId, unit)
+export function canBuildUnit(playerId, unit, spawnPos = null)
 {
     const player = gameState.players[playerId];
     if (!player.unitUnlocked[unit.id]) {
@@ -1031,12 +1031,15 @@ export function canBuildUnit(playerId, unit)
     if (player.unitCds[unit.id] > 0) {
         return false;
     }
+    if (spawnPos != null && getCollidingWithCircle(spawnPos, unit.radius).length > 0) {
+        return false;
+    }
     return true;
 }
 
 export function tryBuildUnit(playerId, unit, laneIdx=null, desiredPos=null)
 {
-    if (!canBuildUnit(playerId, unit)) {
+    if (!canBuildUnit(playerId, unit, desiredPos)) {
         return false;
     }
     const player = gameState.players[playerId];

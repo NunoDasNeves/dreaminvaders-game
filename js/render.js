@@ -588,10 +588,11 @@ export function draw(realTimeMs, timeDeltaMs)
         if (localPlayer.unitSelected >= 0) {
             const unit = units[localPlayer.unitSelected];
             const sprite = unitSprites[localPlayer.unitSelected];
-            const drawUnitPos = getDrawUnitPos(gameState.input.mousePos, sprite.width, sprite.height, sprite.centerOffset);
-            const overlayColor = localPlayer.laneSpawnHovered >= 0 && canBuildUnit(localPlayer.id, unit) ? "#20f8" : "#8088";
+            const spawnPos = gameState.input.mousePos;
+            const drawUnitPos = getDrawUnitPos(spawnPos, sprite.width, sprite.height, sprite.centerOffset);
+            const overlayColor = localPlayer.laneSpawnHovered >= 0 && canBuildUnit(localPlayer.id, unit, spawnPos) ? "#20f8" : "#8088";
             context.globalAlpha = 0.7;
-            strokeCircleWorld(context, gameState.input.mousePos, unit.radius, 1, overlayColor);
+            strokeCircleWorld(context, spawnPos, unit.radius, 1, overlayColor);
             drawSprite(context, sprite, 0, 0, drawUnitPos, overlayColor);
             context.globalAlpha = 1;
         }
