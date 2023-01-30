@@ -1066,7 +1066,7 @@ export function tryBuildUnit(playerId, unit, laneIdx=null, desiredPos=null)
     }
     playSfx('spawn');
     player.gold -= unit.goldCost;
-    player.unitCds[unit.id] = unit.cdTimeMs;
+    player.unitCds[unit.id] = 0; // TODO remove properly
     return true;
 }
 
@@ -1090,7 +1090,7 @@ export function tryUnlockUnit(playerId, unit)
     const player = gameState.players[playerId];
     player.souls -= unit.unlockCost;
     player.unitUnlocked[unit.id] = true;
-    player.unitCds[unit.id] = unit.cdTimeMs;
+    player.unitCds[unit.id] = 0; // TODO remove properly
     playSfx('unlockUnit');
     return true;
 }
