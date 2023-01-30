@@ -554,6 +554,16 @@ function updateHitState(timeDeltaMs)
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
 
         switch (hitState[i].state) {
+            case HITSTATE.SPAWN:
+            {
+                if (hitState[i].spawnTimer > 0) {
+                    hitState[i].spawnTimer -= timeDeltaMs;
+                } else {
+                    hitState[i].state = HITSTATE.ALIVE;
+                    aiState[i].state = unit[i].defaultAiState;
+                }
+                break;
+            }
             case HITSTATE.ALIVE:
             {
                 const onIsland = isOnIsland(i);

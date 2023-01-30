@@ -63,7 +63,6 @@ export const params = Object.freeze(
             hitFadeTimeMs: 300,
             deathTimeMs: 1000,
             fallTimeMs: 500,
-            fallSizeReduction: 0.75,
             startingGold: 10,
             startingGoldPerSec: 1,
             dreamerGoldPerSec: 0.5,
@@ -98,8 +97,9 @@ export const ATKSTATE = Object.freeze({
     RECOVER: 2,
 });
 export const HITSTATE = Object.freeze({
-    ALIVE: 0,
-    DEAD: 1,
+    SPAWN: 0,
+    ALIVE: 1,
+    DEAD: 2,
 });
 
 /* Unit data */
@@ -341,6 +341,7 @@ const unitDefaults = Object.freeze({
     lighthouseDamage: 0,
     goldCost: Infinity,
     cdTimeMs: Infinity,
+    spawnTimeMs: 0,
     needsUnlock: false,
     unlockCost: 0,
     draw: {},
@@ -365,6 +366,7 @@ const unitData = [
         lighthouseDamage: 50,
         goldCost: 5,
         cdTimeMs: 300,
+        spawnTimeMs: 1000,
     },{
         id: UNIT.BIGEYE,
         maxSpeed: 1.5,
@@ -378,6 +380,7 @@ const unitData = [
         lighthouseDamage: 100,
         goldCost: 10,
         cdTimeMs: 300,
+        spawnTimeMs: 3000,
         needsUnlock: true,
         unlockCost: 5,
     },{
@@ -393,6 +396,7 @@ const unitData = [
         lighthouseDamage: 150,
         goldCost: 20,
         cdTimeMs: 1500,
+        spawnTimeMs: 6000,
         needsUnlock: true,
         unlockCost: 10,
     },{

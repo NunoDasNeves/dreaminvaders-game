@@ -69,14 +69,24 @@ function drawUnit(i)
 
     let alpha = 1;
     let colorOverlay = null;
-    if (hitState[i].state == HITSTATE.DEAD) {
-        const f = hitState[i].deadTimer / params.deathTimeMs;
-        alpha = f;
-        if (hitState[i].fallTimer > 0) {
-            //unitScale = (1 - params.fallSizeReduction) + (hitState[i].fallTimer / params.fallTimeMs) * params.fallSizeReduction;
+    switch (hitState[i].state) {
+        case HITSTATE.SPAWN:
+        {
+            const f = 1 - hitState[i].spawnTimer / unit[i].spawnTimeMs;
+            alpha = f;
+            break;
         }
-    } else {
-        strokeCircleWorld(context, pos[i], unit[i].radius, 1, color[i]);
+        case HITSTATE.ALIVE:
+        {
+            strokeCircleWorld(context, pos[i], unit[i].radius, 1, color[i]);
+            break;
+        }
+        case HITSTATE.DEAD:
+        {
+            const f = hitState[i].deadTimer / params.deathTimeMs;
+            alpha = f;
+            break;
+        }
     }
     // flash red when hit
     if (hitState[i].hitTimer > 0) {
@@ -563,7 +573,7 @@ export function draw(realTimeMs, timeDeltaMs)
     }
     //draw alive
     for (let i = 0; i < exists.length; ++i) {
-        if (!entityExists(i, ENTITY.UNIT) || (hitState[i].state != HITSTATE.ALIVE)) {
+        if (!entityExists(i, ENTITY.UNIT) || (hitState[i].state == HITSTATE.DEAD)) {
             continue;
         }
         drawUnit(i);

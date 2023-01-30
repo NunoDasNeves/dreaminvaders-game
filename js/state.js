@@ -303,18 +303,20 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     laneIdx[idx]    = aLaneIdx;
     target[idx]     = new EntityRef(INVALID_ENTITY_INDEX);
     // aiState, atkState, hitState are pretty interlinked
+    const hasSpawnTime = unit[idx].spawnTimeMs > 0;
     aiState[idx]    = {
-        state: unit[idx].defaultAiState
+        state: hasSpawnTime ? AISTATE.DO_NOTHING : unit[idx].defaultAiState,
     };
     atkState[idx]   = {
         state: ATKSTATE.AIM,
     };
     hitState[idx]   = {
-        state: HITSTATE.ALIVE,
+        state: hasSpawnTime ? HITSTATE.SPAWN : HITSTATE.ALIVE,
         hitTimer: 0,
         hpBarTimer: 0,
         deadTimer: 0,
         fallTimer: 0,
+        spawnTimer: unit[idx].spawnTimeMs,
     };
     physState[idx]  = {
         canCollide: unit[idx].collides,
