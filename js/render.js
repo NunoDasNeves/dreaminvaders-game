@@ -187,7 +187,7 @@ function drawVFX(i)
     switch(vfxState[i].type) {
         case (VFX.BIGEYE_BEAM):
         {
-            const weapon = weapons[UNIT.BIGEYE];
+            const weapon = getUnitWeapon(units[UNIT.BIGEYE]);
             const f = clamp(1 - vfx.timeMs / vfx.totalTimeMs, 0, 1);
             const colorLaser = `rgb(255,${255*f},255)`;
             strokeLineWorld(context, pos[i], vfx.hitPos, f*weapon.aoeRadius/2, colorLaser);
@@ -242,7 +242,7 @@ function drawWeapon(i)
         return;
     }
 
-    switch(weapon.id) {
+    switch(unit.id) {
         case UNIT.BASE:
             break;
         case UNIT.CHOGORINGU:

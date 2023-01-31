@@ -272,60 +272,6 @@ const unitSpriteData = [
     },
 ];
 
-const weaponRequired = ['id'];
-const weaponDefaults = Object.freeze({
-    // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
-    range: 0,
-    // damage to HP, reduced by effective armor (after armorPen)
-    damage: 0,
-    // flat armor reduction, before damage is applied
-    armorPen: 0,
-    // can't miss twice in a row, so it's less really
-    missChance: 1,
-    sfxName: 'dummy',
-});
-
-const weaponData = [
-    {
-        id: UNIT.BASE,
-    },{
-        id: UNIT.CHOGORINGU,
-        range: 10,
-        damage: 6,
-        missChance: 0.15,
-        sfxName: 'chogoringuAtk',
-    },{
-        id: UNIT.BIGEYE,
-        range: 90,
-        damage: 9,
-        aoeRadius: 20, // radius around the hit point
-        aoeMissRadius: 30, // how far away from target we might hit
-        aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
-        sfxName: 'bigeyeAtk',
-    },{
-        id: UNIT.TANK,
-        range: 100,
-        damage: 25,
-        armorPen: 2,
-        missChance: 0.1,
-        aoeRadius: 10, // looks like AOE but is actually single target
-        sfxName: 'tankAtk',
-    },{
-        id: UNIT.TOWER,
-        // TODO use these
-        atkMs: 1000, // total time taken to attack - should agree with anim
-        swingTime: 0, // 'swing' start time
-        hitTime: 100, // hit time
-        //
-        range: 650,
-        damage: 5,
-        missChance: 0.1,
-        aoeRadius: 10, // looks like AOE but is actually single target
-        aoeMissRadius: 30,
-        sfxName: 'staticDatk',
-    },
-];
-
 const unitRequired = ['id'];
 const unitDefaults = Object.freeze({
     maxSpeed: 0,
@@ -345,6 +291,17 @@ const unitDefaults = Object.freeze({
     needsUnlock: false,
     unlockCost: 0,
     draw: {},
+    weapon: {
+        // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
+        range: 0,
+        // damage to HP, reduced by effective armor (after armorPen)
+        damage: 0,
+        // flat armor reduction, before damage is applied
+        armorPen: 0,
+        // can't miss twice in a row, so it's less really
+        missChance: 1,
+        sfxName: 'dummy',
+    }
 });
 
 const unitData = [
@@ -354,6 +311,7 @@ const unitData = [
         radius: params.lighthouseRadius,
         collides: false,
         canFall: false,
+        weapon: {},
     },{
         id: UNIT.CHOGORINGU,
         maxSpeed: 1.5,
@@ -367,6 +325,12 @@ const unitData = [
         goldCost: 5,
         cdTimeMs: 300,
         spawnTimeMs: 1000,
+        weapon: {
+            range: 10,
+            damage: 6,
+            missChance: 0.15,
+            sfxName: 'chogoringuAtk',
+        }
     },{
         id: UNIT.BIGEYE,
         maxSpeed: 1.5,
@@ -383,6 +347,14 @@ const unitData = [
         spawnTimeMs: 3000,
         needsUnlock: true,
         unlockCost: 5,
+        weapon: {
+            range: 90,
+            damage: 9,
+            aoeRadius: 20, // radius around the hit point
+            aoeMissRadius: 30, // how far away from target we might hit
+            aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
+            sfxName: 'bigeyeAtk',
+        }
     },{
         id: UNIT.TANK,
         maxSpeed: 0.8,
@@ -399,6 +371,14 @@ const unitData = [
         spawnTimeMs: 6000,
         needsUnlock: true,
         unlockCost: 10,
+        weapon: {
+            range: 100,
+            damage: 25,
+            armorPen: 2,
+            missChance: 0.1,
+            aoeRadius: 10, // looks like AOE but is actually single target
+            sfxName: 'tankAtk',
+        }
     },{
         id: UNIT.TOWER,
         maxSpeed: 0,
@@ -410,6 +390,19 @@ const unitData = [
         collides: false,
         canFall: false,
         sightRange: 650,
+        weapon: {
+            // TODO use these
+            atkMs: 1000, // total time taken to attack - should agree with anim
+            swingTime: 0, // 'swing' start time
+            hitTime: 100, // hit time
+            //
+            range: 650,
+            damage: 5,
+            missChance: 0.1,
+            aoeRadius: 10, // looks like AOE but is actually single target
+            aoeMissRadius: 30,
+            sfxName: 'staticDatk',
+        }
     },
 ];
 
@@ -442,12 +435,11 @@ export function getUnitAnim(unit, animName)
     return unitSprites[unit.id].anims[animName];
 }
 
-export const weapons = makeFromDefaults("weapon", weaponData, weaponDefaults, weaponRequired);
 export const units = makeFromDefaults("unit", unitData, unitDefaults, unitRequired);
 
 export function getUnitWeapon(unit)
 {
-    return weapons[unit.id];
+    return unit.weapon;
 }
 
 export const UPGRADE = Object.freeze({

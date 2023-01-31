@@ -513,7 +513,7 @@ function unitHitUnit(hitter, hittee)
 {
     const { unit, playerId } = gameState.entities;
     const weapon = getUnitWeapon(unit[hitter]);
-    const damage = getWeaponDamage(playerId[hitter], weapon);
+    const damage = getUnitDamage(playerId[hitter], unit[hitter]);
     hitUnit(hittee, damage, weapon.armorPen);
 }
 
@@ -671,7 +671,7 @@ function doWeaponHit(i)
     console.assert(t != INVALID_ENTITY_INDEX);
     const weapon = getUnitWeapon(unit[i]);
 
-    switch(weapon.id) {
+    switch(unit[i].id) {
         case UNIT.TANK:
         {
             if (canAttackTarget(i) && atkState[i].didHit) {
@@ -716,7 +716,7 @@ function startWeaponSwing(i)
     console.assert(t != INVALID_ENTITY_INDEX);
     const weapon = getUnitWeapon(unit[i]);
 
-    switch(weapon.id) {
+    switch(unit[i].id) {
         case UNIT.CHOGORINGU:
         {
             // can't miss twice

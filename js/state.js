@@ -419,14 +419,15 @@ function addPlayer({name, controller}, pos, team, colorIdx)
     return id;
 }
 
-export function getWeaponDamage(playerId, weapon)
+export function getUnitDamage(playerId, unit)
 {
     const player = gameState.players[playerId];
     const upgradeLevel = player.upgradeLevels[UPGRADE.ATK];
+    const weapon = getUnitWeapon(unit);
     const base = weapon.damage;
     let bonus = 0;
     if (upgradeLevel >= 0) {
-        bonus = upgrades[UPGRADE.ATK].damageBonus[weapon.id][upgradeLevel];
+        bonus = upgrades[UPGRADE.ATK].damageBonus[unit.id][upgradeLevel];
     }
     return base + bonus;
 }
