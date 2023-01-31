@@ -1,14 +1,19 @@
 ## TODO
-- death anim
+- make unit + weapon parameters tuneable from CSV
+    - and animations
+    - just everything from data.js
+    - live update or button to update it in debug mode
+- make debug vis stuff toggleable in game
+- make dreamers move around a bit - toward lane controller
+- sort units for drawing back to front
+- island design...
+- death anim - pair with soul entity spawning
+- lighthouse death anim - 'explode' - pair with soul entity spawning
 - fall anim?
 - pixel art spawn platforms
 - island inlets design
-- make dreamers move around a bit - toward lane controller
-- make dreams fly around - from dreamers, up from the void..from killed nightmares..etc..
-    - basically an ellipse that flies along a curve; straight ahead, fixed angular speed probably
-    - maybe trails little particles that disappear - 'twinkle's
-- unit spawn vfx - flash of light
-    - 'twinkle's
+- unit spawn vfx - swirling particles + twinkles?
+    - screams manifesting into unit
 - change victory & defeat sounds to music, so we can stop them when going back to main menu
     - no loop tho
 - audio system upgrade - use audio.js for music and sfx, since they'll share most stuff
@@ -18,10 +23,10 @@
     - use sound pool for sfx - max of same sfx playing at once; 3-5, so we aren't cloneNode()ing constantly
 - ditch lane select; mouse click to spawn unit (or keyboard tap?)
 - make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
+    - this is also mitigated by just increasing sight radius, because they start chasing and slowing down a bit earlier
 - display unit stats on mouseover?
 - weapons: have a 'hit' time, instead of having to be at end of swing ?
 - make animations optionally loop or not loop? gives some flexibility for pausing at end of swing state, recover, etc...
-- sort units for drawing back to front
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
@@ -38,6 +43,9 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- make souls fly around
+- click to create units, or mouse + press hotkey (make it an option)
+- 2 resources - gold (screams) + souls
 - make tower a unit with weapon instead of special case
 - make tower an upgrade
 - refactor animation system/status - dont do special stuff for atk except hold some data for when swing is, hit, etc..
