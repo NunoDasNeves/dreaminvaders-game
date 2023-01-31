@@ -5,7 +5,7 @@ import * as Render from "./render.js";
 import * as Assets from "./assets.js";
 import * as Music from "./music.js";
 import * as UI from "./UI.js";
-import { debug, initSprites } from "./data.js";
+import * as Data from "./data.js";
 
 window.onload = start;
 
@@ -31,7 +31,7 @@ function gameLoop(timeElapsed)
     while (timeSinceLastUpdate >= frameTimeMs) {
         timeSinceLastUpdate -= frameTimeMs;
         ticks++;
-        debug.numUpdates++;
+        Data.debug.numUpdates++;
         Game.update(timeElapsed, ticks * frameTimeMs, frameTimeMs);
     }
     Render.draw(timeElapsed, timeDelta);
@@ -75,7 +75,7 @@ function start()
 {
     // Do assets first, other modules depend on assets existing
     Assets.init();
-    initSprites();
+    Data.init();
     Music.init();
     Render.init();
     UI.init();

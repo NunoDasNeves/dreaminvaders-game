@@ -1,6 +1,20 @@
 import { assets } from "./assets.js";
+import * as CSV from "./csv.js";
 import * as Utils from "./util.js";
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
+
+function getDataPath(filename)
+{
+    return `data/${filename}`;
+}
+
+async function getDataFile(filename)
+{
+    const path = getDataPath(filename);
+    const response = await fetch(path);
+    const text = await response.text();
+    return text;
+}
 
 /*
  * Static data
@@ -424,6 +438,17 @@ export function getUnitAnim(unit, animName)
 
 export const units = makeFromDefaults("unit", unitData, unitDefaults, unitRequired);
 
+async function loadUnitData()
+{
+    const unitCSV = await getDataFile('unit.csv');
+    const { success, array, error } = CSV.parse(unitCSV);
+    if (!success) {
+        console.error(error);
+    } else {
+        console.log(array);
+    }
+}
+
 export function getUnitWeapon(unit)
 {
     return unit;
@@ -515,9 +540,10 @@ export const SCREEN = Object.freeze({
     PAUSE: 3,
 });
 
-
-export function initSprites()
+export function init()
 {
+    loadUnitData();
+
     for (const sprite of Object.values(unitSprites)) {
         console.assert(sprite.assetName in assets.images);
         sprite.imgAsset = assets.images[sprite.assetName];
