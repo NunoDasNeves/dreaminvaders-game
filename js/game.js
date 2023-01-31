@@ -289,7 +289,7 @@ function updateUnitAiState()
                 // switch to attack if in range (and mostly stopped)
                 // units can get stuck partially off the edge without
                 // their vel going to almostZero, so this kinda fixes that
-                const mostlyStopped = vecLen(vel[i]) < (unit[i].maxSpeed * 0.5);
+                const mostlyStopped = vecLen(vel[i]) < (unit[i].topSpeed * 0.5);
                 if (nearestAtkTarget.isValid() && mostlyStopped) {
                     startAtk(i, nearestAtkTarget);
                 // otherwise always chase nearest
@@ -610,7 +610,7 @@ function updateHitState(timeDeltaMs)
                     const player = gameState.players[playerId[i]];
                     const enemyLighthouseIdx = enemyPlayer.island.idx;
                     if (onIsland && getDist(pos[i], pos[enemyLighthouseIdx]) < params.lighthouseRadius) {
-                        hp[enemyLighthouseIdx] -= unit[i].lighthouseDamage;
+                        hp[enemyLighthouseIdx] -= unit[i].damageToBase;
                         hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
                         hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
                         const souls = 1;
@@ -1025,7 +1025,7 @@ export function canBuildUnit(playerId, unit, spawnPos = null)
     if (player.laneSelected < 0) {
         return false;
     }
-    if (player.gold < unit.goldCost) {
+    if (player.gold < unit.cost) {
         return false;
     }
     if (player.unitCds[unit.id] > 0) {
@@ -1068,7 +1068,7 @@ export function tryBuildUnit(playerId, unit, laneIdx=null, desiredPos=null)
         return false;
     }
     playSfx('spawn');
-    player.gold -= unit.goldCost;
+    player.gold -= unit.cost;
     player.unitCds[unit.id] = 0; // TODO remove properly
     return true;
 }

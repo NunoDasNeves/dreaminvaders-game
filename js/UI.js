@@ -101,7 +101,7 @@ function upgradeButton(player, pos, dims, key, upgrade)
 function unitButton(player, pos, dims, key, unit)
 {
     const unlocked = player.unitUnlocked[unit.id];
-    const cost = unlocked ? unit.goldCost : unit.unlockCost;
+    const cost = unlocked ? unit.cost : unit.unlockCost;
     const canAfford = unlocked ? player.gold >= cost : player.souls >= cost;
     const onCd = player.unitCds[unit.id] > 0;
     const canPress = canAfford && !onCd;
@@ -278,7 +278,7 @@ export function doPlayerUI(player)
     {
         const { unit, hp } = gameState.entities;
         const lighthouseHp = hp[player.island.idx];
-        const f = clamp(lighthouseHp / unit[player.island.idx].maxHp, 0, 1);
+        const f = clamp(lighthouseHp / unit[player.island.idx].hp, 0, 1);
         const greenWidth = lhHpMaxWidth * f;
         const redStartX = xOff + greenWidth;
         const redWidth = lhHpMaxWidth * (1 - f);

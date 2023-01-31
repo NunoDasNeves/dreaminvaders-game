@@ -145,7 +145,7 @@ function drawHpBar(i)
         const hpBarHeight = 3;
         const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
         const hpPos = vecAdd(pos[i], hpOff);
-        const hpPercent = hp[i]/unit[i].maxHp;
+        const hpPercent = hp[i]/unit[i].hp;
         const filledWidth = hpPercent * hpBarWidth;
         const emptyWidth = (1 - hpPercent) * hpBarWidth;
         const emptyPos = vecAdd(hpPos, vec(filledWidth, 0))
