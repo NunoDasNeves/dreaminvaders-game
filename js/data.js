@@ -438,14 +438,62 @@ export function getUnitAnim(unit, animName)
 
 export const units = makeFromDefaults("unit", unitData, unitDefaults, unitRequired);
 
+function csvArrayToObjArr(arr)
+{
+    const retArr = [];
+    const fields = arr[0];
+    for (let i = 1; i < arr.length; ++i) {
+        const obj = {};
+        const row = arr[i];
+        const minLen = Math.min(row.length, fields.length);
+        for (let j = 0; j < minLen; ++j) {
+            const fieldName = fields[j];
+            const data = row[j];
+            obj[fieldName] = data;
+        }
+        retArr.push(obj);
+    }
+    return retArr;
+}
+
 async function loadUnitData()
 {
     const unitCSV = await getDataFile('unit.csv');
     const { success, array, error } = CSV.parse(unitCSV);
     if (!success) {
         console.error(error);
-    } else {
-        console.log(array);
+        return;
+    }
+    const arr = csvArrayToObjArr(array);
+    const unitArr = [];
+
+    for (const obj of arr) {
+        if (!('id' in obj)) {
+            console.error('Unit data missing id');
+            continue;
+        }
+        if (!(obj.id in UNIT)) {
+            console.error(`Unexpected unit type ${obj.id}`);
+            continue;
+        }
+        const id = UNIT[obj.id];
+        const unit = units[id];
+        for (const [key, val] of Object.entries(obj)) {
+            if (key === 'id') {
+                continue;
+            } else {
+                let finalVal = val;
+                const float = parseFloat(val);
+                if (!isNaN(float)) {
+                    finalVal = float;
+                } else if (val === 'FALSE') {
+                    finalVal = false;
+                } else if (val === 'TRUE') {
+                    finalVal = true;
+                }
+                unit[key] = finalVal;
+            }
+        }
     }
 }
 
