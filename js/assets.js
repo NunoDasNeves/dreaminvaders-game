@@ -88,7 +88,7 @@ const sfxData = {
         filename: 'Cannon Sound V2.mp3',
         volume: 0.3
     },
-    staticDatk: {
+    towerAtk: {
         filename: 'Lighthouse Laser.mp3',
         volume: 0.2
     },

@@ -406,7 +406,7 @@ const unitData = [
         missChance: 0.1,
         aoeRadius: 10, // looks like AOE but is actually single target
         aoeMissRadius: 30,
-        sfxName: 'staticDatk',
+        sfxName: 'towerAtk',
     },
 ];
 
