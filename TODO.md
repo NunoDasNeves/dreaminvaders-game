@@ -1,12 +1,12 @@
 ## TODO
-- make unit + weapon parameters tuneable from CSV
-    - and animations
-    - just everything from data.js
-    - live update or button to update it in debug mode
+- maybe animations in CSV
+    - other stuff?
+- debug key or button to reload data
 - make debug vis stuff toggleable in game
 - make dreamers move around a bit - toward lane controller
 - sort units for drawing back to front
 - island design...
+- soul sprite thingy - crystal ball
 - death anim - pair with soul entity spawning
 - lighthouse death anim - 'explode' - pair with soul entity spawning
 - fall anim?
@@ -43,6 +43,9 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- keep all relevant unit properties relevant in unit.csv
+    - attack timings
+- make unit + weapon parameters tuneable from CSV
 - make souls fly around
 - click to create units, or mouse + press hotkey (make it an option)
 - 2 resources - gold (screams) + souls
