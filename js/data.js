@@ -209,9 +209,6 @@ const unitSpriteData = [
                 col: 0,
                 frames: 5,
                 frameDur: 140,
-                // specific to ANIM.ATK:
-                swingTime: 140, // time swing starts
-                hitTime: 420, // time hit registers
             },
         },
     },{
@@ -235,8 +232,6 @@ const unitSpriteData = [
                 row: 1,
                 frames: 7,
                 frameDur: 150,
-                swingTime: 300,
-                hitTime: 700,
             },
         },
     },{
@@ -257,8 +252,6 @@ const unitSpriteData = [
                 row: 2,
                 frames: 5,
                 frameDur: 300,
-                swingTime: 150,
-                hitTime: 300,
             },
         },
     },{
@@ -279,8 +272,6 @@ const unitSpriteData = [
                 row: 1,
                 frames: 3,
                 frameDur: 200,
-                swingTime: 0,
-                hitTime: 100,
             },
         }
     },
@@ -303,6 +294,9 @@ const unitDefaults = Object.freeze({
     spawnTimeMs: 0,
     needsUnlock: false,
     unlockCost: 0,
+    atkMs: 0,
+    swingTime: 0,
+    hitTime: 0,
     // range starts at edge of unit radius, so the weapon 'radius' is unit.radius + weapon.range
     range: 0,
     // damage to HP, reduced by effective armor (after armorPen)
@@ -334,6 +328,9 @@ const unitData = [
         cdTimeMs: 300,
         spawnTimeMs: 1000,
         // weapon
+        atkMs: 700,
+        swingTime: 140,
+        hitTime: 420,
         range: 10,
         damage: 6,
         missChance: 0.15,
@@ -354,6 +351,9 @@ const unitData = [
         needsUnlock: true,
         unlockCost: 5,
         // weapon
+        atkMs: 1050,
+        swingTime: 300,
+        hitTime: 700,
         range: 90,
         damage: 9,
         aoeRadius: 20, // radius around the hit point
@@ -376,6 +376,9 @@ const unitData = [
         needsUnlock: true,
         unlockCost: 10,
         // weapon
+        atkMs: 1500,
+        swingTime: 150,
+        hitTime: 300,
         range: 100,
         damage: 25,
         armorPen: 2,
@@ -392,11 +395,11 @@ const unitData = [
         collides: false,
         canFall: false,
         sightRange: 650,
-        // weapon
-        // TODO use these
-        atkMs: 1000, // total time taken to attack - should agree with anim
-        swingTime: 0, // 'swing' start time
-        hitTime: 100, // hit time
+        // total time taken to attack
+        // *should agree with anim data*
+        atkMs: 1000,
+        swingTime: 0, // 'swing' start time for vfx
+        hitTime: 100, // hit time for damage + more vfx
         //
         range: 650,
         damage: 5,

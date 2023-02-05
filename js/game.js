@@ -773,7 +773,7 @@ function updateUnitAtkState(timeDeltaMs)
         switch (atkState.state) {
             case ATKSTATE.AIM:
             {
-                if (animState.timer >= attackAnim.swingTime) {
+                if (animState.timer >= unit.swingTime) {
                     atkState.state = ATKSTATE.SWING;
                     startWeaponSwing(i);
                 }
@@ -781,7 +781,7 @@ function updateUnitAtkState(timeDeltaMs)
             }
             case ATKSTATE.SWING:
             {
-                if (animState.timer >= attackAnim.hitTime) {
+                if (animState.timer >= unit.hitTime) {
                     atkState.state = ATKSTATE.RECOVER;
                     doWeaponHit(i);
                 }
@@ -824,10 +824,12 @@ function updateUnitAnimState(timeDeltaMs)
         const unit = gameState.entities.unit[i];
         const aState = gameState.entities.animState[i];
         const anim = getUnitAnim(unit, aState.anim);
-        const duration = anim.frames * anim.frameDur;
+        // frameDur is not used currently
+        const durationMs = unit.atkMs;//anim.frames * anim.frameDur;
         aState.timer += timeDeltaMs;
-        aState.frame = Math.floor(clamp(aState.timer / duration, 0, 0.9999) * anim.frames);
-        if (aState.timer >= duration) {
+        // current frame determined by timer only
+        aState.frame = Math.floor(clamp(aState.timer / durationMs, 0, 0.9999) * anim.frames);
+        if (aState.timer >= durationMs) {
             if (aState.loop) {
                 aState.frame = 0;
                 aState.timer = 0;
