@@ -181,7 +181,6 @@ const unitSpriteData = [
     {
         id: UNIT.CHOGORINGU,
         assetName: "chogoringu",
-        imgAsset: null, // not really needed here; populated by assets.js
         // dimensions of one frame of animation
         width: 16,
         height: 24,
@@ -292,7 +291,6 @@ const unitDefaults = Object.freeze({
     cost: Infinity,
     cdTimeMs: Infinity,
     spawnTimeMs: 0,
-    needsUnlock: false,
     unlockCost: 0,
     atkMs: 0,
     swingTime: 0,
@@ -311,102 +309,18 @@ const unitDefaults = Object.freeze({
 const unitData = [
     {
         id: UNIT.BASE,
-        hp: 1000,
-        radius: params.lighthouseRadius,
-        collides: false,
-        canFall: false,
     },{
         id: UNIT.CHOGORINGU,
-        topSpeed: 1.5,
-        accel: 0.4,
-        hp: 35,
-        sightRange: 60,
-        radius: 8,
         defaultAiState: AISTATE.PROCEED,
-        damageToBase: 50,
-        cost: 5,
-        cdTimeMs: 300,
-        spawnTimeMs: 1000,
-        // weapon
-        atkMs: 700,
-        swingTime: 140,
-        hitTime: 420,
-        range: 10,
-        damage: 6,
-        missChance: 0.15,
-        sfxName: 'chogoringuAtk',
     },{
         id: UNIT.BIGEYE,
-        topSpeed: 1.5,
-        accel: 0.3,
-        hp: 80,
-        armor: 1,
-        sightRange: 120,
-        radius: 15,
         defaultAiState: AISTATE.PROCEED,
-        damageToBase: 100,
-        cost: 10,
-        cdTimeMs: 300,
-        spawnTimeMs: 3000,
-        needsUnlock: true,
-        unlockCost: 5,
-        // weapon
-        atkMs: 1050,
-        swingTime: 300,
-        hitTime: 700,
-        range: 90,
-        damage: 9,
-        aoeRadius: 20, // radius around the hit point
-        aoeMissRadius: 30, // how far away from target we might hit
-        aoeAccuracy: 0.25, // higher accuracy = less chance of hitting edge of miss radius
-        sfxName: 'bigeyeAtk',
     },{
         id: UNIT.TANK,
-        topSpeed: 0.8,
-        accel: 0.1,
-        hp: 100,
-        armor: 1,
-        sightRange: 120,
-        radius: 20,
         defaultAiState: AISTATE.PROCEED,
-        damageToBase: 150,
-        cost: 20,
-        cdTimeMs: 1500,
-        spawnTimeMs: 6000,
-        needsUnlock: true,
-        unlockCost: 10,
-        // weapon
-        atkMs: 1500,
-        swingTime: 150,
-        hitTime: 300,
-        range: 100,
-        damage: 25,
-        armorPen: 2,
-        missChance: 0.1,
-        aoeRadius: 10, // looks like AOE but is actually single target
-        sfxName: 'tankAtk',
     },{
         id: UNIT.TOWER,
-        topSpeed: 0,
-        accel: 0,
-        hp: 1,
-        radius: 1,
         defaultAiState: AISTATE.IDLE,
-        collides: false,
-        canFall: false,
-        sightRange: 650,
-        // total time taken to attack
-        // *should agree with anim data*
-        atkMs: 1000,
-        swingTime: 0, // 'swing' start time for vfx
-        hitTime: 100, // hit time for damage + more vfx
-        //
-        range: 650,
-        damage: 5,
-        missChance: 0.1,
-        aoeRadius: 10, // looks like AOE but is actually single target
-        aoeMissRadius: 30,
-        sfxName: 'towerAtk',
     },
 ];
 
