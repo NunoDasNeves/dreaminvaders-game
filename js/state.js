@@ -410,7 +410,7 @@ function addPlayer({name, controller}, pos, team, colorIdx)
         },
         upgradeLevels: Object.fromEntries(Object.values(upgrades).map(({ id }) => [id, -1])),
         unitCds: Object.fromEntries(Object.values(UNIT).map(id => [id, 0])),
-        unitUnlocked: Object.fromEntries(Object.values(units).map(({ id, needsUnlock }) => [id, needsUnlock ? false : true])),
+        unitUnlocked: Object.fromEntries(Object.values(units).map(({ id, unlockCost }) => [id, unlockCost == 0])),
         botState: {
             actionTimer: 0,
             strategy: BOT.AGGRO,
