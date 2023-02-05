@@ -591,9 +591,9 @@ export const SCREEN = Object.freeze({
     PAUSE: 3,
 });
 
-export function init()
+export async function init()
 {
-    loadUnitData();
+    await loadUnitData();
 
     for (const sprite of Object.values(unitSprites)) {
         console.assert(sprite.assetName in assets.images);

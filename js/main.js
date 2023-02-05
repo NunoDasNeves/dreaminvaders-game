@@ -71,11 +71,11 @@ function initEvents()
     });
 }
 
-function start()
+async function start()
 {
     // Do assets first, other modules depend on assets existing
-    Assets.init();
-    Data.init();
+    await Assets.init();
+    await Data.init();
     Music.init();
     Render.init();
     UI.init();

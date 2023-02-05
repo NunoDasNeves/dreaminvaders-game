@@ -170,7 +170,7 @@ function loadImageAsset(filename, width=50, height=50, centerOffset=vec())
     return imageAsset;
 }
 
-export function init()
+export async function init()
 {
     for (const [name, data] of Object.entries(imageData)) {
         const { filename, width, height, centerOffset } = data;
