@@ -93,19 +93,24 @@ const sfxData = {
         volume: 0.2
     },
     unlockUnit: {
-        filename: 'spawn.mp3',
+        filename: 'upgrade.mp3',
+        volume: 0.35
     },
     upgradeEco: {
-        filename: 'spawn_old.mp3',
+        filename: 'upgrade.mp3',
+        volume: 0.35
     },
     upgradeAtk: {
-        filename: 'spawn_old.mp3',
+        filename: 'upgrade.mp3',
+        volume: 0.35
     },
     upgradeDef: {
-        filename: 'spawn_old.mp3',
+        filename: 'upgrade.mp3',
+        volume: 0.35
     },
     upgradeTower: {
-        filename: 'spawn_old.mp3',
+        filename: 'upgrade.mp3',
+        volume: 0.35
     },
     lighthouseHit: {
         filename: 'Lighthouse Hit.mp3',
