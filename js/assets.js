@@ -115,10 +115,12 @@ const sfxData = {
 const musicData = {
     menu: {
         filename: 'menu.mp3',
+        volume: 0.5,
         loop: true,
     },
     game: {
         filename: 'game.mp3',
+        volume: 0.5,
         loop: true,
     },
 };
