@@ -71,7 +71,7 @@ const sfxData = {
         volume: 1,
     },
     spawn: {
-        filename: 'dummy.mp3',
+        filename: 'scream.mp3',
     },
     death: {
         filename: 'death.mp3',
