@@ -125,7 +125,7 @@ const musicData = {
     },
     game: {
         filename: 'ACOM9GD.mp3',
-        volume: 0.3,
+        volume: 0.10,
         loop: true,
     },
 };
