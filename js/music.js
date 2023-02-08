@@ -75,7 +75,7 @@ export function init()
             asset,
             audioNode,
             gainNode,
-            volume: 1,
+            volume: asset.volume,
         };
     }
 }

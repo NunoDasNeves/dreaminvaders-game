@@ -57,6 +57,7 @@ const imageData = {
 };
 
 const sfxDefaultVolume = 0.7; // 0-1
+const musicDefaultVolume = 1; // 0-1
 
 const sfxData = {
     dummy: {
@@ -120,12 +121,12 @@ const sfxData = {
 const musicData = {
     menu: {
         filename: 'menu.mp3',
-        volume: 0.5,
+        volume: 0.7,
         loop: true,
     },
     game: {
         filename: 'ACOM9GD.mp3',
-        volume: 0.10,
+        volume: 0.5,
         loop: true,
     },
 };
@@ -186,7 +187,8 @@ export async function init()
     }
     for (const [name, data] of Object.entries(musicData)) {
         const { filename, loop } = data;
-        const asset = loadAudioAsset(getMusicPath(filename), loop);
+        const volume = 'volume' in data ? data.volume : musicDefaultVolume;
+        const asset = loadAudioAsset(getMusicPath(filename), loop, volume);
         assets.music[name] = asset;
     }
     for (const [name, data] of Object.entries(sfxData)) {
