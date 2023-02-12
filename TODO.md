@@ -1,7 +1,5 @@
 ## TODO
-- use another color color (yellow) instead of player color for $creams
 - lighthouse art
-- lighthouse healthbar - remove from UI, make unit healthbar thicker and at bottom of lighthouse
 - lighthouse upgrade art/anims
     - glowing runes, extra thingys for income?
     - tower/flame for staticD
@@ -33,28 +31,9 @@
 - tank sprites are not really done (need to be shiny & slimy)
 - unit specials - slime, nightling boosts
 
-## Cut
-- audio system upgrade? - use audio.js for music and sfx, since they'll share most stuff
-    - play music by name from game/app code, don't read App state
-        - maintain state of playing, not playing, which song etc...
-    - use audio api and audio nodes for sfx - gain, fadeout etc... reuse from music
-    - use sound pool for sfx - max of same sfx playing at once; 3-5, so we aren't cloneNode()ing constantly
-- make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
-    - this is also mitigated by just increasing sight radius, because they start chasing and slowing down a bit earlier
-- debug key or button to reload data
-- debug UI - options to enable debug draw stuff at runtime
-    - store the settings in local storage and restore them
-- perf: debug display: how long an update() takes
-- better collision or AI for collision
-    - less jittering/bouncing
-    - support pushing (when we want it) - use unit mass or something
-- better steering/avoidance?
-    - deal with avoidance conflict (they avoid the same way)?
-    - use velocity to determine how far ahead to look
-        - use other units velocity to determine where they'll be
-    - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
-
 ## Done
+- lighthouse healthbar - remove from UI, make its normal healthbar thicker, more visible
+- use another color color (yellow) instead of player color for $creams
 - ditch lane select; mouse click to spawn unit (or keyboard tap?)
 - keep all relevant unit properties relevant in unit.csv
     - attack timings
@@ -155,3 +134,24 @@
 - basic avoidance
 - SIMPLE collision
 - fail to spawn if not enough room
+
+## Cut
+- audio system upgrade? - use audio.js for music and sfx, since they'll share most stuff
+    - play music by name from game/app code, don't read App state
+        - maintain state of playing, not playing, which song etc...
+    - use audio api and audio nodes for sfx - gain, fadeout etc... reuse from music
+    - use sound pool for sfx - max of same sfx playing at once; 3-5, so we aren't cloneNode()ing constantly
+- make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
+    - this is also mitigated by just increasing sight radius, because they start chasing and slowing down a bit earlier
+- debug key or button to reload data
+- debug UI - options to enable debug draw stuff at runtime
+    - store the settings in local storage and restore them
+- perf: debug display: how long an update() takes
+- better collision or AI for collision
+    - less jittering/bouncing
+    - support pushing (when we want it) - use unit mass or something
+- better steering/avoidance?
+    - deal with avoidance conflict (they avoid the same way)?
+    - use velocity to determine how far ahead to look
+        - use other units velocity to determine where they'll be
+    - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
