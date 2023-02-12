@@ -1,38 +1,50 @@
 ## TODO
-- maybe animations in CSV
-    - other stuff?
-- debug key or button to reload data
-- make debug vis stuff toggleable in game
+- use another color color (yellow) instead of player color for $creams
+- lighthouse art
+- lighthouse healthbar - remove from UI, make unit healthbar thicker and at bottom of lighthouse
+- lighthouse upgrade art/anims
+    - glowing runes, extra thingys for income?
+    - tower/flame for staticD
+    - ??? for units - runes/carvings?
+    - these need to mix & match, need tech for that
+- Income bubbles floating up whenever you get $creams
+- Placeholder icons to be replaced - souls, screams, upgrades
+- Bit of UI rearrange? where to put souls + screams
+- Spawn animation - beam of light
+- AI update - AI can do all actions
 - make dreamers move around a bit - toward lane controller
+- dreamer art + animations
 - sort units for drawing back to front
-- island design...
-- soul sprite thingy - crystal ball
+- finish island art
+- tower/flame anim - firing, etc...
 - death anim - pair with soul entity spawning
-- lighthouse death anim - 'explode' - pair with soul entity spawning
-- fall anim?
-- pixel art spawn platforms
-- island inlets design
-- unit spawn vfx - swirling particles + twinkles?
-    - screams manifesting into unit
+- lighthouse death anim + VFX
+- unit hit lighthouse anim -'explode' - pair with soul entity spawning
+- soul sprite thingy - crystal ball
+- pixel art spawn platforms + bridge start
+- falling off bridge animation - need to draw behind bridge too...
+- increase island radius a bit so units can't fall off while near the pixel art part
+- Tutorial menu + screens
 - change victory & defeat sounds to music, so we can stop them when going back to main menu
     - no loop tho
-- audio system upgrade - use audio.js for music and sfx, since they'll share most stuff
+
+## Stretch
+- Menu use new assets
+- tank sprites are not really done (need to be shiny & slimy)
+- unit specials - slime, nightling boosts
+
+## Cut
+- audio system upgrade? - use audio.js for music and sfx, since they'll share most stuff
     - play music by name from game/app code, don't read App state
         - maintain state of playing, not playing, which song etc...
     - use audio api and audio nodes for sfx - gain, fadeout etc... reuse from music
     - use sound pool for sfx - max of same sfx playing at once; 3-5, so we aren't cloneNode()ing constantly
-- ditch lane select; mouse click to spawn unit (or keyboard tap?)
 - make units slow down/stop when path is blocked, before colliding and sliding off the bridge (while proceeding)
     - this is also mitigated by just increasing sight radius, because they start chasing and slowing down a bit earlier
-- display unit stats on mouseover?
-- weapons: have a 'hit' time, instead of having to be at end of swing ?
-- make animations optionally loop or not loop? gives some flexibility for pausing at end of swing state, recover, etc...
+- debug key or button to reload data
 - debug UI - options to enable debug draw stuff at runtime
     - store the settings in local storage and restore them
 - perf: debug display: how long an update() takes
-- more weapon types?
-    - projectile weapon need a projectile entity
-- production queue for each lane? 2-3 small units wide, so you can make 2-3 per lane at once, the rest are queued
 - better collision or AI for collision
     - less jittering/bouncing
     - support pushing (when we want it) - use unit mass or something
@@ -43,6 +55,7 @@
     - capsule doesn't work well, use a half circle (circle and then only consider stuff in front)
 
 ## Done
+- ditch lane select; mouse click to spawn unit (or keyboard tap?)
 - keep all relevant unit properties relevant in unit.csv
     - attack timings
 - make unit + weapon parameters tuneable from CSV
