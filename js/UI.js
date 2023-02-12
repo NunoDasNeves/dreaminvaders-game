@@ -175,10 +175,8 @@ export function doPlayerUI(player)
     //  souls
     //  unit buttons
     //  upgrade buttons
-    //  lighthouse HP
-    //  energy
     const UIInnerpadding = 16;
-    const UIOuterPadding = 20;
+    const UIOuterPadding = 32;
     const goldFontSz = 30;
     const goldFont = `${goldFontSz}px sans-serif`;
     const goldFontSmol = `20px sans-serif`;
@@ -190,12 +188,8 @@ export function doPlayerUI(player)
     const buttonXGap = UIInnerpadding;
     const numUnitButtons = Object.keys(hotKeys[player.id].units).length;
     const numUpgradeButtons = Object.keys(hotKeys[player.id].upgrades).length;
-    const lhHpHeight = 16;
     const energyHeight = 8;
-    const lhHpMaxWidth = canvas.width / 3;
-    const energyMaxWidth = lhHpMaxWidth;
     const UIwidth = Math.max(
-        lhHpMaxWidth,
         numUnitButtons * buttonDims.x + (numUnitButtons - 1) * buttonXGap,
         numUpgradeButtons * buttonDims.x + (numUpgradeButtons - 1) * buttonXGap,
     ) + UIOuterPadding * 2;
@@ -208,9 +202,6 @@ export function doPlayerUI(player)
         buttonDims.y +
         UIInnerpadding +
         buttonDims.y +
-        UIInnerpadding +
-        lhHpHeight +
-        energyHeight +
         UIOuterPadding;
     const UIstartX = player.id == 0 ? 0 : canvas.width - UIwidth;
     const UIstartY = canvas.height - UIheight;
@@ -271,35 +262,6 @@ export function doPlayerUI(player)
         upgradeButton(player, vec(xOff, yOff), buttonDims, key, upgrades[upgradeId]);
         xOff += buttonDims.x + buttonXGap;
     }
-
-    xOff = UIstartX + UIOuterPadding;
-    yOff += buttonDims.y + UIInnerpadding;
-
-    // lighthouse health bars
-    {
-        const { unit, hp } = gameState.entities;
-        const lighthouseHp = hp[player.island.idx];
-        const f = clamp(lighthouseHp / unit[player.island.idx].hp, 0, 1);
-        const greenWidth = lhHpMaxWidth * f;
-        const redStartX = xOff + greenWidth;
-        const redWidth = lhHpMaxWidth * (1 - f);
-        fillRectScreen(context, vec(xOff, yOff), vec(greenWidth, lhHpHeight), '#00ff00');
-        fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, lhHpHeight), '#ff0000');
-    }
-
-    yOff += lhHpHeight;
-
-    // energy bar/staticD cooldown
-    /*{
-        const time = player.staticDCd;
-        const cd = params.staticDCdMs;
-        const f = clamp(1 - time/cd, 0, 1);
-        const energyWidth = energyMaxWidth * f;
-        const redStartX = xOff + energyWidth;
-        const redWidth = energyMaxWidth * (1 - f);
-        fillRectScreen(context, vec(xOff, yOff), vec(energyWidth, energyHeight), player.color);
-        fillRectScreen(context, vec(redStartX, yOff), vec(redWidth, energyHeight), '#000000');
-    }*/
 
     // lane indicators and keys, for non-mouse control
     if (!player.mouseEnabled && player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
