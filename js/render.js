@@ -139,12 +139,14 @@ function drawUnit(i)
 function drawHpBar(i)
 {
     const { unit, pos, vel, angle, target, hp, atkState, physState, hitState } = gameState.entities;
+
+    const sprite = unitSprites[unit[i].id];
     // hp bar
     if (hitState[i].hpBarTimer > 0) {
-        const hpBarWidth = unit[i].radius*2;
-        const hpBarHeight = 3;
-        const hpOff = vec(-hpBarWidth*0.5, -(unit[i].radius + unit[i].radius*0.75)); // idk
-        const hpPos = vecAdd(pos[i], hpOff);
+        const hpBarWidth = sprite.width;
+        const hpBarHeight = Math.min(Math.max(sprite.height * 0.1, 3), 8);
+        const hpPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
+        hpPos.y -= hpBarHeight*1.5;
         const hpPercent = hp[i]/unit[i].hp;
         const filledWidth = hpPercent * hpBarWidth;
         const emptyWidth = (1 - hpPercent) * hpBarWidth;
