@@ -183,6 +183,7 @@ export function doPlayerUI(player)
     const goldFont = `${goldFontSz}px sans-serif`;
     const goldFontSmol = `20px sans-serif`;
     const goldFontMetrics = getTextDims(context, '$00', goldFont, 'left', 'top');
+    const goldColor = params.goldTextColor;
     const goldHeight = goldFontMetrics.actualHeight;
     const soulsHeight = goldHeight;
     const buttonDims = vec(64,64);
@@ -221,10 +222,10 @@ export function doPlayerUI(player)
     // gold
     const goldStart = vec(xOff, yOff);
     const goldText = `$${Math.floor(player.gold)}`;
-    drawTextScreen(goldText, goldStart, goldFont, player.color, true, 'left', 'top');
+    drawTextScreen(goldText, goldStart, goldFont, goldColor, true, 'left', 'top');
     const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
     const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
-    drawTextScreen(gpsText, gpsStart, goldFontSmol, player.color, true, 'left', 'top');
+    drawTextScreen(gpsText, gpsStart, goldFontSmol, goldColor, true, 'left', 'top');
 
     yOff += UIInnerpadding + goldHeight;
 
@@ -242,7 +243,7 @@ export function doPlayerUI(player)
         str += `dreamers:    $${player.goldFromDreamers.toFixed(2)}\n`;
         str += `totalEarned: $${player.goldEarned.toFixed(2)}\n`;
         for (const s of str.split('\n')) {
-            drawTextScreen(s, strPos, goldFontSmol, player.color, true, 'left', 'top');
+            drawTextScreen(s, strPos, goldFontSmol, goldColor, true, 'left', 'top');
             vecAddTo(strPos, lineOffset);
         }
         str = ''

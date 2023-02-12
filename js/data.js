@@ -80,6 +80,7 @@ export const params = Object.freeze(
             startingGold: 10,
             startingGoldPerSec: 1,
             dreamerGoldPerSec: 0.5,
+            goldTextColor: '#ffd766',
             soulsTextColor: "#86f",
             soulMaxVel: 5,
             soulMinAccel: 0.03,
