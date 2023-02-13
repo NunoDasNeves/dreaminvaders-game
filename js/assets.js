@@ -54,6 +54,41 @@ const imageData = {
         width: 32,
         height: 32,
     },
+    dreamer: {
+        filename: "dreamer.png",
+        width: 48,
+        height: 48,
+    },
+    scream: {
+        filename: "scream.png",
+        width: 16,
+        height: 16,
+    },
+    soul: {
+        filename: "soul.png",
+        width: 16,
+        height: 16,
+    },
+    incomeUpgrade: {
+        filename: "income_upgrade.png",
+        width: 64,
+        height: 64,
+    },
+    defenseUpgrade: {
+        filename: "defense_upgrade.png",
+        width: 64,
+        height: 64,
+    },
+    goldIcon: {
+        filename: "scream_icon.png",
+        width: 24,
+        height: 24,
+    },
+    soulIcon: {
+        filename: "soul_icon.png",
+        width: 24,
+        height: 24,
+    },
 };
 
 const sfxDefaultVolume = 0.7; // 0-1
