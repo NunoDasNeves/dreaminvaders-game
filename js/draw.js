@@ -224,7 +224,7 @@ export function drawSpriteScreen(context, sprite, row, col, pos, colorOverlay = 
             img,
             sourcePos.x, sourcePos.y,
             sprite.width, sprite.height,
-            pos.x, pos.y,
+            Math.floor(pos.x), Math.floor(pos.y),
             drawDims.x, drawDims.y);
     } else {
         if (colorOverlay != null) {
@@ -236,7 +236,6 @@ export function drawSpriteScreen(context, sprite, row, col, pos, colorOverlay = 
 
 export function drawSprite(context, sprite, row, col, pos, colorOverlay = null)
 {
-    const asset = sprite.imgAsset;
     const drawWidth = sprite.width / gameState.camera.scale;
     const drawHeight = sprite.height / gameState.camera.scale;
     const drawPos = worldToCamera(pos.x, pos.y);

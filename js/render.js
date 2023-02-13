@@ -33,13 +33,6 @@ function drawImage(imgAsset, pos)
     }
 }
 
-function makeOffscreenCanvas(width, height)
-{
-    const c = new OffscreenCanvas(width, height);
-    const ctx = c.getContext("2d");
-    return [c, ctx];
-}
-
 function drawUnitAnim(i, alpha, colorOverlay)
 {
     const { team, playerId, unit, pos, angle, animState } = gameState.entities;
