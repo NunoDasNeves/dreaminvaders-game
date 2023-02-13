@@ -432,12 +432,14 @@ export const upgrades = Object.freeze({
         id: UPGRADE.TOWER,
         soulsCost: [10],
         sfxName: 'upgradeTower',
+        imgName: 'defenseUpgrade',
     },
     [UPGRADE.ECO]: {
         id: UPGRADE.ECO,
         soulsCost: [10, 10, 10],
         goldPerSecBonus: [0.25,0.75,1.5],
         sfxName: 'upgradeEco',
+        imgName: 'incomeUpgrade',
     },
     [UPGRADE.ATK]: {
         id: UPGRADE.ATK,

@@ -4,6 +4,7 @@ import * as State from "./state.js";
 import * as Draw from './draw.js';
 import * as App from './app.js';
 import * as Game from './game.js';
+import { assets } from './assets.js';
 import { tryBuildUnit, tryUnlockUnit, tryUpgrade } from "./game.js"
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
@@ -67,18 +68,21 @@ function upgradeButton(player, pos, dims, key, upgrade)
     }
 
     fillRectScreen(context, pos, dims, hover ? "#888" : "#444", 10);
-    // draw sprite
-    //const sprite = unitSprites[unit.id];
-    //const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
-    //vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
-    //drawSpriteScreen(context, sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");
     const ecoText = {
         [UPGRADE.TOWER]: 'PEW',
         [UPGRADE.ECO]: '$$$',
         [UPGRADE.ATK]: 'ATK',
         [UPGRADE.DEF]: 'DEF',
     }
-    drawTextScreen(ecoText[upgrade.id], vecAdd(pos, vec(dims.x/2, dims.y/2)), buttonFont, 'lightgray', false, 'center', 'middle');
+    if (upgrade.imgName) {
+        const asset = assets.images[upgrade.imgName];
+        const imgDims = vec(asset.width, asset.height);
+        const drawPosOff = vecMul(vecSub(dims, imgDims), 0.5);
+        const drawPos = vecAdd(pos, drawPosOff);
+        drawImageScreen(context, asset.img, drawPos, imgDims);
+    } else {
+        drawTextScreen(ecoText[upgrade.id], vecAdd(pos, vec(dims.x/2, dims.y/2)), buttonFont, 'lightgray', false, 'center', 'middle');
+    }
 
     const costPos = vec(pos.x + 3,pos.y + dims.y - 5);
     if (isMax) {

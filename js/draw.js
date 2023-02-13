@@ -173,13 +173,13 @@ export function fillTriangleWorld(ctx, worldPos, angle, base, height, fillStyle,
     ctx.fill();
 }
 
-function drawImageScreen(ctx, img, pos, dims)
+export function drawImageScreen(ctx, img, pos, dims)
 {
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, drawPos.x, drawPos.y, drawDims.width, drawDims.height);
+    ctx.drawImage(img, pos.x, pos.y, dims.x, dims.y);
 }
 
-function drawImageWorld(ctx, img, pos, dims)
+export function drawImageWorld(ctx, img, pos, dims)
 {
     const drawDims = vecMul(dims, 1 / gameState.camera.scale);
     const drawPos = worldVecToCamera(pos);
