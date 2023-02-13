@@ -176,7 +176,7 @@ export function fillTriangleWorld(ctx, worldPos, angle, base, height, fillStyle,
 export function drawImageScreen(ctx, img, pos, dims)
 {
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, pos.x, pos.y, dims.x, dims.y);
+    ctx.drawImage(img, Math.floor(pos.x), Math.floor(pos.y), dims.x, dims.y);
 }
 
 export function drawImageWorld(ctx, img, pos, dims)
