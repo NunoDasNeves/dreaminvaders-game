@@ -227,6 +227,16 @@ function drawVFX(i)
             drawText(vfx.string, textPos, vfx.textSize, vfx.color, true);
             break;
         }
+        case (VFX.SCREAM):
+        {
+            const f = clamp(vfx.timeMs / vfx.totalTimeMs, 0, 1);
+            const screamPos = vecAdd(pos[i], vec(0, (1-f)*-20));
+            const asset = assets.images.scream;
+            const imgDims = vec(asset.width, asset.height);
+            const drawPos = vecSub(screamPos, vecMul(imgDims, 0.5));
+            drawImageWorld(context, asset.img, drawPos, imgDims);
+            break;
+        }
         default:
     }
 }
@@ -533,7 +543,7 @@ function drawBridge(laneIdx, hovered)
     }
 
     const dreamer = bridge.dreamer;
-    const dreamerPos = vecAdd(bridge.middlePos, vec(0, -params.laneWidth));
+    const dreamerPos = dreamer.pos;
     fillCircleWorld(context, dreamerPos, 24, dreamer.color);
     const asset = assets.images.dreamer;
     const imgDims = vec(asset.width, asset.height);

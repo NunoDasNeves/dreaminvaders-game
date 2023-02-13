@@ -936,6 +936,8 @@ function updateDreamerState(timeDeltaMs)
                 if (dreamer.timer <= 0) {
                     dreamer.goldEarned += params.dreamerGoldPerSec;
                     dreamer.timer = 1000;
+                    const randX = -4 + (Math.random() - 0.5) * 16;
+                    spawnVFXScream(vecAdd(dreamer.pos, vec(randX, -20)));
                 }
             }
         } else {

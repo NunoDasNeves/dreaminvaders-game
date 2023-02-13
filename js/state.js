@@ -203,6 +203,17 @@ export function spawnVFXLastHitText(string, point, textSize, color)
     };
 }
 
+export function spawnVFXScream(point)
+{
+    const { pos, vfxState } = gameState.entities;
+    const idx = createEntity(ENTITY.VFX);
+    pos[idx] = point;
+    vfxState[idx] = {
+        type: VFX.SCREAM,
+        timeMs: 500,
+        totalTimeMs: 500,
+    };
+}
 
 export function spawnVFXStaticDBeam(startPos, endPos, color)
 {
@@ -572,7 +583,7 @@ export function initGameState(gameConfig)
         gameState.players[1].island.lanes.push(p1Lane);
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
-            dreamer: { playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, },
+            dreamer: { playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, pos: vecAdd(middlePos, vec(0, -params.laneWidth)) },
             pathPoints,
             bezierPoints,
             middlePos,
