@@ -67,8 +67,8 @@ export const params = Object.freeze(
             islandRadius: 200,
             lighthouseRadius: 50,
             // where to put center of lighthouse
-            lighthouseOffsetX: -50,
-            lighthouseOffsetY: -25,
+            lighthouseOffsetX: -60,
+            lighthouseOffsetY: -35,
             // where to put the light
             lightHouseLightOffsetY: -148,
             neutralColor: "#dfdfdf",
@@ -174,12 +174,12 @@ const unitSpriteData = [
     {
         id: UNIT.BASE,
         assetName: "lighthouse",
-        width: 128,
+        width: 160,
         height: 256,
         rows: 1,
-        centerOffset: vec(0,74),
-    },
-    {
+        centerOffset: vec(0,65),
+        playerColors: true,
+    },{
         id: UNIT.CHOGORINGU,
         assetName: "chogoringu",
         // dimensions of one frame of animation
