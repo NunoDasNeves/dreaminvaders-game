@@ -533,7 +533,12 @@ function drawBridge(laneIdx, hovered)
     }
 
     const dreamer = bridge.dreamer;
-    fillCircleWorld(context, vecAdd(bridge.middlePos, vec(0, -params.laneWidth)), 15, dreamer.color);
+    const dreamerPos = vecAdd(bridge.middlePos, vec(0, -params.laneWidth));
+    fillCircleWorld(context, dreamerPos, 24, dreamer.color);
+    const asset = assets.images.dreamer;
+    const imgDims = vec(asset.width, asset.height);
+    const drawPos = vecSub(dreamerPos, vecMul(imgDims, 0.5));
+    drawImageWorld(context, asset.img, drawPos, imgDims);
 }
 
 export function getBoundingClientRect()
