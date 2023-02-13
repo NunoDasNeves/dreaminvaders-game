@@ -4,6 +4,7 @@ import * as State from "./state.js";
 import * as Draw from './draw.js';
 import * as UI from './UI.js';
 import { canBuildUnit } from './game.js';
+import { assets } from './assets.js';
 Object.entries(Utils).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
@@ -165,13 +166,23 @@ function drawSoul(i)
     const soul = soulState[i];
     const player = gameState.players[playerId[i]];
 
+    // tail
     const p = vecClone(pos[i]);
-    const inc = vecMul(vecNormalize(vecClone(vel[i])), -4);
-    fillCircleWorld(context, p, 5, params.soulsTextColor);
-    vecAddTo(p, inc);
+    const dir = vecNormalize(vecClone(vel[i]));
+    vecAddTo(p, vecMul(dir, -6));
+    fillCircleWorld(context, p, 4, params.soulsTextColor);
+    vecAddTo(p, vecMul(dir, -6));
     fillCircleWorld(context, p, 3, params.soulsTextColor);
-    vecAddTo(p, inc);
+    vecAddTo(p, vecMul(dir, -4));
     fillCircleWorld(context, p, 2, params.soulsTextColor);
+    vecAddTo(p, vecMul(dir, -3));
+    fillCircleWorld(context, p, 1, params.soulsTextColor);
+
+    // sprite
+    const asset = assets.images.soul;
+    const imgDims = vec(asset.width, asset.height);
+    const drawPos = vecSub(pos[i], vecMul(imgDims, 0.5));
+    drawImageWorld(context, asset.img, drawPos, imgDims);
 }
 
 function drawVFX(i)
