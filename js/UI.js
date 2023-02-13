@@ -192,7 +192,6 @@ export function doPlayerUI(player)
     const buttonXGap = UIInnerpadding;
     const numUnitButtons = Object.keys(hotKeys[player.id].units).length;
     const numUpgradeButtons = Object.keys(hotKeys[player.id].upgrades).length;
-    const energyHeight = 8;
     const UIwidth = Math.max(
         numUnitButtons * buttonDims.x + (numUnitButtons - 1) * buttonXGap,
         numUpgradeButtons * buttonDims.x + (numUpgradeButtons - 1) * buttonXGap,
@@ -215,23 +214,39 @@ export function doPlayerUI(player)
     //strokeRectScreen(context, vec(xOff, yOff), vec(goldFontMetrics.width, goldHeight), "red");
 
     // gold
-    const goldStart = vec(xOff, yOff);
-    const goldText = `$${Math.floor(player.gold)}`;
-    drawTextScreen(goldText, goldStart, goldFont, goldColor, true, 'left', 'top');
-    const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
-    const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
-    drawTextScreen(gpsText, gpsStart, goldFontSmol, goldColor, true, 'left', 'top');
+    {
+        const goldStart = vec(xOff, yOff);
+        const asset = assets.images.goldIcon;
+        const imgDims = vec(asset.width, asset.height);
+        const drawPos = vecAdd(goldStart, vec(0, -2));
+        drawImageScreen(context, asset.img, drawPos, imgDims);
+        goldStart.x += asset.width + 5;
+        const goldText = `${Math.floor(player.gold)}`;
+        drawTextScreen(goldText, goldStart, goldFont, goldColor, true, 'left', 'top');
+        if (debug.drawUI) {
+            const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
+            const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
+            drawTextScreen(gpsText, gpsStart, goldFontSmol, goldColor, true, 'left', 'top');
+        }
+    }
 
     yOff += UIInnerpadding + goldHeight;
 
     // souls
-    const soulsStart = vec(xOff, yOff);
-    const soulsText = `${player.souls}`;
-    drawTextScreen(soulsText, soulsStart, goldFont, params.soulsTextColor, true, 'left', 'top');
+    {
+        const soulsStart = vec(xOff, yOff);
+        const asset = assets.images.soulIcon;
+        const imgDims = vec(asset.width, asset.height);
+        const drawPos = vecAdd(soulsStart, vec(0, -2));
+        drawImageScreen(context, asset.img, drawPos, imgDims);
+        soulsStart.x += asset.width + 5;
+        const soulsText = `${player.souls}`;
+        drawTextScreen(soulsText, soulsStart, goldFont, params.soulsTextColor, true, 'left', 'top');
+    }
 
     // gold + souls income
     if (debug.drawUI) {
-        const strPos = vecAdd(gpsStart, vec(180, 0));
+        const strPos = vec(xOff + 240, yOff);
         const lineOffset = vec(0, 30);
         let str = ''
         str += `base:        $${player.goldBaseEarned.toFixed(2)}\n`;
