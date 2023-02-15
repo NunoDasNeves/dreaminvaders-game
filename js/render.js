@@ -57,6 +57,21 @@ function drawUnitAnim(i, alpha, colorOverlay)
     context.globalAlpha = 1;
 }
 
+function drawUnitShadow(i)
+{
+    const { unit, pos } = gameState.entities;
+    if (unit[i].shadowWidth == 0) {
+        return;
+    }
+    const sprite = unitSprites[unit[i].id];
+    const width_2 = sprite.width * 0.5;
+    //const drawUnitPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
+    const shadowPos = vecClone(pos[i],); //vecAdd(drawUnitPos, vec(sprite.width * 0.5, sprite.height));
+    shadowPos.y += unit[i].shadowOffsetY;
+    const radii = vec(unit[i].shadowWidth, unit[i].shadowWidth * 0.3);
+    fillEllipseWorld(context, shadowPos, radii, "#0004");
+}
+
 function drawUnit(i)
 {
     const { team, color, unit, pos, vel, accel, angle, target, hp, aiState, atkState, physState, hitState, debugState } = gameState.entities;
@@ -584,6 +599,12 @@ export function draw(realTimeMs, timeDeltaMs)
     }
 
     const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.UNIT)) {
+            continue;
+        }
+        drawUnitShadow(i);
+    }
     // TODO bit of hack to draw alive units on top of dead ones
     // draw dead
     for (let i = 0; i < exists.length; ++i) {
