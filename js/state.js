@@ -62,7 +62,6 @@ export const ENTITY = Object.freeze({
     NONE: 0,
     UNIT: 1,
     VFX: 2,
-    SOUL: 3,
 });
 
 const entityDefaults = Object.freeze({
@@ -108,7 +107,6 @@ const entityDefaults = Object.freeze({
     hitState: null,
     animState: null,
     vfxState: null,
-    soulState: null,
     debugState: null,
 });
 
@@ -157,35 +155,6 @@ export function createEntity(eType)
     type[idx]       = eType;
 
     return idx;
-}
-
-export function spawnSoul(spawnPos, player)
-{
-    const { playerId, pos, vel, maxVel, accel, maxAccel, physState, soulState } = gameState.entities;
-    const targetPos = pos[player.island.idx];
-    const idx = createEntity(ENTITY.SOUL);
-    const yDir = spawnPos.y >= 0 ? 1 : -1;
-    playerId[idx] = player.id;
-    pos[idx] = vecClone(spawnPos);
-    vel[idx] = vec(0, params.soulMaxVel * yDir);
-    maxVel[idx] = params.soulMaxVel;
-    accel[idx] = vec();
-    maxAccel[idx] = params.soulMaxAccel;
-    physState[idx]  = {
-        canCollide: false,
-        colliding: false,
-        canFall: false,
-    };
-    const stagingOffset = vecClone(params.soulStagingOffset);
-    stagingOffset.y *= yDir;
-    if (player.id > 0) {
-        stagingOffset.x *= -1;
-    }
-    soulState[idx] = {
-        targetPos,
-        stagingPos: vecAdd(targetPos, stagingOffset),
-        doneStaging: false,
-    };
 }
 
 export function spawnVFXLastHitText(string, point, textSize, color)
@@ -289,7 +258,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
 {
     const { homeIsland, team, color, playerId, unit, hp, pos, vel, maxVel, accel, maxAccel, angle, angVel, target, lane, laneIdx, atkState, aiState, physState, hitState, animState, debugState } = gameState.entities;
 
-    if (getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
+    if (aUnit.collides && getCollidingWithCircle(aPos, aUnit.radius).length > 0) {
         console.warn("Can't spawn entity there");
         return INVALID_ENTITY_INDEX;
     }
@@ -316,7 +285,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     // aiState, atkState, hitState are pretty interlinked
     const hasSpawnTime = unit[idx].spawnTimeMs > 0;
     aiState[idx]    = {
-        state: hasSpawnTime ? AISTATE.DO_NOTHING : unit[idx].defaultAiState,
+        state: hasSpawnTime ? AISTATE.IDLE : unit[idx].defaultAiState,
     };
     atkState[idx]   = {
         state: ATKSTATE.AIM,

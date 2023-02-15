@@ -235,187 +235,280 @@ function startAtk(i, targetRef)
     target[i] = targetRef;
 }
 
-function updateUnitAiState()
+function updateUnitAiProceedAttack(i)
 {
-    const { exists, playerId, unit, pos, vel, accel, maxAccel, angle, angVel, lane, target, aiState, atkState, debugState } = gameState.entities;
+    const { playerId, unit, pos, vel, accel, maxAccel, lane, target, aiState, atkState, debugState } = gameState.entities;
+    const player = gameState.players[playerId[i]];
+    // assumption all lanes lead to same enemy for units without a lane
+    const laneToEnemy = lane[i] != null ? lane[i] : player.island.lanes[0];
+    const enemyIsland = gameState.players[laneToEnemy.otherPlayerIdx].island;
+    const enemyLighthousePos = pos[enemyIsland.idx];
+    const distToEnemyIsland = getDist(pos[i], enemyIsland.pos);
+    const toEnemyLighthouse = vecSub(enemyLighthousePos, pos[i]);
+    const distToEnemyLighthouse = vecLen(toEnemyLighthouse);
+    const nearestAtkTarget = nearestEnemyInAttackRange(i);
+    const nearestChaseTarget = nearestEnemyInSightRange(i);
+    const weapon = getUnitWeapon(unit[i]);
 
-    for (let i = 0; i < exists.length; ++i) {
-        if (!entityExists(i, ENTITY.UNIT)) {
-            continue;
+    switch (aiState[i].state) {
+        case AISTATE.IDLE:
+        {
+            if (nearestAtkTarget.isValid()) {
+                startAtk(i, nearestAtkTarget);
+            } else if (nearestChaseTarget.isValid()) {
+                aiState[i].state = AISTATE.CHASE;
+                target[i] = nearestChaseTarget;
+            }
+            break;
         }
-        if (aiState[i].state == AISTATE.DO_NOTHING) {
-            continue;
+        case AISTATE.PROCEED:
+        {
+            if (distToEnemyLighthouse < unit[i].radius) {
+                aiState[i].state = AISTATE.IDLE;
+                break;
+            }
+            if (distToEnemyIsland < (params.laneDistFromBase + params.spawnPlatRadius)) {
+                // keep proceeding
+            } else if (nearestAtkTarget.isValid()) {
+                startAtk(i, nearestAtkTarget);
+            } else if (nearestChaseTarget.isValid()) {
+                aiState[i].state = AISTATE.CHASE;
+                target[i] = nearestChaseTarget;
+            }
+            break;
         }
-        const player = gameState.players[playerId[i]];
-        // assumption all lanes lead to same enemy for units without a lane
-        const laneToEnemy = lane[i] != null ? lane[i] : player.island.lanes[0];
-        const enemyIsland = gameState.players[laneToEnemy.otherPlayerIdx].island;
-        const enemyLighthousePos = pos[enemyIsland.idx];
-        const distToEnemyIsland = getDist(pos[i], enemyIsland.pos);
-        const toEnemyLighthouse = vecSub(enemyLighthousePos, pos[i]);
-        const distToEnemyLighthouse = vecLen(toEnemyLighthouse);
-        const nearestAtkTarget = nearestEnemyInAttackRange(i);
-        const nearestChaseTarget = nearestEnemyInSightRange(i);
-        const weapon = getUnitWeapon(unit[i]);
-        switch (aiState[i].state) {
-            case AISTATE.IDLE:
-            {
+        case AISTATE.CHASE:
+        {
+            // switch to attack if in range (and mostly stopped)
+            // units can get stuck partially off the edge without
+            // their vel going to almostZero, so this kinda fixes that
+            const mostlyStopped = vecLen(vel[i]) < (unit[i].topSpeed * 0.5);
+            if (nearestAtkTarget.isValid() && mostlyStopped) {
+                startAtk(i, nearestAtkTarget);
+            // otherwise always chase nearest
+            } else if (nearestChaseTarget.isValid()) {
+                target[i] = nearestChaseTarget;
+            // otherwise... continue on
+            } else {
+                aiState[i].state = unit[i].defaultAiState;
+            }
+            break;
+        }
+        case AISTATE.ATTACK:
+        {
+            // check we can still attack the current target
+            if (!canAttackTarget(i)) {
+                target[i].invalidate();
+            }
+            /*
+                * If we can't attack the current target, target[i] is invalid;
+                * let recovery animation play, then pick a new target or chase
+                */
+            if (!target[i].isValid() && atkState[i].state != ATKSTATE.RECOVER) {
                 if (nearestAtkTarget.isValid()) {
                     startAtk(i, nearestAtkTarget);
                 } else if (nearestChaseTarget.isValid()) {
                     aiState[i].state = AISTATE.CHASE;
                     target[i] = nearestChaseTarget;
+
+                } else {
+                    aiState[i].state = unit[i].defaultAiState;
                 }
+            }
+            break;
+        }
+    }
+    // do stuff based on state
+    switch (aiState[i].state) {
+        case AISTATE.IDLE: {
+            decel(i);
+            playUnitAnim(i, ANIM.IDLE);
+            break;
+        }
+        case AISTATE.PROCEED:
+        {
+            // TODO assumes lane[i] is not null
+            const bridgePoints = lane[i].bridgePoints;
+            const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
+            let currIdx = baseIdx;
+            let nextIdx = baseIdx+1;
+            // if close to next point, go there instead
+            if (getDist(pos[i], bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
+                currIdx++;
+                nextIdx++;
+            }
+            const currPoint = bridgePoints[currIdx];
+            const nextPoint = vec();
+            // little bit of a hack, just check if we're on the island to go straight to the base
+            let goToPoint = false
+            if (nextIdx >= bridgePoints.length || getDist(pos[i], enemyIsland.pos) < params.islandRadius) {
+                goToPoint = true;
+                vecCopyTo(nextPoint, enemyLighthousePos);
+            } else {
+                vecCopyTo(nextPoint, bridgePoints[nextIdx]);
+            }
+            let goDir = null;
+            if (goToPoint) {
+                // go to the point
+                goDir = vecNormalize(vecSub(nextPoint, pos[i]));
+            } else {
+                // go parallel to the bridge line
+                goDir = vecNormalize(vecSub(nextPoint, currPoint));
+            }
+            accel[i] = vecMul(goDir, maxAccel[i]);
+            if (!isOnEnemyIsland(i)) {
+                accelUnitAwayFromEdge(i);
+            }
+            target[i].invalidate();
+            playUnitAnim(i, ANIM.WALK);
+            break;
+        }
+        case AISTATE.CHASE:
+        {
+            const t = target[i].getIndex();
+            console.assert(t != INVALID_ENTITY_INDEX);
+            const toTarget = vecSub(pos[t], pos[i]);
+            const distToTarget = vecLen(toTarget);
+            if (almostZero(distToTarget)) {
+                decel(i);
+                accelUnitAwayFromEdge(i);
                 break;
             }
-            case AISTATE.PROCEED:
-            {
-                if (distToEnemyLighthouse < unit[i].radius) {
-                    aiState[i].state = AISTATE.IDLE;
-                    break;
-                }
-                if (distToEnemyIsland < (params.laneDistFromBase + params.spawnPlatRadius)) {
-                    // keep proceeding
-                } else if (nearestAtkTarget.isValid()) {
+            const rangeToTarget = distToTarget - unit[i].radius - unit[t].radius;
+            const desiredRange = weapon.range;
+            const distToDesired = rangeToTarget - desiredRange;
+            if (distToDesired < 0) {
+                decel(i);
+                accelUnitAwayFromEdge(i);
+                break;
+            }
+            const dirToTarget = vecNorm(toTarget, 1/distToTarget);
+            const velTowardsTarget = vecDot(vel[i], dirToTarget);
+            // compute the approximate stopping distance
+            // ...these are kinematic equations of motion!
+            // underestimate the time it takes to stop by a frame
+            const stopFrames = Math.ceil(velTowardsTarget / maxAccel[i] - 1); // v = v_0 + at, solve for t
+            const stopRange = ( velTowardsTarget + 0.5*maxAccel[i]*stopFrames ) * stopFrames; // dx = v_0t + 1/2at^2
+            debugState[i].stopRange = vecMul(dirToTarget, stopRange);
+            if ( distToDesired > stopRange ) {
+            accel[i] = vecMul(dirToTarget, Math.min(maxAccel[i], distToDesired));
+                debugState[i].stopping = false;
+            } else {
+                debugState[i].stopping = true;
+                decel(i);
+            }
+            accelUnitAwayFromEdge(i);
+            playUnitAnim(i, ANIM.WALK);
+            break;
+        }
+        case AISTATE.ATTACK:
+        {
+            const t = target[i].getIndex();
+            console.assert(t != INVALID_ENTITY_INDEX || atkState[i].state == ATKSTATE.RECOVER);
+            decel(i); // stand still
+            playUnitAnim(i, ANIM.ATK);
+        }
+        break;
+    }
+}
+
+function updateUnitAiIdleAttack(i)
+{
+    const { playerId, unit, pos, vel, accel, maxAccel, lane, target, aiState, atkState, debugState } = gameState.entities;
+    const player = gameState.players[playerId[i]];
+    // assumption all lanes lead to same enemy for units without a lane
+    const laneToEnemy = lane[i] != null ? lane[i] : player.island.lanes[0];
+    const enemyIsland = gameState.players[laneToEnemy.otherPlayerIdx].island;
+    const enemyLighthousePos = pos[enemyIsland.idx];
+    const distToEnemyIsland = getDist(pos[i], enemyIsland.pos);
+    const toEnemyLighthouse = vecSub(enemyLighthousePos, pos[i]);
+    const distToEnemyLighthouse = vecLen(toEnemyLighthouse);
+    const nearestAtkTarget = nearestEnemyInAttackRange(i);
+    const nearestChaseTarget = nearestEnemyInSightRange(i);
+    const weapon = getUnitWeapon(unit[i]);
+
+    switch (aiState[i].state) {
+        case AISTATE.IDLE:
+        {
+            if (nearestAtkTarget.isValid()) {
+                startAtk(i, nearestAtkTarget);
+            } else if (nearestChaseTarget.isValid()) {
+                aiState[i].state = AISTATE.CHASE;
+                target[i] = nearestChaseTarget;
+            }
+            break;
+        }
+        case AISTATE.ATTACK:
+        {
+            // check we can still attack the current target
+            if (!canAttackTarget(i)) {
+                target[i].invalidate();
+            }
+            /*
+                * If we can't attack the current target, target[i] is invalid;
+                * let recovery animation play, then pick a new target or chase
+                */
+            if (!target[i].isValid() && atkState[i].state != ATKSTATE.RECOVER) {
+                if (nearestAtkTarget.isValid()) {
                     startAtk(i, nearestAtkTarget);
                 } else if (nearestChaseTarget.isValid()) {
                     aiState[i].state = AISTATE.CHASE;
                     target[i] = nearestChaseTarget;
-                }
-                break;
-            }
-            case AISTATE.CHASE:
-            {
-                // switch to attack if in range (and mostly stopped)
-                // units can get stuck partially off the edge without
-                // their vel going to almostZero, so this kinda fixes that
-                const mostlyStopped = vecLen(vel[i]) < (unit[i].topSpeed * 0.5);
-                if (nearestAtkTarget.isValid() && mostlyStopped) {
-                    startAtk(i, nearestAtkTarget);
-                // otherwise always chase nearest
-                } else if (nearestChaseTarget.isValid()) {
-                    target[i] = nearestChaseTarget;
-                // otherwise... continue on
+
                 } else {
                     aiState[i].state = unit[i].defaultAiState;
                 }
-                break;
-            }
-            case AISTATE.ATTACK:
-            {
-                // check we can still attack the current target
-                if (!canAttackTarget(i)) {
-                    target[i].invalidate();
-                }
-                /*
-                 * If we can't attack the current target, target[i] is invalid;
-                 * let recovery animation play, then pick a new target or chase
-                 */
-                if (!target[i].isValid() && atkState[i].state != ATKSTATE.RECOVER) {
-                    if (nearestAtkTarget.isValid()) {
-                        startAtk(i, nearestAtkTarget);
-                    } else if (nearestChaseTarget.isValid()) {
-                        aiState[i].state = AISTATE.CHASE;
-                        target[i] = nearestChaseTarget;
-
-                    } else {
-                        aiState[i].state = unit[i].defaultAiState;
-                    }
-                }
-                break;
-            }
-        }
-        // make decisions based on state
-        switch (aiState[i].state) {
-            case AISTATE.IDLE: {
-                decel(i);
-                playUnitAnim(i, ANIM.IDLE);
-                break;
-            }
-            case AISTATE.PROCEED:
-            {
-                // TODO assumes lane[i] is not null
-                const bridgePoints = lane[i].bridgePoints;
-                const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
-                let currIdx = baseIdx;
-                let nextIdx = baseIdx+1;
-                // if close to next point, go there instead
-                if (getDist(pos[i], bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
-                    currIdx++;
-                    nextIdx++;
-                }
-                const currPoint = bridgePoints[currIdx];
-                const nextPoint = vec();
-                // little bit of a hack, just check if we're on the island to go straight to the base
-                let goToPoint = false
-                if (nextIdx >= bridgePoints.length || getDist(pos[i], enemyIsland.pos) < params.islandRadius) {
-                    goToPoint = true;
-                    vecCopyTo(nextPoint, enemyLighthousePos);
-                } else {
-                    vecCopyTo(nextPoint, bridgePoints[nextIdx]);
-                }
-                let goDir = null
-                if (goToPoint) {
-                    // go to the point
-                    goDir = vecNormalize(vecSub(nextPoint, pos[i]))
-                } else {
-                    // go parallel to the bridge line
-                    goDir = vecNormalize(vecSub(nextPoint, currPoint));
-                }
-                accel[i] = vecMul(goDir, maxAccel[i]);
-                if (!isOnEnemyIsland(i)) {
-                    accelUnitAwayFromEdge(i);
-                }
-                target[i].invalidate();
-                playUnitAnim(i, ANIM.WALK);
-                break;
-            }
-            case AISTATE.CHASE:
-            {
-                const t = target[i].getIndex();
-                console.assert(t != INVALID_ENTITY_INDEX);
-                const toTarget = vecSub(pos[t], pos[i]);
-                const distToTarget = vecLen(toTarget);
-                if (almostZero(distToTarget)) {
-                    decel(i);
-                    accelUnitAwayFromEdge(i);
-                    break;
-                }
-                const rangeToTarget = distToTarget - unit[i].radius - unit[t].radius;
-                const desiredRange = weapon.range;
-                const distToDesired = rangeToTarget - desiredRange;
-                if (distToDesired < 0) {
-                    decel(i);
-                    accelUnitAwayFromEdge(i);
-                    break;
-                }
-                const dirToTarget = vecNorm(toTarget, 1/distToTarget);
-                const velTowardsTarget = vecDot(vel[i], dirToTarget);
-                // compute the approximate stopping distance
-                // ...these are kinematic equations of motion!
-                // underestimate the time it takes to stop by a frame
-                const stopFrames = Math.ceil(velTowardsTarget / maxAccel[i] - 1); // v = v_0 + at, solve for t
-                const stopRange = ( velTowardsTarget + 0.5*maxAccel[i]*stopFrames ) * stopFrames; // dx = v_0t + 1/2at^2
-                debugState[i].stopRange = vecMul(dirToTarget, stopRange);
-                if ( distToDesired > stopRange ) {
-                accel[i] = vecMul(dirToTarget, Math.min(maxAccel[i], distToDesired));
-                    debugState[i].stopping = false;
-                } else {
-                    debugState[i].stopping = true;
-                    decel(i);
-                }
-                accelUnitAwayFromEdge(i);
-                playUnitAnim(i, ANIM.WALK);
-                break;
-            }
-            case AISTATE.ATTACK:
-            {
-                const t = target[i].getIndex();
-                console.assert(t != INVALID_ENTITY_INDEX || atkState[i].state == ATKSTATE.RECOVER);
-                decel(i); // stand still
-                playUnitAnim(i, ANIM.ATK);
             }
             break;
+        }
+    }
+    // do stuff based on state
+    switch (aiState[i].state) {
+        case AISTATE.IDLE: {
+            decel(i);
+            playUnitAnim(i, ANIM.IDLE);
+            break;
+        }
+        case AISTATE.ATTACK:
+        {
+            const t = target[i].getIndex();
+            console.assert(t != INVALID_ENTITY_INDEX || atkState[i].state == ATKSTATE.RECOVER);
+            decel(i); // stand still
+            playUnitAnim(i, ANIM.ATK);
+        }
+        break;
+    }
+}
+
+function updateUnitAiReturnToBase(i)
+{
+    const { playerId, unit, pos, vel, accel, maxAccel, lane, target, aiState, atkState, debugState } = gameState.entities;
+    const player = gameState.players[playerId[i]];
+    const lighthousePos = pos[player.island.idx];
+    const goDir = vecNormalize(vecSub(lighthousePos, pos[i]));
+    accel[i] = vecMul(goDir, maxAccel[i]);
+}
+
+function updateUnitAiState()
+{
+    const { exists, unit } = gameState.entities;
+
+    for (let i = 0; i < exists.length; ++i) {
+        if (!entityExists(i, ENTITY.UNIT)) {
+            continue;
+        }
+        switch (unit[i].aiBehavior) {
+            case AIBEHAVIOR.DO_NOTHING:
+                break;
+            case AIBEHAVIOR.IDLE_AND_ATTACK:
+                updateUnitAiIdleAttack(i);
+                break;
+            case AIBEHAVIOR.PROCEED_AND_ATTACK:
+                updateUnitAiProceedAttack(i);
+                break;
+            case AIBEHAVIOR.RETURN_TO_BASE:
+                updateUnitAiReturnToBase(i);
+                break;
         }
     }
 }
@@ -576,15 +669,12 @@ function updateHitState(timeDeltaMs)
                     }
                     hitState[i].deadTimer = params.deathTimeMs;
                     hitState[i].state = HITSTATE.DEAD;
-                    aiState[i].state = AISTATE.DO_NOTHING;
+                    // TODO pause animation/AI
                     physState[i].canCollide = false;
                     vecClear(vel[i]);
                     vecClear(accel[i]);
-                    const souls = 1;
-                    enemyPlayer.souls += souls;
-                    enemyPlayer.soulsFromUnitsKilled += souls;
-                    enemyPlayer.soulsEarned += souls;
-                    spawnSoul(pos[i], enemyPlayer);
+                    enemyPlayer.soulsFromUnitsKilled++;
+                    spawnUnitForPlayer(pos[i], enemyPlayer.id, units[UNIT.SOUL], lane[i]);
                     playSfx('death');
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
@@ -599,10 +689,21 @@ function updateHitState(timeDeltaMs)
                         hitState[i].fallTimer = params.fallTimeMs;
                         hitState[i].deadTimer = params.fallTimeMs; // same as fall time!
                         hitState[i].state = HITSTATE.DEAD;
-                        aiState[i].state = AISTATE.DO_NOTHING;
+                        // TODO stop animation
                         physState[i].canCollide = false;
                         vecClear(vel[i]);
                         vecClear(accel[i]);
+                    }
+                // souls hit own lighthouse and give...souls
+                } else if (unit[i].id == UNIT.SOUL) {
+                    const player = gameState.players[playerId[i]];
+                    const lighthouseIdx = player.island.idx;
+                    if (onIsland && getDist(pos[i], pos[lighthouseIdx]) < params.lighthouseRadius) {
+                        player.souls++;
+                        player.soulsEarned++;
+                        // playSfx('soulEarned'); // TODO?
+                        // instantly disappear this frame
+                        freeable[i] = true;
                     }
                 // 'die' by scoring
                 } else {
@@ -613,11 +714,8 @@ function updateHitState(timeDeltaMs)
                         hp[enemyLighthouseIdx] -= unit[i].damageToBase;
                         hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
                         hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
-                        const souls = 1;
-                        player.souls += souls; // TODO defer until soul hits base
-                        player.soulsFromLighthouse += souls;
-                        player.soulsEarned += souls;
-                        spawnSoul(pos[i], player);
+                        player.soulsFromLighthouse++;
+                        spawnUnitForPlayer(pos[i], player.id, units[UNIT.SOUL], lane[i]);
                         playSfx('lighthouseHit');
                         if ( hp[enemyLighthouseIdx] <= 0 ) {
                             endCurrentGame(player);
