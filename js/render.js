@@ -87,7 +87,9 @@ function drawUnit(i)
         }
         case HITSTATE.ALIVE:
         {
-            strokeCircleWorld(context, pos[i], unit[i].radius, 1, color[i]);
+            if (debug.drawCollision) {
+                strokeCircleWorld(context, pos[i], unit[i].radius, 1, color[i]);
+            }
             break;
         }
         case HITSTATE.DEAD:
