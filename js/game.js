@@ -83,8 +83,8 @@ function canChaseOrAttack(myIdx, theirIdx)
     if (!entityExists(myIdx, ENTITY.UNIT) || !entityExists(theirIdx, ENTITY.UNIT)) {
         return false;
     }
-    // ignore bases
-    if (unit[theirIdx].id == UNIT.BASE) {
+    // ignore bases, towers, souls...
+    if (!unit[theirIdx].targettable) {
         return false;
     }
     if (hitState[theirIdx].state != HITSTATE.ALIVE) {

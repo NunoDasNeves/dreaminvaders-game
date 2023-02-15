@@ -320,6 +320,7 @@ const unitDefaults = Object.freeze({
     // can't miss twice in a row, so it's less really
     missChance: 1,
     sfxName: 'dummy',
+    targettable: false,
 });
 
 const unitData = [
@@ -329,14 +330,17 @@ const unitData = [
         id: UNIT.CHOGORINGU,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
+        targettable: true,
     },{
         id: UNIT.BIGEYE,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
+        targettable: true,
     },{
         id: UNIT.TANK,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
+        targettable: true,
     },{
         id: UNIT.TOWER,
         defaultAiState: AISTATE.IDLE,
