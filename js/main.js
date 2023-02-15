@@ -69,6 +69,10 @@ function initEvents()
     document.addEventListener('keyup', function (event) {
         State.updateKey(event.key, false);
     });
+
+    document.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+    });
 }
 
 async function start()
