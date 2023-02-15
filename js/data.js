@@ -321,6 +321,8 @@ const unitDefaults = Object.freeze({
     missChance: 1,
     sfxName: 'dummy',
     targettable: false,
+    shadowWidth: 0,
+    shadowOffsetY: 0,
 });
 
 const unitData = [
