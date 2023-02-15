@@ -235,6 +235,38 @@ function startAtk(i, targetRef)
     target[i] = targetRef;
 }
 
+// TODO go towards targetPos, and don't care about whether bridgePoints is right to left or not
+function getDirAlongBridge(pos, bridgePoints, targetPos)
+{
+    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos, bridgePoints);
+    let currIdx = baseIdx;
+    let nextIdx = baseIdx+1;
+    // if close to next point, go there instead
+    if (getDist(pos, bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
+        currIdx++;
+        nextIdx++;
+    }
+    const currPoint = bridgePoints[currIdx];
+    const nextPoint = vec();
+    // little bit of a hack, just check if we're on the island to go straight to the base
+    let goToPoint = false
+    if (nextIdx >= bridgePoints.length) {
+        goToPoint = true;
+        vecCopyTo(nextPoint, bridgePoints[bridgePoints.length - 1]);
+    } else {
+        vecCopyTo(nextPoint, bridgePoints[nextIdx]);
+    }
+    let goDir = null;
+    if (goToPoint) {
+        // go to the point
+        goDir = vecNormalize(vecSub(nextPoint, pos));
+    } else {
+        // go parallel to the bridge line
+        goDir = vecNormalize(vecSub(nextPoint, currPoint));
+    }
+    return goDir;
+}
+
 function updateUnitAiProceedAttack(i)
 {
     const { playerId, unit, pos, vel, accel, maxAccel, lane, target, aiState, atkState, debugState } = gameState.entities;
@@ -312,36 +344,14 @@ function updateUnitAiProceedAttack(i)
     switch (aiState[i].state) {
         case AISTATE.PROCEED:
         {
-            // TODO assumes lane[i] is not null
             const bridgePoints = lane[i].bridgePoints;
-            const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
-            let currIdx = baseIdx;
-            let nextIdx = baseIdx+1;
-            // if close to next point, go there instead
-            if (getDist(pos[i], bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
-                currIdx++;
-                nextIdx++;
-            }
-            const currPoint = bridgePoints[currIdx];
-            const nextPoint = vec();
-            // little bit of a hack, just check if we're on the island to go straight to the base
-            let goToPoint = false
-            if (nextIdx >= bridgePoints.length || getDist(pos[i], enemyIsland.pos) < params.islandRadius) {
-                goToPoint = true;
-                vecCopyTo(nextPoint, enemyLighthousePos);
+            if (isOnEnemyIsland(i)) {
+                // go to enemy lighthouse
+                const goDir = vecNormalize(vecSub(enemyLighthousePos, pos[i]));
+                accel[i] = vecMul(goDir, maxAccel[i]);
             } else {
-                vecCopyTo(nextPoint, bridgePoints[nextIdx]);
-            }
-            let goDir = null;
-            if (goToPoint) {
-                // go to the point
-                goDir = vecNormalize(vecSub(nextPoint, pos[i]));
-            } else {
-                // go parallel to the bridge line
-                goDir = vecNormalize(vecSub(nextPoint, currPoint));
-            }
-            accel[i] = vecMul(goDir, maxAccel[i]);
-            if (!isOnEnemyIsland(i)) {
+                const goDir = getDirAlongBridge(pos[i], bridgePoints, enemyLighthousePos);
+                accel[i] = vecMul(goDir, maxAccel[i]);
                 accelUnitAwayFromEdge(i);
             }
             target[i].invalidate();
