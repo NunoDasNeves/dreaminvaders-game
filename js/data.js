@@ -106,6 +106,12 @@ export const AISTATE = Object.freeze({
     CHASE: 2,
     ATTACK: 3,
 });
+export const AIBEHAVIOR = Object.freeze({
+    DO_NOTHING: 0,
+    PROCEED_AND_ATTACK: 1,
+    IDLE_AND_ATTACK: 2,
+    RETURN_TO_BASE: 3,
+});
 export const ATKSTATE = Object.freeze({
     AIM: 0,
     SWING: 1,
@@ -120,7 +126,6 @@ export const HITSTATE = Object.freeze({
 /* Unit data */
 
 export const ANIM = Object.freeze({
-    DO_NOTHING: 0,
     IDLE: 1,
     WALK: 2,
     ATK: 3,
@@ -129,14 +134,16 @@ export const ANIM = Object.freeze({
 });
 export const UNIT = Object.freeze({
     INVALID: 0,
-    // special base/lighthouse unit
+    // base/lighthouse unit
     BASE: 1,
+    // tower static defense
+    TOWER: 2,
     // normal units
-    CHOGORINGU: 2,
-    BIGEYE: 3,
-    TANK: 4,
-    // buildings
-    TOWER: 5,
+    CHOGORINGU: 3,
+    BIGEYE: 4,
+    TANK: 5,
+    // err
+    SOUL: 6,
 });
 export const VFX = Object.freeze({
     EXPLOSION: 1,
@@ -275,6 +282,12 @@ const unitSpriteData = [
                 frameDur: 200,
             },
         }
+    },{
+        id: UNIT.SOUL,
+        assetName: "soul",
+        width: 16,
+        height: 16,
+        playerColors: true,
     },
 ];
 
@@ -288,7 +301,8 @@ const unitDefaults = Object.freeze({
     radius: 10,
     collides: true,
     canFall: true,
-    defaultAiState: AISTATE.DO_NOTHING,
+    defaultAiState: AISTATE.IDLE,
+    aiBehavior: AIBEHAVIOR.DO_NOTHING,
     damageToBase: 0,
     cost: Infinity,
     cdTimeMs: Infinity,
@@ -314,16 +328,24 @@ const unitData = [
     },{
         id: UNIT.CHOGORINGU,
         defaultAiState: AISTATE.PROCEED,
+        aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
     },{
         id: UNIT.BIGEYE,
         defaultAiState: AISTATE.PROCEED,
+        aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
     },{
         id: UNIT.TANK,
         defaultAiState: AISTATE.PROCEED,
+        aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
     },{
         id: UNIT.TOWER,
         defaultAiState: AISTATE.IDLE,
-    },
+        aiBehavior: AIBEHAVIOR.IDLE_AND_ATTACK,
+    },{
+        id: UNIT.SOUL,
+        defaultAiState: AISTATE.PROCEED,
+        aiBehavior: AIBEHAVIOR.RETURN_TO_BASE,
+    }
 ];
 
 export const unitSprites = makeFromDefaults("unit sprite", unitSpriteData,
