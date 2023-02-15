@@ -101,10 +101,11 @@ export const NO_PLAYER_INDEX = -1;
 export const NO_TEAM_INDEX = -1;
 
 export const AISTATE = Object.freeze({
-    IDLE: 0,
-    PROCEED: 1,
-    CHASE: 2,
-    ATTACK: 3,
+    NONE: 0, // can't act; spawning, dying etc...
+    IDLE: 1,
+    PROCEED: 2,
+    CHASE: 3,
+    ATTACK: 4,
 });
 export const AIBEHAVIOR = Object.freeze({
     DO_NOTHING: 0,
@@ -301,7 +302,7 @@ const unitDefaults = Object.freeze({
     radius: 10,
     collides: true,
     canFall: true,
-    defaultAiState: AISTATE.IDLE,
+    defaultAiState: AISTATE.NONE,
     aiBehavior: AIBEHAVIOR.DO_NOTHING,
     damageToBase: 0,
     cost: Infinity,

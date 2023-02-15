@@ -251,16 +251,6 @@ function updateUnitAiProceedAttack(i)
     const weapon = getUnitWeapon(unit[i]);
 
     switch (aiState[i].state) {
-        case AISTATE.IDLE:
-        {
-            if (nearestAtkTarget.isValid()) {
-                startAtk(i, nearestAtkTarget);
-            } else if (nearestChaseTarget.isValid()) {
-                aiState[i].state = AISTATE.CHASE;
-                target[i] = nearestChaseTarget;
-            }
-            break;
-        }
         case AISTATE.PROCEED:
         {
             if (distToEnemyLighthouse < unit[i].radius) {
@@ -320,11 +310,6 @@ function updateUnitAiProceedAttack(i)
     }
     // do stuff based on state
     switch (aiState[i].state) {
-        case AISTATE.IDLE: {
-            decel(i);
-            playUnitAnim(i, ANIM.IDLE);
-            break;
-        }
         case AISTATE.PROCEED:
         {
             // TODO assumes lane[i] is not null
@@ -491,12 +476,19 @@ function updateUnitAiReturnToBase(i)
 
 function updateUnitAiState()
 {
-    const { exists, unit } = gameState.entities;
+    const { exists, unit, aiState } = gameState.entities;
 
     for (let i = 0; i < exists.length; ++i) {
         if (!entityExists(i, ENTITY.UNIT)) {
             continue;
         }
+        // pause everything
+        if (aiState[i].state == AISTATE.NONE) {
+            decel(i);
+            resetUnitAnim(i, ANIM.IDLE);
+            continue;
+        }
+
         switch (unit[i].aiBehavior) {
             case AIBEHAVIOR.DO_NOTHING:
                 break;
@@ -669,7 +661,8 @@ function updateHitState(timeDeltaMs)
                     }
                     hitState[i].deadTimer = params.deathTimeMs;
                     hitState[i].state = HITSTATE.DEAD;
-                    // TODO pause animation/AI
+                    aiState[i].state = AISTATE.NONE;
+                    // TODO pause animation/death animation
                     physState[i].canCollide = false;
                     vecClear(vel[i]);
                     vecClear(accel[i]);
@@ -689,7 +682,8 @@ function updateHitState(timeDeltaMs)
                         hitState[i].fallTimer = params.fallTimeMs;
                         hitState[i].deadTimer = params.fallTimeMs; // same as fall time!
                         hitState[i].state = HITSTATE.DEAD;
-                        // TODO stop animation
+                        aiState[i].state = AISTATE.NONE;
+                        // TODO pause animation/death animation
                         physState[i].canCollide = false;
                         vecClear(vel[i]);
                         vecClear(accel[i]);

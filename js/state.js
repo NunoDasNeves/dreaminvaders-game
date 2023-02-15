@@ -285,7 +285,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     // aiState, atkState, hitState are pretty interlinked
     const hasSpawnTime = unit[idx].spawnTimeMs > 0;
     aiState[idx]    = {
-        state: hasSpawnTime ? AISTATE.IDLE : unit[idx].defaultAiState,
+        state: hasSpawnTime ? AISTATE.NONE : unit[idx].defaultAiState,
     };
     atkState[idx]   = {
         state: ATKSTATE.AIM,
