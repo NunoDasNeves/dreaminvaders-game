@@ -127,6 +127,25 @@ export function fillCircleWorld(ctx, worldPos, radius, fillStyle)
     );
 }
 
+export function fillEllipseScreen(ctx, pos, radii, fillStyle)
+{
+    ctx.fillStyle = fillStyle;
+    ctx.beginPath();
+    ctx.ellipse(pos.x, pos.y, radii.x, radii.y, 0, 0, 2 * Math.PI);
+    ctx.fill();
+}
+
+export function fillEllipseWorld(ctx, worldPos, radii, fillStyle)
+{
+    const coords = worldVecToCamera(worldPos);
+    fillEllipseScreen(
+        ctx,
+        coords,
+        vec(radii.x / gameState.camera.scale, radii.y / gameState.camera.scale),
+        fillStyle
+    );
+}
+
 export function strokeLineWorld(ctx, posFrom, posTo, width, strokeStyle) {
     const posFromScreen = worldVecToCamera(posFrom);
     const posToScreen = worldVecToCamera(posTo);
