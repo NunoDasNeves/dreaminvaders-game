@@ -1,24 +1,24 @@
 ## TODO
-- lighthouse art
-- lighthouse upgrade art/anims
-    - glowing runes, extra thingys for income?
-    - tower/flame for staticD
-    - ??? for units - runes/carvings?
-    - these need to mix & match, need tech for that
+- make dreamers move around a bit - toward lane controller unit, float back to center otherwise
+    - dreamers bob up and down
+- AI update - AI can do all actions
 - Income bubbles floating up whenever you get $creams
-- Placeholder icons to be replaced - souls, screams, upgrades
+    - they need to fade out, pop nicely
 - Bit of UI rearrange? where to put souls + screams
 - Spawn animation - beam of light
-- AI update - AI can do all actions
-- make dreamers move around a bit - toward lane controller
 - dreamer art + animations
+- baby/different dreamer for base - art + animations
+    - need 3 or 4 of them, maybe chained up
+    - need animations
+    - need code and stuff to link with upgrades
+- tower defense dreamer? or something else for static D
+    - need animations
 - sort units for drawing back to front
 - finish island art
 - tower/flame anim - firing, etc...
 - death anim - pair with soul entity spawning
 - lighthouse death anim + VFX
 - unit hit lighthouse anim -'explode' - pair with soul entity spawning
-- soul sprite thingy - crystal ball
 - pixel art spawn platforms + bridge start
 - falling off bridge animation - need to draw behind bridge too...
 - increase island radius a bit so units can't fall off while near the pixel art part
@@ -32,6 +32,10 @@
 - unit specials - slime, nightling boosts
 
 ## Done
+- unit shadows
+- soul sprite thingy - crystal ball
+- Placeholder icons to be replaced - souls, screams, upgrades
+- lighthouse art
 - lighthouse healthbar - remove from UI, make its normal healthbar thicker, more visible
 - use another color color (yellow) instead of player color for $creams
 - ditch lane select; mouse click to spawn unit (or keyboard tap?)
