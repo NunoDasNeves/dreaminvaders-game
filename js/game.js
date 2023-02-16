@@ -235,36 +235,25 @@ function startAtk(i, targetRef)
     target[i] = targetRef;
 }
 
-// TODO go towards targetPos, and don't care about whether bridgePoints is right to left or not
+// get direction of the closest bridge line segment, toward target pos
 function getDirAlongBridge(pos, bridgePoints, targetPos)
 {
+    const lastIdx = bridgePoints.length - 1;
+    console.assert(lastIdx > 0);
     const { baseIdx, point, dir, dist } = pointNearLineSegs(pos, bridgePoints);
-    let currIdx = baseIdx;
-    let nextIdx = baseIdx+1;
-    // if close to next point, go there instead
-    if (getDist(pos, bridgePoints[baseIdx+1]) < params.laneWidth*0.5) {
-        currIdx++;
-        nextIdx++;
+    console.assert(baseIdx < lastIdx);
+    const basePoint = bridgePoints[baseIdx];
+    const nextIdx = baseIdx + 1;
+    const nextPoint = bridgePoints[nextIdx];
+    const dirAlongBridge = vecNormalize(vecSub(nextPoint, basePoint));
+    const posToTarget = vecSub(targetPos, pos);
+
+    if (vecDot(posToTarget, dirAlongBridge) < 0) {
+        // go backwards instead of forwards
+        vecNegate(dirAlongBridge);
     }
-    const currPoint = bridgePoints[currIdx];
-    const nextPoint = vec();
-    // little bit of a hack, just check if we're on the island to go straight to the base
-    let goToPoint = false
-    if (nextIdx >= bridgePoints.length) {
-        goToPoint = true;
-        vecCopyTo(nextPoint, bridgePoints[bridgePoints.length - 1]);
-    } else {
-        vecCopyTo(nextPoint, bridgePoints[nextIdx]);
-    }
-    let goDir = null;
-    if (goToPoint) {
-        // go to the point
-        goDir = vecNormalize(vecSub(nextPoint, pos));
-    } else {
-        // go parallel to the bridge line
-        goDir = vecNormalize(vecSub(nextPoint, currPoint));
-    }
-    return goDir;
+
+    return dirAlongBridge;
 }
 
 function updateUnitAiProceedAttack(i)
