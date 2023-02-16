@@ -42,7 +42,7 @@ export function pointInAABB(point, topLeft, dims)
  * Get info about relationship between point and the closest point on lineSegs;
  * lineSegs is a list of points treated as joined line segments.
  * Returns: {
- *      baseIdx,    // index in lineSegs of 'base' of line which point is closest to
+ *      baseIdx,    // index in lineSegs of 'base' of line which point is closest to, (can never be the last index in lineSegs)
  *      point,      // point on lineSegs which is closest to point argument
  *      dir,        // direction from point on lineSegs to point argument. null if point is very close to the line
  *      dist,       // distance from point arg to closest point on lineSegs
@@ -54,7 +54,10 @@ export function pointNearLineSegs(point, lineSegs)
     let minPoint = null;
     let minDir = null;
     let minDist = Infinity;
-    for (let i = 0; i < lineSegs.length - 1; ++i) {
+    const lastIdx = lineSegs.length - 1;
+    console.assert(lastIdx > 0);
+
+    for (let i = 0; i < lastIdx; ++i) { // omit last idx
         const capsuleLine = vecSub(lineSegs[i+1], lineSegs[i]);
         const lineLen = vecLen(capsuleLine);
         const baseToPoint = vecSub(point, lineSegs[i]);
@@ -83,7 +86,7 @@ export function pointNearLineSegs(point, lineSegs)
             const d = vecLen(dir);
             if (d < minDist) {
                 minDist = d;
-                minBaseIdx = i; // its the 'base' of the segment, so it is i and not i+1
+                minBaseIdx = i; // its always the 'base' of the segment, so it is i and not i+1
                 minPoint = vecClone(lineSegs[i+1]);
                 minDir = almostZero(d) ? null : vecMul(dir, 1/d);
             }
