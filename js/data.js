@@ -289,6 +289,7 @@ const unitSpriteData = [
         width: 16,
         height: 16,
         playerColors: true,
+        centerOffset: vec(0,22),
     },
 ];
 

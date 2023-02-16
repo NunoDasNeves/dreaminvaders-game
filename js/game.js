@@ -469,8 +469,18 @@ function updateUnitAiReturnToBase(i)
     const { playerId, unit, pos, vel, accel, maxAccel, lane, target, aiState, atkState, debugState } = gameState.entities;
     const player = gameState.players[playerId[i]];
     const lighthousePos = pos[player.island.idx];
-    const goDir = vecNormalize(vecSub(lighthousePos, pos[i]));
+    // go toward lighthouse
+    let goDir = vecNormalize(vecSub(lighthousePos, pos[i]));
+    // but follow the bridge if not on our island
+    const onOwnIsland = isOnOwnIsland(i);
+    if (!onOwnIsland) {
+        goDir = getDirAlongBridge(pos[i], lane[i].bridgePoints, lighthousePos);
+    }
     accel[i] = vecMul(goDir, maxAccel[i]);
+
+    if (!onOwnIsland) {
+        accelUnitAwayFromEdge(i);
+    }
 }
 
 function updateUnitAiState()
