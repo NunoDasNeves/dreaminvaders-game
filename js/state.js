@@ -279,7 +279,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     angle[idx]      = 0;
     angVel[idx]     = 0; // not used yet
     // possibly lane, and probably target, should be in aiState
-    lane[idx]       = aLaneIdx == null ? null : gameState.islands[aPlayerId].lanes[aLaneIdx];
+    lane[idx]       = aLaneIdx == null || aPlayerId == NO_PLAYER_INDEX ? null : gameState.islands[aPlayerId].lanes[aLaneIdx];
     laneIdx[idx]    = aLaneIdx;
     target[idx]     = new EntityRef(INVALID_ENTITY_INDEX);
     // aiState, atkState, hitState are pretty interlinked
@@ -550,9 +550,10 @@ export function initGameState(gameConfig)
         };
         gameState.players[0].island.lanes.push(p0Lane);
         gameState.players[1].island.lanes.push(p1Lane);
+        const dreamerIdx = spawnUnit(middlePos, NO_TEAM_INDEX, NO_PLAYER_INDEX, params.neutralColor, units[Data.UNIT.DREAMER], null, i);
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
-            dreamer: { playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, pos: vecAdd(middlePos, vec(0, -params.laneWidth)) },
+            dreamer: { idx: dreamerIdx, playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, pos: vecAdd(middlePos, vec(0, -params.laneWidth)) },
             pathPoints,
             bezierPoints,
             middlePos,

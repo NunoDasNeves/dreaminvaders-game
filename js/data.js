@@ -89,6 +89,7 @@ export const params = Object.freeze(
             soulMaxAccelRadius: 200,
             soulMinAccelRadius: 1500,
             soulStagingOffset: vec(200, 300), // invert X for player[1], invert Y for souls going down instead of up
+            dreamerLaneDist: 72,
         }
         obj.laneDistFromBase = obj.islandRadius - 50;
         obj.spawnPlatRadius = obj.laneWidth * 0.75;
@@ -112,6 +113,7 @@ export const AIBEHAVIOR = Object.freeze({
     PROCEED_AND_ATTACK: 1,
     IDLE_AND_ATTACK: 2,
     RETURN_TO_BASE: 3,
+    DREAMER: 4,
 });
 export const ATKSTATE = Object.freeze({
     AIM: 0,
@@ -145,6 +147,7 @@ export const UNIT = Object.freeze({
     TANK: 5,
     // err
     SOUL: 6,
+    DREAMER: 7,
 });
 export const VFX = Object.freeze({
     EXPLOSION: 1,
@@ -290,6 +293,12 @@ const unitSpriteData = [
         height: 16,
         playerColors: true,
         centerOffset: vec(0,22),
+    },{
+        id: UNIT.DREAMER,
+        assetName: "dreamer",
+        width: 48,
+        height: 48,
+        centerOffset: vec(0,params.dreamerLaneDist),
     },
 ];
 
@@ -325,6 +334,7 @@ const unitDefaults = Object.freeze({
     targettable: false,
     shadowWidth: 0,
     shadowOffsetY: 0,
+    canDream: false,
 });
 
 const unitData = [
@@ -335,16 +345,19 @@ const unitData = [
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
         targettable: true,
+        canDream: true,
     },{
         id: UNIT.BIGEYE,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
         targettable: true,
+        canDream: true,
     },{
         id: UNIT.TANK,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
         targettable: true,
+        canDream: true,
     },{
         id: UNIT.TOWER,
         defaultAiState: AISTATE.IDLE,
@@ -353,7 +366,11 @@ const unitData = [
         id: UNIT.SOUL,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.RETURN_TO_BASE,
-    }
+    },{
+        id: UNIT.DREAMER,
+        defaultAiState: AISTATE.PROCEED,
+        aiBehavior: AIBEHAVIOR.DREAMER,
+    },
 ];
 
 export const unitSprites = makeFromDefaults("unit sprite", unitSpriteData,

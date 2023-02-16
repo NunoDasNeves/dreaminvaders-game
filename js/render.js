@@ -36,7 +36,7 @@ function drawImage(imgAsset, pos)
 
 function drawUnitAnim(i, alpha, colorOverlay)
 {
-    const { team, playerId, unit, pos, angle, animState } = gameState.entities;
+    const { team, playerId, unit, pos, angle, color, animState } = gameState.entities;
     const { anim, frame, timer, loop } = animState[i];
     let flip = false;
     if (vecFromAngle(angle[i]).x < 0) {
@@ -52,6 +52,11 @@ function drawUnitAnim(i, alpha, colorOverlay)
     }
     const row = animObj.row + flipOffset + colorOffset;
     const drawUnitPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
+
+    if (unit[i].id == UNIT.DREAMER) {
+        const circlePos = vecSub(pos[i], sprite.centerOffset);
+        fillCircleWorld(context, circlePos, 24, color[i]);
+    }
     context.globalAlpha = alpha;
     drawSprite(context, sprite, row, col, drawUnitPos, colorOverlay);
     context.globalAlpha = 1;
@@ -558,14 +563,6 @@ function drawBridge(laneIdx, hovered)
         fillCircleWorld(context, bridge.playerLanes[0].spawnPos, 8, "#00ff00");
         fillCircleWorld(context, bridge.playerLanes[1].spawnPos, 8, "#00ff00");
     }
-
-    const dreamer = bridge.dreamer;
-    const dreamerPos = dreamer.pos;
-    fillCircleWorld(context, dreamerPos, 24, dreamer.color);
-    const asset = assets.images.dreamer;
-    const imgDims = vec(asset.width, asset.height);
-    const drawPos = vecSub(dreamerPos, vecMul(imgDims, 0.5));
-    drawImageWorld(context, asset.img, drawPos, imgDims);
 }
 
 export function getBoundingClientRect()

@@ -483,6 +483,19 @@ function updateUnitAiReturnToBase(i)
     }
 }
 
+function updateUnitAiDreamer(i)
+{
+
+}
+
+const aiBehaviorToUpdateFn = {
+    [AIBEHAVIOR.DO_NOTHING]: (i) => {},
+    [AIBEHAVIOR.IDLE_AND_ATTACK]: updateUnitAiIdleAttack,
+    [AIBEHAVIOR.PROCEED_AND_ATTACK]: updateUnitAiProceedAttack,
+    [AIBEHAVIOR.RETURN_TO_BASE]: updateUnitAiReturnToBase,
+    [AIBEHAVIOR.DREAMER]: updateUnitAiDreamer,
+};
+
 function updateUnitAiState()
 {
     const { exists, unit, aiState } = gameState.entities;
@@ -491,26 +504,13 @@ function updateUnitAiState()
         if (!entityExists(i, ENTITY.UNIT)) {
             continue;
         }
-        // pause everything
         if (aiState[i].state == AISTATE.NONE) {
+            // don't do nothin'
             decel(i);
             resetUnitAnim(i, ANIM.IDLE);
             continue;
         }
-
-        switch (unit[i].aiBehavior) {
-            case AIBEHAVIOR.DO_NOTHING:
-                break;
-            case AIBEHAVIOR.IDLE_AND_ATTACK:
-                updateUnitAiIdleAttack(i);
-                break;
-            case AIBEHAVIOR.PROCEED_AND_ATTACK:
-                updateUnitAiProceedAttack(i);
-                break;
-            case AIBEHAVIOR.RETURN_TO_BASE:
-                updateUnitAiReturnToBase(i);
-                break;
-        }
+        aiBehaviorToUpdateFn[unit[i].aiBehavior](i);
     }
 }
 
@@ -995,10 +995,11 @@ function updateSoulState(timeDeltaMs)
 
 function updateDreamerState(timeDeltaMs)
 {
-    const { playerId, unit, homeIsland, pos, lane } = gameState.entities;
+    const { playerId, unit, homeIsland, pos, lane, color } = gameState.entities;
     const timeDeltaSec = 0.001 * timeDeltaMs;
     for (const bridge of gameState.bridges) {
         const { dreamer, middlePos } = bridge;
+        const dIdx = dreamer.idx;
         const playerIds = Object.keys(bridge.playerLanes);
         console.assert(playerIds.length == 2);
         const playerCounts = {};
@@ -1006,15 +1007,15 @@ function updateDreamerState(timeDeltaMs)
             playerCounts[pId] = 0;
         }
         forAllUnits(i => {
-            if (playerId[i] == NO_PLAYER_INDEX || !homeIsland[i]) {
+            if (playerId[i] == NO_PLAYER_INDEX || !homeIsland[i] || !unit[i].canDream) {
                 return;
             }
             if (lane[i] != bridge.playerLanes[playerId[i]]) {
                 return;
             }
-            const toMiddle = vecSub(middlePos, pos[i]);
+            const toDreamer = vecSub(pos[dIdx], pos[i]);
             const toHome = vecSub(homeIsland[i].pos, pos[i]);
-            if (vecDot(toMiddle, toHome) > 0) {
+            if (vecDot(toDreamer, toHome) > 0) {
                 playerCounts[playerId[i]]++;
             }
         });
@@ -1024,11 +1025,11 @@ function updateDreamerState(timeDeltaMs)
         } else if (playerCounts[playerIds[0]] < playerCounts[playerIds[1]]) {
             attackingPlayer = playerIds[1];
         }
-        const oldAttackingPlayer = dreamer.playerId;
-        dreamer.playerId = attackingPlayer;
+        const oldAttackingPlayer = playerId[dIdx];
+        playerId[dIdx] = attackingPlayer;
         if (attackingPlayer != NO_PLAYER_INDEX) {
             const player = gameState.players[attackingPlayer];
-            dreamer.color = player.color;
+            color[dIdx] = player.color;
             if (oldAttackingPlayer != attackingPlayer) {
                 dreamer.goldEarned = 0;
                 dreamer.timer = 1000;
@@ -1037,12 +1038,13 @@ function updateDreamerState(timeDeltaMs)
                 if (dreamer.timer <= 0) {
                     dreamer.goldEarned += params.dreamerGoldPerSec;
                     dreamer.timer = 1000;
+                    // TODO compute dreamer head pos properly for spawning screams
                     const randX = -4 + (Math.random() - 0.5) * 16;
-                    spawnVFXScream(vecAdd(dreamer.pos, vec(randX, -20)));
+                    spawnVFXScream(vecAdd(pos[dIdx], vec(randX, -params.dreamerLaneDist-24)));
                 }
             }
         } else {
-            dreamer.color = params.neutralColor;
+            color[dIdx] = params.neutralColor;
         }
     }
 }
