@@ -632,7 +632,7 @@ function isOnOwnIsland(i)
 
 function updateHitState(timeDeltaMs)
 {
-    const { freeable, unit, color, pos, vel, accel, hp, lane, team, playerId, aiState, atkState, hitState, physState } = gameState.entities;
+    const { freeable, unit, color, pos, vel, accel, hp, lane, laneIdx, team, playerId, aiState, atkState, hitState, physState } = gameState.entities;
     forAllUnits((i) => {
         hitState[i].hitTimer = Math.max(hitState[i].hitTimer - timeDeltaMs, 0);
         hitState[i].hpBarTimer = Math.max(hitState[i].hpBarTimer - timeDeltaMs, 0);
@@ -666,7 +666,7 @@ function updateHitState(timeDeltaMs)
                     vecClear(vel[i]);
                     vecClear(accel[i]);
                     enemyPlayer.soulsFromUnitsKilled++;
-                    spawnUnitForPlayer(pos[i], enemyPlayer.id, units[UNIT.SOUL], lane[i]);
+                    spawnUnitForPlayer(pos[i], enemyPlayer.id, units[UNIT.SOUL], laneIdx[i]);
                     playSfx('death');
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
@@ -708,7 +708,7 @@ function updateHitState(timeDeltaMs)
                         hitState[enemyLighthouseIdx].hitTimer = params.hitFadeTimeMs;
                         hitState[enemyLighthouseIdx].hpBarTimer = params.hpBarTimeMs;
                         player.soulsFromLighthouse++;
-                        spawnUnitForPlayer(pos[i], player.id, units[UNIT.SOUL], lane[i]);
+                        spawnUnitForPlayer(pos[i], player.id, units[UNIT.SOUL], laneIdx[i]);
                         playSfx('lighthouseHit');
                         if ( hp[enemyLighthouseIdx] <= 0 ) {
                             endCurrentGame(player);
