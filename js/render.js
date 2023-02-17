@@ -467,7 +467,7 @@ function drawUnderBridge(laneIdx)
 {
     const underColor = "rgb(50,50,50)";
     const bridge = gameState.bridges[laneIdx];
-    const bridgePointsR2L = bridge.playerLanes[1].bridgePoints.map(vecClone);
+    const bridgePointsR2L = bridge.bridgePoints.map(vecClone).reverse();
     const bridgeUnderPoints = bridgePointsR2L.map(vecClone);
     const bridgeThickness = 55 + laneIdx*14;
     const bridgeArchHeight = 300;
@@ -556,7 +556,7 @@ function drawBridge(laneIdx, hovered)
     }
 
     if (debug.drawLaneSegs) {
-        const bridgePoints = bridge.playerLanes[0].bridgePoints[0];
+        const bridgePoints = bridge.bridgePoints[0];
         strokePoints(bridgePoints, 5, "#ff0000");
         capsulePoints(bridgePoints, params.laneWidth*0.5, 4, "#ffff00");
         dotPoints(bridgePoints, 7, "#0000ff");

@@ -286,7 +286,7 @@ export function doPlayerUI(player)
     if (!player.mouseEnabled && player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
             const lane = player.island.lanes[laneIdx];
-            const pos = lane.bridgePoints[0];
+            const pos = lane.bridgePoints[0]; // TODO fix
             if (keyPressed(key)) {
                 player.laneSelected = laneIdx;
             }

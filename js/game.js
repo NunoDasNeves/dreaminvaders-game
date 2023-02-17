@@ -210,8 +210,8 @@ function decel(i)
 
 function accelUnitAwayFromEdge(i)
 {
-    const { unit, lane, team, pos, accel, maxAccel } = gameState.entities;
-    const bridgePoints = lane[i].bridgePoints;
+    const { unit, laneIdx, team, pos, accel, maxAccel } = gameState.entities;
+    const bridgePoints = gameState.bridges[laneIdx[i]].bridgePoints;
     const { dir, dist } = pointNearLineSegs(pos[i], bridgePoints);
     const distUntilFall = params.laneWidth*0.5 - dist;
     if (distUntilFall < unit[i].radius) {
@@ -258,7 +258,7 @@ function getDirAlongBridge(pos, bridgePoints, targetPos)
 
 function updateUnitAiProceedAttack(i)
 {
-    const { playerId, unit, pos, vel, accel, maxAccel, lane, target, aiState, atkState, debugState } = gameState.entities;
+    const { playerId, unit, pos, vel, accel, maxAccel, lane, laneIdx, target, aiState, atkState, debugState } = gameState.entities;
     const player = gameState.players[playerId[i]];
     // assumption all lanes lead to same enemy for units without a lane
     const laneToEnemy = lane[i] != null ? lane[i] : player.island.lanes[0];
@@ -333,7 +333,7 @@ function updateUnitAiProceedAttack(i)
     switch (aiState[i].state) {
         case AISTATE.PROCEED:
         {
-            const bridgePoints = lane[i].bridgePoints;
+            const bridgePoints = gameState.bridges[laneIdx[i]].bridgePoints;
             if (isOnEnemyIsland(i)) {
                 // go to enemy lighthouse
                 const goDir = vecNormalize(vecSub(enemyLighthousePos, pos[i]));
@@ -466,7 +466,7 @@ function updateUnitAiIdleAttack(i)
 
 function updateUnitAiReturnToBase(i)
 {
-    const { playerId, unit, pos, vel, accel, maxAccel, lane, target, aiState, atkState, debugState } = gameState.entities;
+    const { playerId, unit, pos, vel, accel, maxAccel, laneIdx, target, aiState, atkState, debugState } = gameState.entities;
     const player = gameState.players[playerId[i]];
     const lighthousePos = pos[player.island.idx];
     // go toward lighthouse
@@ -474,7 +474,8 @@ function updateUnitAiReturnToBase(i)
     // but follow the bridge if not on our island
     const onOwnIsland = isOnOwnIsland(i);
     if (!onOwnIsland) {
-        goDir = getDirAlongBridge(pos[i], lane[i].bridgePoints, lighthousePos);
+        const bridgePoints = gameState.bridges[laneIdx[i]].bridgePoints;
+        goDir = getDirAlongBridge(pos[i], bridgePoints, lighthousePos);
     }
     accel[i] = vecMul(goDir, maxAccel[i]);
 
@@ -485,7 +486,28 @@ function updateUnitAiReturnToBase(i)
 
 function updateUnitAiDreamer(i)
 {
-
+    const { playerId, unit, pos, vel, accel, maxAccel, laneIdx, target, aiState } = gameState.entities;
+    const { dreamer, middlePos } = gameState.bridges[laneIdx[i]];
+    // HACK
+    const targetPos = vec(dreamer.targetX, middlePos.y);
+    const targetDir = vecSub(targetPos, pos[i]);
+    if (vecAlmostZero(targetDir)) {
+        return;
+    }
+    let goDir = null;
+    // TODO fix going off center of lane
+    if (vecLen(targetDir) < 32) {
+        decel(i);
+    } else if (Math.abs(targetPos.x - pos[i].x) < 120) {
+        // HACKU
+        // if almost there in x direction, correct in all axes...
+        goDir = vecNormalize(targetDir);
+    } else {
+        goDir = getDirAlongBridge(pos[i], gameState.bridges[laneIdx[i]].bridgePoints, targetPos);
+        accel[i] = vecMul(goDir, maxAccel[i]);
+    }
+    // should fix stuff up
+    accelUnitAwayFromEdge(i);
 }
 
 const aiBehaviorToUpdateFn = {
@@ -680,7 +702,7 @@ function updateHitState(timeDeltaMs)
                     playSfx('death');
                 // die from falling
                 } else if (!onIsland && physState[i].canFall && hitState[i].state == HITSTATE.ALIVE) {
-                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], lane[i].bridgePoints);
+                    const { baseIdx, point, dir, dist } = pointNearLineSegs(pos[i], gameState.bridges[laneIdx[i]].bridgePoints);
                     if (dist >= params.laneWidth*0.5) {
                         // TODO push it with a force, don't just teleport
                         vecAddTo(pos[i], vecMulBy(dir, unit[i].radius));
@@ -1003,6 +1025,8 @@ function updateDreamerState(timeDeltaMs)
         const playerIds = Object.keys(bridge.playerLanes);
         console.assert(playerIds.length == 2);
         const playerCounts = {};
+        let minX = pos[dIdx].x;
+        let maxX = pos[dIdx].x;
         for (const pId of playerIds) {
             playerCounts[pId] = 0;
         }
@@ -1017,13 +1041,21 @@ function updateDreamerState(timeDeltaMs)
             const toHome = vecSub(homeIsland[i].pos, pos[i]);
             if (vecDot(toDreamer, toHome) > 0) {
                 playerCounts[playerId[i]]++;
+                if (pos[i].x < minX) {
+                    minX = pos[i].x;
+                } else if (pos[i].x > maxX) {
+                    maxX = pos[i].x;
+                }
             }
         });
         let attackingPlayer = NO_PLAYER_INDEX;
+        dreamer.targetX = middlePos.x;
         if (playerCounts[playerIds[0]] > playerCounts[playerIds[1]]) {
             attackingPlayer = playerIds[0];
+            dreamer.targetX = maxX - 32;
         } else if (playerCounts[playerIds[0]] < playerCounts[playerIds[1]]) {
             attackingPlayer = playerIds[1];
+            dreamer.targetX = minX + 32;
         }
         const oldAttackingPlayer = playerId[dIdx];
         playerId[dIdx] = attackingPlayer;

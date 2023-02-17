@@ -537,14 +537,11 @@ export function initGameState(gameConfig)
             const right = pathPoints[Math.floor(pathPoints.length/2)];
             middlePos = vecMul(vecAdd(left, right), 0.5);
         }
-        const bridgePointsReversed = reverseToNewArray(bridgePoints);
         const p0Lane = {
-            bridgePoints,
             spawnPos: pLaneStart,
             otherPlayerIdx: 1,
         };
         const p1Lane = {
-            bridgePoints: bridgePointsReversed,
             spawnPos: pLaneEnd,
             otherPlayerIdx: 0,
         };
@@ -554,6 +551,7 @@ export function initGameState(gameConfig)
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
             dreamer: { idx: dreamerIdx, playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, pos: vecAdd(middlePos, vec(0, -params.laneWidth)) },
+            bridgePoints,
             pathPoints,
             bezierPoints,
             middlePos,
