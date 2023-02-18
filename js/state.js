@@ -539,10 +539,12 @@ export function initGameState(gameConfig)
         }
         const p0Lane = {
             spawnPos: pLaneStart,
+            bridgeDir: vecNormalize(vecSub(bridgePoints[1], pLaneStart)),
             otherPlayerIdx: 1,
         };
         const p1Lane = {
             spawnPos: pLaneEnd,
+            bridgeDir: vecNormalize(vecSub(bridgePoints[bridgePoints.length - 2], pLaneEnd)),
             otherPlayerIdx: 0,
         };
         gameState.players[0].island.lanes.push(p0Lane);

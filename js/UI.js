@@ -286,12 +286,12 @@ export function doPlayerUI(player)
     if (!player.mouseEnabled && player.controller == PLAYER_CONTROLLER.LOCAL_HUMAN) {
         for (const [key, laneIdx] of Object.entries(hotKeys[player.id].lanes)) {
             const lane = player.island.lanes[laneIdx];
-            const pos = lane.bridgePoints[0]; // TODO fix
+            const pos = lane.spawnPos;
             if (keyPressed(key)) {
                 player.laneSelected = laneIdx;
             }
             if (player.laneSelected == laneIdx) {
-                const dir = vecSub(lane.bridgePoints[1], pos);
+                const dir = lane.bridgeDir;
                 fillTriangleWorld(context, pos, vecToAngle(dir), 15, 20, player.color);
             } else {
                 // TODO maybe take away this scale hack and just let it scale
