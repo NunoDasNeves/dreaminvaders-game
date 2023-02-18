@@ -44,7 +44,7 @@ export function pointInAABB(point, topLeft, dims)
  * Returns: {
  *      baseIdx,    // index in lineSegs of 'base' of line which point is closest to, (can never be the last index in lineSegs)
  *      point,      // point on lineSegs which is closest to point argument
- *      dir,        // direction from point on lineSegs to point argument. null if point is very close to the line
+ *      dir,        // direction from point on lineSegs to point argument. zero vector if point is very close to the line
  *      dist,       // distance from point arg to closest point on lineSegs
  * }
  */
@@ -67,7 +67,7 @@ export function pointNearLineSegs(point, lineSegs)
                 minDist = d;
                 minBaseIdx = i;
                 minPoint = vecClone(lineSegs[i]);
-                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
+                minDir = almostZero(d) ? vec() : vecMul(baseToPoint, 1/d);
             }
             continue;
         }
@@ -79,7 +79,7 @@ export function pointNearLineSegs(point, lineSegs)
                 minDist = d;
                 minBaseIdx = i;
                 minPoint = vecClone(lineSegs[i]);
-                minDir = almostZero(d) ? null : vecMul(baseToPoint, 1/d);
+                minDir = almostZero(d) ? vec() : vecMul(baseToPoint, 1/d);
             }
         } else if (distAlongLine > lineLen) {
             const dir = vecSub(point, lineSegs[i+1]);
@@ -88,7 +88,7 @@ export function pointNearLineSegs(point, lineSegs)
                 minDist = d;
                 minBaseIdx = i; // its always the 'base' of the segment, so it is i and not i+1
                 minPoint = vecClone(lineSegs[i+1]);
-                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
+                minDir = almostZero(d) ? vec() : vecMul(dir, 1/d);
             }
         } else {
             const pointOnLine = vecAddTo(vecMul(lineDir, distAlongLine), lineSegs[i]);
@@ -98,7 +98,7 @@ export function pointNearLineSegs(point, lineSegs)
                 minDist = d;
                 minBaseIdx = i;
                 minPoint = pointOnLine;
-                minDir = almostZero(d) ? null : vecMul(dir, 1/d);
+                minDir = almostZero(d) ? vec() : vecMul(dir, 1/d);
             }
         }
     }

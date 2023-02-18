@@ -90,6 +90,7 @@ export const params = Object.freeze(
             soulMinAccelRadius: 1500,
             soulStagingOffset: vec(200, 300), // invert X for player[1], invert Y for souls going down instead of up
             dreamerLaneDist: 72,
+            dreamerTetherDist: 32,
         }
         obj.laneDistFromBase = obj.islandRadius - 50;
         obj.spawnPlatRadius = obj.laneWidth * 0.75;

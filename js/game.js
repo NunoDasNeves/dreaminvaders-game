@@ -193,19 +193,22 @@ function updateAllCollidingPairs(pairs)
     return pairs;
 }
 
+function getDecelVec(vel, maxAccel)
+{
+    const velLen = vecLen(vel);
+    // accel to inverse of vel; ensures we don't undershoot and go backwards if vel is small
+    const decelVec = vecMul(vel, -1);
+    // common case; cap deceleration at maxAccel
+    if (velLen > maxAccel) {
+        vecSetMag(decelVec, maxAccel);
+    }
+    return decelVec;
+}
+
 function decel(i)
 {
     const { vel, accel, maxAccel } = gameState.entities;
-    // friction: decelerate automatically if velocity with no acceleration
-    const velLen = vecLen(vel[i]);
-    // accel to inverse of velLen; ensures we don't undershoot and go backwards
-    vecClear(accel[i])
-    vecCopyTo(accel[i], vel[i]);
-    vecNegate(accel[i]);
-    // common case; reduce vel by acceleration rate
-    if (maxAccel[i] < velLen) {
-        vecSetMag(accel[i], maxAccel[i]);
-    }
+    accel[i] = getDecelVec(vel[i], maxAccel[i]);
 }
 
 function accelUnitAwayFromEdge(i)
@@ -484,29 +487,45 @@ function updateUnitAiReturnToBase(i)
     }
 }
 
+function getStopDistance(currentVel, constantDecel) {
+    // don't assume direction of currentVel or constantDecel
+    const v_0 = Math.abs(currentVel);
+    const a = -Math.abs(constantDecel);
+    const t = -v_0 / a;              // v = v_0 + at, solve for t
+    return (v_0 + 0.5 * a * t) * t;    // dx = v_0t + 1/2at^2
+}
+
 function updateUnitAiDreamer(i)
 {
     const { playerId, unit, pos, vel, accel, maxAccel, laneIdx, target, aiState } = gameState.entities;
     const { dreamer, middlePos } = gameState.bridges[laneIdx[i]];
-    // HACK
-    const targetPos = vec(dreamer.targetX, middlePos.y);
-    const targetDir = vecSub(targetPos, pos[i]);
-    if (vecAlmostZero(targetDir)) {
+    const targetPos = dreamer.targetPos;
+    const toTarget = vecSub(targetPos, pos[i]);
+    if (vecAlmostZero(toTarget)) {
         return;
     }
-    let goDir = null;
-    // TODO fix going off center of lane
-    if (vecLen(targetDir) < 32) {
-        decel(i);
-    } else if (Math.abs(targetPos.x - pos[i].x) < 120) {
-        // HACKU
+    // TODO this can prob be less complicated because targetPos is in center of lane now
+    if (Math.abs(targetPos.x - pos[i].x) < 64) {
         // if almost there in x direction, correct in all axes...
-        goDir = vecNormalize(targetDir);
+        const dist = vecLen(toTarget);
+        const dirToTarget = vecMul(toTarget, 1/dist);
+        // just go there by default
+        accel[i] = vecMul(dirToTarget, maxAccel[i]);
+
+        // check if we should smoothly come to a stop instead
+        const velTowardsTarget = vecDot(vel[i], dirToTarget);
+        if (velTowardsTarget > 0) { // make sure we're moving toward the target already
+            const stopDist = getStopDistance(velTowardsTarget, maxAccel[i]);
+            console.assert(stopDist >= 0);
+            if (dist <= stopDist || dist < 4) {
+                decel(i);
+            }
+        }
     } else {
-        goDir = getDirAlongBridge(pos[i], gameState.bridges[laneIdx[i]].bridgePoints, targetPos);
+        const goDir = getDirAlongBridge(pos[i], gameState.bridges[laneIdx[i]].bridgePoints, targetPos);
         accel[i] = vecMul(goDir, maxAccel[i]);
     }
-    // should fix stuff up
+    // should keep it pretty centered in lane due to large radius
     accelUnitAwayFromEdge(i);
 }
 
@@ -1021,15 +1040,19 @@ function updateDreamerState(timeDeltaMs)
     const timeDeltaSec = 0.001 * timeDeltaMs;
     for (const bridge of gameState.bridges) {
         const { dreamer, middlePos } = bridge;
+        const bridgePoints = bridge.bridgePoints;
         const dIdx = dreamer.idx;
         const playerIds = Object.keys(bridge.playerLanes);
         console.assert(playerIds.length == 2);
         const playerCounts = {};
-        let minX = pos[dIdx].x;
-        let maxX = pos[dIdx].x;
         for (const pId of playerIds) {
             playerCounts[pId] = 0;
         }
+        let minX = pos[dIdx].x;
+        let minUnitIdx = dIdx;
+        let maxX = pos[dIdx].x;
+        let maxUnitIdx = dIdx;
+
         forAllUnits(i => {
             if (playerId[i] == NO_PLAYER_INDEX || !homeIsland[i] || !unit[i].canDream) {
                 return;
@@ -1043,19 +1066,25 @@ function updateDreamerState(timeDeltaMs)
                 playerCounts[playerId[i]]++;
                 if (pos[i].x < minX) {
                     minX = pos[i].x;
+                    minUnitIdx = i;
                 } else if (pos[i].x > maxX) {
                     maxX = pos[i].x;
+                    maxUnitIdx = i;
                 }
             }
         });
         let attackingPlayer = NO_PLAYER_INDEX;
-        dreamer.targetX = middlePos.x;
+        dreamer.targetPos = vecClone(middlePos); // by default go back to the middle
         if (playerCounts[playerIds[0]] > playerCounts[playerIds[1]]) {
             attackingPlayer = playerIds[0];
-            dreamer.targetX = maxX - 32;
+            const rightX = bridgePoints[bridgePoints.length - 1].x;
+            dreamer.targetPos.x = Math.min(maxX - params.dreamerTetherDist, rightX);
+            dreamer.targetPos.y = pos[maxUnitIdx].y;
         } else if (playerCounts[playerIds[0]] < playerCounts[playerIds[1]]) {
             attackingPlayer = playerIds[1];
-            dreamer.targetX = minX + 32;
+            const leftX = bridgePoints[0].x;
+            dreamer.targetPos.x = Math.max(minX + params.dreamerTetherDist, leftX);
+            dreamer.targetPos.y = pos[minUnitIdx].y;
         }
         const oldAttackingPlayer = playerId[dIdx];
         playerId[dIdx] = attackingPlayer;
@@ -1075,6 +1104,9 @@ function updateDreamerState(timeDeltaMs)
                     spawnVFXScream(vecAdd(pos[dIdx], vec(randX, -params.dreamerLaneDist-24)));
                 }
             }
+            // snap targetPos to lane center
+            const { point } = Utils.pointNearLineSegs(dreamer.targetPos, bridgePoints);
+            dreamer.targetPos = point;
         } else {
             color[dIdx] = params.neutralColor;
         }

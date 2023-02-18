@@ -550,7 +550,7 @@ export function initGameState(gameConfig)
         const dreamerIdx = spawnUnit(middlePos, NO_TEAM_INDEX, NO_PLAYER_INDEX, params.neutralColor, units[Data.UNIT.DREAMER], null, i);
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
-            dreamer: { idx: dreamerIdx, playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, pos: vecAdd(middlePos, vec(0, -params.laneWidth)) },
+            dreamer: { idx: dreamerIdx, playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, targetPos: vecClone(middlePos) },
             bridgePoints,
             pathPoints,
             bezierPoints,
