@@ -393,7 +393,9 @@ function addPlayer({name, controller}, pos, team, colorIdx)
         unitUnlocked: Object.fromEntries(Object.values(units).map(({ id, unlockCost }) => [id, unlockCost == 0])),
         botState: {
             actionTimer: 0,
-            strategy: BOT.AGGRO,
+            strategy: BOT.RANDOM,
+            goldActions: [],
+            soulActions: [],
         },
     });
     return id;

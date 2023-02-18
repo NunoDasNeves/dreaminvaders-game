@@ -1311,41 +1311,69 @@ function selectRandomLane(player)
     player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
 }
 
-function botRandomAction(player, timeDeltaMs)
+function botGetRandomSoulAction(player, timeDeltaMs)
 {
-    const botActions = [()=>{ return true; }]; // do nothing actions, keep it somewhat easy
+    const botActions = [];
     Object.values(Data.hotKeys[player.id].units)
         .forEach(unitId => {
             const unit = units[unitId];
-            if (canUnlockUnit(player.id, unit)) {
-                botActions.push(() => {
-                    selectRandomLane(player);
-                    return tryUnlockUnit(player.id, unit)
-                });
-            } else if (canBuildUnit(player.id, unit)) {
-                botActions.push(() => {
-                    selectRandomLane(player);
-                    return tryBuildUnit(player.id, unit)
-                });
+            const unlocked = player.unitUnlocked[unit.id];
+            if (!unlocked) {
+                const canDo = () => canUnlockUnit(player.id, unit);
+                const action = () => tryUnlockUnit(player.id, unit);
+                botActions.push({ canDo, action });
             }
         });
     Object.values(Data.hotKeys[player.id].upgrades)
         .forEach(upgradeId => {
-            if (canUpgrade(player.id, upgradeId)) {
-                botActions.push(() => {
-                    selectRandomLane(player);
-                    return tryUpgrade(player.id, upgradeId)
-                });
+            const upgrade = upgrades[upgradeId];
+            const currLevel = player.upgradeLevels[upgradeId];
+            const maxLevel = upgrade.soulsCost.length - 1;
+            if (currLevel < maxLevel) {
+                const canDo = () => canUpgrade(player.id, upgradeId);
+                const action = () => tryUpgrade(player.id, upgradeId);
+                botActions.push({ canDo, action });
             }
         });
+
     if (botActions.length > 0) {
         return randFromArray(botActions);
     }
-    return null;
+
+    console.log("can't do any soul action");
+
+    return { canDo: () => true, action: () => true };
 }
 
-function botAggroAction(player, timeDeltaMs)
+function botGetRandomGoldAction(player, timeDeltaMs)
 {
+    const botActions = [];
+    Object.values(Data.hotKeys[player.id].units)
+        .forEach(unitId => {
+            const unit = units[unitId];
+            const unlocked = player.unitUnlocked[unit.id];
+            if (unlocked) {
+                const canDo = () => canBuildUnit(player.id, unit);
+                const action = () => {
+                    selectRandomLane(player);
+                    return tryBuildUnit(player.id, unit);
+                };
+                botActions.push({ canDo, action });
+            }
+        });
+
+    if (botActions.length > 0) {
+        return randFromArray(botActions);
+    }
+
+    console.log("can't do any gold action");
+
+    return { canDo: () => true, action: () => true };
+}
+
+function botAggroActions(actionList, timeDeltaMs)
+{
+//TODO fix
     player.laneSelected = Math.floor(Math.random()*player.island.lanes.length);
     const botActions = [
         ()=>{ return true; } // do nothing action, keep it somewhat easy
@@ -1363,36 +1391,49 @@ function botAggroAction(player, timeDeltaMs)
     return null;
 }
 
+const botStrategyToFunc = {
+    [BOT.RANDOM]: {
+        getGoldAction: botGetRandomGoldAction,
+        getSoulAction: botGetRandomSoulAction,
+    },
+    // TODO aggro
+};
+
 function updateBotPlayer(player, timeDeltaMs)
 {
     player.botState.actionTimer -= timeDeltaMs;
     if (player.botState.actionTimer > 0) {
         return;
     }
-    let botAction = null;
-    switch (player.botState.strategy) {
-        case BOT.RANDOM:
-            botAction = botRandomAction(player, timeDeltaMs);
-            player.botState.actionTimer += 2000;
-            break;
-        case BOT.AGGRO:
-            botAction = botAggroAction(player, timeDeltaMs);
-            player.botState.actionTimer += 1000;
-            break;
-        /*case BOT.ECO:
-            botEcoAction(player, timeDeltaMs);
-            break;
-        case BOT.TECH:
-            botTechAction(player, timeDeltaMs);
-            break;*/
+    const goldActions = player.botState.goldActions;
+    const soulActions = player.botState.soulActions;
+    const { getGoldAction, getSoulAction } = botStrategyToFunc[player.botState.strategy];
+    if (goldActions.length == 0) {
+        goldActions.push(getGoldAction(player, timeDeltaMs));
     }
-    if (botAction != null) {
-        if (!botAction()) {
-            console.error("bot failed action");
+    {
+        const { canDo, action } = goldActions[0];
+        if (canDo()) {
+            goldActions.shift();
+            if (!action()) {
+                console.error("bot failed gold action");
+            }
         }
-    } else {
-        console.log("bot no action");
     }
+    if (soulActions.length == 0) {
+        soulActions.push(getSoulAction(player, timeDeltaMs));
+    }
+    {
+        const { canDo, action } = soulActions[0];
+        if (canDo()) {
+            soulActions.shift();
+            if (!action()) {
+                console.error("bot failed soul action");
+            }
+        }
+    }
+
+    player.botState.actionTimer += 2000;
 }
 
 function updatePlayersActionsAndUI(timeDeltaMs)
