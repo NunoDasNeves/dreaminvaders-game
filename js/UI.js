@@ -107,11 +107,11 @@ function unitButton(player, pos, dims, key, unit)
     const unlocked = player.unitUnlocked[unit.id];
     const cost = unlocked ? unit.cost : unit.unlockCost;
     const canAfford = unlocked ? player.gold >= cost : player.souls >= cost;
-    const onCd = player.unitCds[unit.id] > 0;
-    const canPress = canAfford && !onCd;
+    //const onCd = player.unitCds[unit.id] > 0;
+    const onCd = false;
     const buttonFontSz = 20;
     const buttonFont = `${buttonFontSz}px sans-serif`;
-    const { press, hover } = canPress && pressedButton(player, pos, dims, key);
+    const { press, hover } = pressedButton(player, pos, dims, key);
     let selected = player.unitSelected == unit.id;
 
     if (press) {
@@ -124,10 +124,10 @@ function unitButton(player, pos, dims, key, unit)
                     player.unitSelected = unit.id;
                     selected = true;
                 }
-            } else {
+            } else if (canAfford) {
                 tryBuildUnit(player.id, unit);
             }
-        } else {
+        } else if (canAfford) {
             tryUnlockUnit(player.id, unit);
         }
     }
