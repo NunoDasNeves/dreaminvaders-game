@@ -1,25 +1,26 @@
 ## TODO
-- make dreamers move around a bit - toward lane controller unit, float back to center otherwise
-    - dreamers bob up and down
-- AI update - AI can do all actions
-- Income bubbles floating up whenever you get $creams
-    - they need to fade out, pop nicely
-- Bit of UI rearrange? where to put souls + screams
-- Spawn animation - beam of light
-- dreamer art + animations
 - baby/different dreamer for base - art + animations
     - need 3 or 4 of them, maybe chained up
     - need animations
     - need code and stuff to link with upgrades
 - tower defense dreamer? or something else for static D
     - need animations
-- sort units for drawing back to front
-- finish island art
-- tower/flame anim - firing, etc...
-- death anim - pair with soul entity spawning
-- lighthouse death anim + VFX
-- unit hit lighthouse anim -'explode' - pair with soul entity spawning
+- fix up economy tracking
+    - dreamer gold should arrive when crystal pops
+    - dreamer gps should work based on that?
+- Spawn animation - beam of light
 - pixel art spawn platforms + bridge start
+- finish island art
+- start game timer/anim/delay
+- end game - lighthouse death anim + VFX
+- dreamers bob up and down
+- Income bubbles floating up whenever you get $creams
+    - they need to fade out, pop nicely
+- Bit of UI rearrange? where to put souls + screams
+- dreamer art + animations
+- sort units for drawing back to front
+- death anim - pair with soul entity spawning
+- unit hit lighthouse anim -'explode' - pair with soul entity spawning
 - falling off bridge animation - need to draw behind bridge too...
 - increase island radius a bit so units can't fall off while near the pixel art part
 - Tutorial menu + screens
@@ -32,6 +33,8 @@
 - unit specials - slime, nightling boosts
 
 ## Done
+- AI update - AI can do all actions, and actually does them (randomly tho)
+- make dreamers move around a bit - toward lane controller unit, float back to center otherwise
 - unit shadows
 - soul sprite thingy - crystal ball
 - Placeholder icons to be replaced - souls, screams, upgrades
