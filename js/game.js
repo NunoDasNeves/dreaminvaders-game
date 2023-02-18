@@ -490,9 +490,9 @@ function updateUnitAiReturnToBase(i)
 function getStopDistance(currentVel, constantDecel) {
     // don't assume direction of currentVel or constantDecel
     const v_0 = Math.abs(currentVel);
-    const a = -Math.abs(constantDecel);
-    const t = -v_0 / a;              // v = v_0 + at, solve for t
-    return (v_0 + 0.5 * a * t) * t;    // dx = v_0t + 1/2at^2
+    const a = Math.abs(constantDecel);
+    // its just v_t^2 = v_0^2 + 2*a*d, where v_t is 0
+    return v_0 * v_0 * 0.5 / a;
 }
 
 function updateUnitAiDreamer(i)
