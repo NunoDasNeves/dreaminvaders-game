@@ -42,7 +42,7 @@ function drawUnitAnim(i, alpha, colorOverlay)
     if (vecFromAngle(angle[i]).x < 0) {
         flip = true;
     }
-    const sprite = unitSprites[unit[i].id];
+    const sprite = animState[i].sprite;
     const animObj = sprite.anims[anim];
     const col = animObj.col + frame;
     const flipOffset = flip ? sprite.rows : 0;
@@ -68,10 +68,7 @@ function drawUnitShadow(i)
     if (unit[i].shadowWidth == 0) {
         return;
     }
-    const sprite = unitSprites[unit[i].id];
-    const width_2 = sprite.width * 0.5;
-    //const drawUnitPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
-    const shadowPos = vecClone(pos[i],); //vecAdd(drawUnitPos, vec(sprite.width * 0.5, sprite.height));
+    const shadowPos = vecClone(pos[i]);
     shadowPos.y += unit[i].shadowOffsetY;
     const radii = vec(unit[i].shadowWidth, unit[i].shadowWidth * 0.3);
     fillEllipseWorld(context, shadowPos, radii, "#0004");
@@ -154,9 +151,9 @@ function drawUnit(i)
 
 function drawHpBar(i)
 {
-    const { unit, pos, vel, angle, target, hp, atkState, physState, hitState } = gameState.entities;
+    const { unit, pos, hp, animState, hitState } = gameState.entities;
 
-    const sprite = unitSprites[unit[i].id];
+    const sprite = animState[i].sprite;
     // hp bar
     if (hitState[i].hpBarTimer > 0) {
         const hpBarWidth = sprite.width;

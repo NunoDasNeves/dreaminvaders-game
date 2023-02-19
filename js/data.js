@@ -398,11 +398,6 @@ for (const sprite of Object.values(unitSprites)) {
     }
 }
 
-export function getUnitAnim(unit, animName)
-{
-    return unitSprites[unit.id].anims[animName];
-}
-
 export const units = makeFromDefaults("unit", unitData, unitDefaults, unitRequired);
 
 function csvArrayToObjArr(arr)

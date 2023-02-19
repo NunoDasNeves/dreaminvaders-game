@@ -910,7 +910,6 @@ function updateUnitAtkState(timeDeltaMs)
         }
         const atkState = gameState.entities.atkState[i];
         const animState = gameState.entities.animState[i];
-        const attackAnim = getUnitAnim(unit, ANIM.ATK);
 
         switch (atkState.state) {
             case ATKSTATE.AIM:
@@ -965,7 +964,7 @@ function updateUnitAnimState(timeDeltaMs)
     forAllUnits((i) => {
         const unit = gameState.entities.unit[i];
         const aState = gameState.entities.animState[i];
-        const anim = getUnitAnim(unit, aState.anim);
+        const anim = aState.sprite.anims[aState.anim];
         // frameDur is not used currently
         const durationMs = unit.atkMs;//anim.frames * anim.frameDur;
         aState.timer += timeDeltaMs;
