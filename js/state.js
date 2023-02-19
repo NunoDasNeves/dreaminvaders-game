@@ -286,6 +286,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
     const hasSpawnTime = unit[idx].spawnTimeMs > 0;
     aiState[idx]    = {
         state: hasSpawnTime ? AISTATE.NONE : unit[idx].defaultAiState,
+        behavior: aUnit.aiBehavior,
     };
     atkState[idx]   = {
         state: ATKSTATE.AIM,

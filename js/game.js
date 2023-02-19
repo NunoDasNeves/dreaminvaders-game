@@ -551,7 +551,7 @@ function updateUnitAiState()
             resetUnitAnim(i, ANIM.IDLE);
             continue;
         }
-        aiBehaviorToUpdateFn[unit[i].aiBehavior](i);
+        aiBehaviorToUpdateFn[aiState[i].behavior](i);
     }
 }
 
