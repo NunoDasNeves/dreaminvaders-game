@@ -1,26 +1,39 @@
 ## TODO
-- baby/different dreamer for base - art + animations
-    - need 3 or 4 of them, maybe chained up
-    - need animations
+- baby/different dreamer for base - art + code
+    - need 4 of them
     - need code and stuff to link with upgrades
-- tower defense dreamer? or something else for static D
-    - need animations
+        - separate shadowWidth to animState so base dreamers can not have shadow
+        - aibehavior do dreamer lane movement and target changing - use target instead of targetPos, debugState for goldEarned
+            - and bobbing up and down? how about the shadow?
+        - separate update goes through and gives gold, spawns crystals
+        - spawn functions differentiate base and lane dreamers
+        - upgrade just spawns next dreamer, store which dreamer, offsets etc, in upgrade itself?
+        - sprite will have head offset for crystal spawning
+    - dreamer color shoud be a glow or something
+- tower defense new anim - lightning
+    - need animations - idle (crackle), attack (charge, fire, dormant)
+- Spawn animation - beam of light
+- pixel art spawn platforms + bridge start
+- start game timer/anim/delay
+- end game - lighthouse death anim + VFX
+    - base dreamers (on losing team) need to fade away when game ends
+- dreamer animations (all the dreamers)
+    - switching team/active/inactive needs to happen with a timer
+        - can put a state timer on aiState
+    - idle
+    - move - non looping whooshy
+        - maybe accel vs decel
+    - active vs inactive?
 - fix up economy tracking
     - dreamer gold should arrive when crystal pops
     - dreamer gps should work based on that?
-- Spawn animation - beam of light
-- pixel art spawn platforms + bridge start
-- finish island art
-- start game timer/anim/delay
-- end game - lighthouse death anim + VFX
-- dreamers bob up and down
-- Income bubbles floating up whenever you get $creams
+- crystals need a bit of update
     - they need to fade out, pop nicely
 - Bit of UI rearrange? where to put souls + screams
-- dreamer art + animations
 - sort units for drawing back to front
 - death anim - pair with soul entity spawning
 - unit hit lighthouse anim -'explode' - pair with soul entity spawning
+- finish island art
 - falling off bridge animation - need to draw behind bridge too...
 - increase island radius a bit so units can't fall off while near the pixel art part
 - Tutorial menu + screens
@@ -28,6 +41,7 @@
     - no loop tho
 
 ## Stretch
+- dreamers bob up and down?
 - Menu use new assets
 - tank sprites are not really done (need to be shiny & slimy)
 - unit specials - slime, nightling boosts
