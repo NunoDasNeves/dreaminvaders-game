@@ -341,6 +341,25 @@ export function spawnUnitInLane(laneIdx, playerId, unit)
     return spawnUnitForPlayer(randPos, playerId, unit, laneIdx);
 }
 
+export function spawnNextLhDreamer(playerId)
+{
+    const { pos, animState } = gameState.entities;
+    const player = gameState.players[playerId];
+    const num = player.island.dreamers.length;
+    if (num > 3) {
+        console.error("too many lh dreamers");
+        return INVALID_ENTITY_INDEX;
+    }
+    const spawnPos = pos[player.island.idx];
+    const unit = units[UNIT.LH_DREAMER];
+    const idx = spawnUnitForPlayer(spawnPos, playerId, unit);
+    if (idx != INVALID_ENTITY_INDEX) {
+        animState[idx].sprite = unitSprites[SPRITE[`LH_DREAMER_${num}`]];
+        player.island.dreamers.push(idx);
+    }
+    return idx;
+}
+
 export function getLocalPlayer()
 {
     return gameState.players[gameState.localPlayerId];
@@ -389,6 +408,7 @@ function addPlayer({name, controller}, pos, team, colorIdx)
             lanes: [],
             sprite: envSprites.island,
             flipSprite: id == 1,
+            dreamers: [],
         },
         upgradeLevels: Object.fromEntries(Object.values(upgrades).map(({ id }) => [id, -1])),
         unitCds: Object.fromEntries(Object.values(UNIT).map(id => [id, 0])),
@@ -556,7 +576,7 @@ export function initGameState(gameConfig)
         const dreamerIdx = spawnUnit(middlePos, NO_TEAM_INDEX, NO_PLAYER_INDEX, params.neutralColor, units[Data.UNIT.DREAMER], null, i);
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
-            dreamer: { idx: dreamerIdx, playerId: NO_PLAYER_INDEX, color: params.neutralColor, timer: 0, goldEarned: 0, targetPos: vecClone(middlePos) },
+            dreamer: { idx: dreamerIdx, playerId: NO_PLAYER_INDEX, timer: 0, goldEarned: 0, targetPos: vecClone(middlePos) },
             bridgePoints,
             pathPoints,
             bezierPoints,
@@ -567,12 +587,13 @@ export function initGameState(gameConfig)
         islands[1].paths.push([vecClone(pLaneEnd), islandPos[1], lighthousePos[1]]);
     }
 
-    // spawn lighthouses
+    // spawn lighthouses, initial players' dreamers
     for (let i = 0; i < gameState.players.length; ++i) {
         const player = gameState.players[i];
         player.island.idx = spawnUnitForPlayer(lighthousePos[i], i, units[UNIT.BASE]);
         // select middle lane by default
         player.laneSelected = Math.floor(player.island.lanes.length/2);
+        spawnNextLhDreamer(i);
     }
 }
 

@@ -1316,6 +1316,8 @@ export function tryUpgrade(playerId, upgradeId)
         const unit = units[UNIT.TOWER];
         const lightPos = vecAdd(pos[player.island.idx], vec(0,-148));
         spawnUnitForPlayer(lightPos, playerId, unit);
+    } else if (upgradeId == UPGRADE.ECO) {
+        spawnNextLhDreamer(playerId);
     }
     return true;
 }
