@@ -89,9 +89,6 @@ function drawUnit(i)
         }
         case HITSTATE.ALIVE:
         {
-            if (debug.drawCollision) {
-                strokeCircleWorld(context, pos[i], unit[i].radius, 1, color[i]);
-            }
             break;
         }
         case HITSTATE.DEAD:
@@ -115,9 +112,9 @@ function drawUnit(i)
     if (!debug.drawUI) {
         return;
     }
-    // all this stuff is debug only, later we wanna draw sprites
-    if (debug.drawCollision && physState[i].colliding) {
-        strokeCircleWorld(context, pos[i], unit[i].radius, 1, 'red');
+    if (debug.drawCollision) {
+        const collColor = physState[i].colliding ? 'red' : color[i];
+        strokeCircleWorld(context, pos[i], unit[i].radius, 1, collColor);
     }
     if (debug.drawSightRange && unit[i].sightRange > 0) {
         strokeCircleWorld(context, pos[i], unit[i].sightRange + unit[i].radius, 1, 'yellow');
