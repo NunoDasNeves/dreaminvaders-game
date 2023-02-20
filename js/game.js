@@ -1132,10 +1132,12 @@ function updatePlayerState(timeDeltaMs)
     }
     // add dreamer gold
     for (const { dreamer } of gameState.bridges) {
-        if (dreamer.playerId == NO_PLAYER_INDEX) {
+        const { playerId } = gameState.entities;
+        const dIdx = dreamer.idx;
+        if (playerId[dIdx] == NO_PLAYER_INDEX) {
             continue;
         }
-        const player = gameState.players[dreamer.playerId];
+        const player = gameState.players[playerId[dIdx]];
         player.goldPerSec += params.dreamerGoldPerSec;
         // track dreamer gold
         player.goldFromDreamers += params.dreamerGoldPerSec * timeDeltaSec;
