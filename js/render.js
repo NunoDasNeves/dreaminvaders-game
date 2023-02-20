@@ -625,7 +625,7 @@ export function draw(realTimeMs, timeDeltaMs)
     if (localPlayer.mouseEnabled) {
         if (localPlayer.unitSelected >= 0) {
             const unit = units[localPlayer.unitSelected];
-            const sprite = unitSprites[localPlayer.unitSelected];
+            const sprite = unitSprites[unit.defaultSpriteId];
             const spawnPos = gameState.input.mousePos;
             const drawUnitPos = getDrawUnitPos(spawnPos, sprite.width, sprite.height, sprite.centerOffset);
             const overlayColor = localPlayer.laneSpawnHovered >= 0 && canBuildUnit(localPlayer.id, unit, spawnPos) ? "#20f8" : "#8088";

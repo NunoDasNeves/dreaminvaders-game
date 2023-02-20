@@ -140,7 +140,7 @@ function unitButton(player, pos, dims, key, unit)
 
     fillRectScreen(context, pos, dims, backColor, 10);
     // draw sprite
-    const sprite = unitSprites[unit.id];
+    const sprite = unitSprites[unit.defaultSpriteId];
     const spriteDrawPos = vecAdd(pos, vecMul(dims, 0.5))
     vecSubFrom(spriteDrawPos, vecMulBy(vec(sprite.width, sprite.height), 0.5));
     drawSpriteScreen(context, sprite, 0, 0, spriteDrawPos, unlocked ? null : "#000");

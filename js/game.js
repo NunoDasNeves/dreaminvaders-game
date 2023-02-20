@@ -529,12 +529,19 @@ function updateUnitAiDreamer(i)
     accelUnitAwayFromEdge(i);
 }
 
+function updateUnitAiLhDreamer(i)
+{
+    // don't do anytin
+    decel(i);
+}
+
 const aiBehaviorToUpdateFn = {
     [AIBEHAVIOR.DO_NOTHING]: (i) => {},
     [AIBEHAVIOR.IDLE_AND_ATTACK]: updateUnitAiIdleAttack,
     [AIBEHAVIOR.PROCEED_AND_ATTACK]: updateUnitAiProceedAttack,
     [AIBEHAVIOR.RETURN_TO_BASE]: updateUnitAiReturnToBase,
     [AIBEHAVIOR.DREAMER]: updateUnitAiDreamer,
+    [AIBEHAVIOR.LH_DREAMER]: updateUnitAiLhDreamer,
 };
 
 function updateUnitAiState()

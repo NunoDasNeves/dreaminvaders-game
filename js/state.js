@@ -306,7 +306,7 @@ export function spawnUnit(aPos, aTeamId, aPlayerId, aColor, aUnit, aHomeIsland =
         collRadius: unit[idx].radius,
     };
     animState[idx]  = {
-        sprite: unitSprites[aUnit.id],
+        sprite: unitSprites[aUnit.defaultSpriteId],
         anim: ANIM.IDLE,
         frame: 0,
         timer: 0, // counts UP

@@ -115,6 +115,7 @@ export const AIBEHAVIOR = Object.freeze({
     IDLE_AND_ATTACK: 2,
     RETURN_TO_BASE: 3,
     DREAMER: 4,
+    LH_DREAMER: 5,
 });
 export const ATKSTATE = Object.freeze({
     AIM: 0,
@@ -149,7 +150,26 @@ export const UNIT = Object.freeze({
     // err
     SOUL: 6,
     DREAMER: 7,
+    LH_DREAMER: 8,
 });
+
+export const SPRITE = Object.freeze({
+    // same as UNIT, until lh dreamers
+    INVALID: 0,
+    BASE: 1,
+    TOWER: 2,
+    CHOGORINGU: 3,
+    BIGEYE: 4,
+    TANK: 5,
+    SOUL: 6,
+    DREAMER: 7,
+    // different to UNIT
+    LH_DREAMER_0: 8,
+    LH_DREAMER_1: 9,
+    LH_DREAMER_2: 10,
+    LH_DREAMER_3: 11,
+});
+
 export const VFX = Object.freeze({
     EXPLOSION: 1,
     BIGEYE_BEAM: 2,
@@ -185,7 +205,7 @@ const unitAnimDefaults = Object.freeze({
 
 const unitSpriteData = [
     {
-        id: UNIT.BASE,
+        id: SPRITE.BASE,
         assetName: "lighthouse",
         width: 160,
         height: 256,
@@ -193,7 +213,7 @@ const unitSpriteData = [
         centerOffset: vec(0,65),
         playerColors: true,
     },{
-        id: UNIT.CHOGORINGU,
+        id: SPRITE.CHOGORINGU,
         assetName: "chogoringu",
         // dimensions of one frame of animation
         width: 16,
@@ -225,7 +245,7 @@ const unitSpriteData = [
             },
         },
     },{
-        id: UNIT.BIGEYE,
+        id: SPRITE.BIGEYE,
         assetName: "bigeye",
         width: 32,
         height: 32,
@@ -248,7 +268,7 @@ const unitSpriteData = [
             },
         },
     },{
-        id: UNIT.TANK,
+        id: SPRITE.TANK,
         assetName: "tank",
         width: 72,
         height: 48,
@@ -268,7 +288,7 @@ const unitSpriteData = [
             },
         },
     },{
-        id: UNIT.TOWER,
+        id: SPRITE.TOWER,
         assetName: "tower",
         width: 32,
         height: 32,
@@ -288,23 +308,30 @@ const unitSpriteData = [
             },
         }
     },{
-        id: UNIT.SOUL,
+        id: SPRITE.SOUL,
         assetName: "soul",
         width: 16,
         height: 16,
         playerColors: true,
         centerOffset: vec(0,22),
     },{
-        id: UNIT.DREAMER,
+        id: SPRITE.DREAMER,
         assetName: "dreamer",
         width: 48,
         height: 48,
         centerOffset: vec(0,params.dreamerLaneDist),
+    },{
+        id: SPRITE.LH_DREAMER_0,
+        assetName: "dreamer", // TODO
+        width: 48, // TODO
+        height: 48,
+        centerOffset: vec(0,0), // TODO same as base offset
     },
 ];
 
 const unitRequired = ['id'];
 const unitDefaults = Object.freeze({
+    defaultSpriteId: SPRITE.INVALID,
     topSpeed: 0,
     accel: 0,
     hp: 1,
@@ -341,36 +368,48 @@ const unitDefaults = Object.freeze({
 const unitData = [
     {
         id: UNIT.BASE,
+        defaultSpriteId: SPRITE.BASE,
     },{
         id: UNIT.CHOGORINGU,
+        defaultSpriteId: SPRITE.CHOGORINGU,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
         targettable: true,
         canDream: true,
     },{
         id: UNIT.BIGEYE,
+        defaultSpriteId: SPRITE.BIGEYE,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
         targettable: true,
         canDream: true,
     },{
         id: UNIT.TANK,
+        defaultSpriteId: SPRITE.TANK,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.PROCEED_AND_ATTACK,
         targettable: true,
         canDream: true,
     },{
         id: UNIT.TOWER,
+        defaultSpriteId: SPRITE.TOWER,
         defaultAiState: AISTATE.IDLE,
         aiBehavior: AIBEHAVIOR.IDLE_AND_ATTACK,
     },{
         id: UNIT.SOUL,
+        defaultSpriteId: SPRITE.SOUL,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.RETURN_TO_BASE,
     },{
         id: UNIT.DREAMER,
+        defaultSpriteId: SPRITE.DREAMER,
         defaultAiState: AISTATE.PROCEED,
         aiBehavior: AIBEHAVIOR.DREAMER,
+    },{
+        id: UNIT.LH_DREAMER,
+        defaultSpriteId: SPRITE.LH_DREAMER_0,
+        defaultAiState: AISTATE.IDLE,
+        aiBehavior: AIBEHAVIOR.LH_DREAMER,
     },
 ];
 
