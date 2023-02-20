@@ -59,6 +59,26 @@ const imageData = {
         width: 48,
         height: 48,
     },
+    lhDreamer0: {
+        filename: "lh_dreamer_0.png",
+        width: 160,
+        height: 256,
+    },
+    lhDreamer1: {
+        filename: "lh_dreamer_1.png",
+        width: 160,
+        height: 256,
+    },
+    lhDreamer2: {
+        filename: "lh_dreamer_2.png",
+        width: 160,
+        height: 256,
+    },
+    lhDreamer3: {
+        filename: "lh_dreamer_3.png",
+        width: 160,
+        height: 256,
+    },
     scream: {
         filename: "scream.png",
         width: 16,

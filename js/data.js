@@ -320,32 +320,16 @@ const unitSpriteData = [
         width: 48,
         height: 48,
         centerOffset: vec(0,params.dreamerLaneDist),
-    },{
-        id: SPRITE.LH_DREAMER_0,
-        assetName: "dreamer", // TODO
-        width: 48, // TODO
-        height: 48,
-        centerOffset: vec(0,128), // TODO same as base offset
-    },{
-        id: SPRITE.LH_DREAMER_1,
-        assetName: "dreamer", // TODO
-        width: 48, // TODO
-        height: 48,
-        centerOffset: vec(0,96), // TODO same as base offset
-    },{
-        id: SPRITE.LH_DREAMER_2,
-        assetName: "dreamer", // TODO
-        width: 48, // TODO
-        height: 48,
-        centerOffset: vec(0,64), // TODO same as base offset
-    },{
-        id: SPRITE.LH_DREAMER_3,
-        assetName: "dreamer", // TODO
-        width: 48, // TODO
-        height: 48,
-        centerOffset: vec(0,32), // TODO same as base offset
-    },
-];
+    }
+].concat(
+    [0,1,2,3].map(i => ({
+        id: SPRITE[`LH_DREAMER_${i}`],
+        assetName: `lhDreamer${i}`,
+        width: 160,
+        height: 256,
+        centerOffset: vec(0,65),
+    }))
+);
 
 const unitRequired = ['id'];
 const unitDefaults = Object.freeze({
