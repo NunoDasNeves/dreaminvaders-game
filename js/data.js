@@ -325,7 +325,25 @@ const unitSpriteData = [
         assetName: "dreamer", // TODO
         width: 48, // TODO
         height: 48,
-        centerOffset: vec(0,0), // TODO same as base offset
+        centerOffset: vec(0,128), // TODO same as base offset
+    },{
+        id: SPRITE.LH_DREAMER_1,
+        assetName: "dreamer", // TODO
+        width: 48, // TODO
+        height: 48,
+        centerOffset: vec(0,96), // TODO same as base offset
+    },{
+        id: SPRITE.LH_DREAMER_2,
+        assetName: "dreamer", // TODO
+        width: 48, // TODO
+        height: 48,
+        centerOffset: vec(0,64), // TODO same as base offset
+    },{
+        id: SPRITE.LH_DREAMER_3,
+        assetName: "dreamer", // TODO
+        width: 48, // TODO
+        height: 48,
+        centerOffset: vec(0,32), // TODO same as base offset
     },
 ];
 
