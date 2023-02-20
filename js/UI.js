@@ -303,13 +303,15 @@ export function doPlayerUI(player)
     // dreamer debug earned gold
     if (debug.drawUI) {
         for (let i = 0; i < gameState.bridges.length; ++i) {
+            const { color } = gameState.entities;
             const bridge = gameState.bridges[i];
             const dreamer = bridge.dreamer;
+            const dIdx = dreamer.idx;
             if (dreamer.goldEarned == 0) {
                 continue;
             }
             const pos = vecAdd(bridge.middlePos, vec(0, -params.laneWidth*2));
-            drawText(`+$${dreamer.goldEarned.toFixed(2)}`, pos, 20 * gameState.camera.scale, dreamer.color, true, 'center');
+            drawText(`+$${dreamer.goldEarned.toFixed(2)}`, pos, 20 * gameState.camera.scale, color[dIdx], true, 'center');
         }
     }
 }
