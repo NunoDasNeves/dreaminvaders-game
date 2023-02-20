@@ -497,8 +497,72 @@ function getStopDistance(currentVel, constantDecel) {
 
 function updateUnitAiDreamer(i)
 {
-    const { playerId, unit, pos, vel, accel, maxAccel, laneIdx, target, aiState } = gameState.entities;
-    const { dreamer, middlePos } = gameState.bridges[laneIdx[i]];
+    const { playerId, unit, pos, vel, accel, maxAccel, laneIdx, target, homeIsland, color, aiState } = gameState.entities;
+    const bridge = gameState.bridges[laneIdx[i]];
+    const { dreamer, middlePos } = bridge;
+
+    // TARGET UPDATE
+    const bridgePoints = bridge.bridgePoints;
+    const playerIds = Object.keys(bridge.playerLanes);
+    console.assert(playerIds.length == 2);
+    const playerCounts = {};
+    for (const pId of playerIds) {
+        playerCounts[pId] = 0;
+    }
+    let minX = pos[i].x;
+    let minUnitIdx = i;
+    let maxX = pos[i].x;
+    let maxUnitIdx = i;
+
+    forAllUnits(j => {
+        if (playerId[j] == NO_PLAYER_INDEX || !homeIsland[j] || !unit[j].canDream) {
+            return;
+        }
+        if (laneIdx[j] != laneIdx[i]) {
+            return;
+        }
+        const toDreamer = vecSub(pos[i], pos[j]);
+        const toHome = vecSub(homeIsland[j].pos, pos[j]);
+        if (vecDot(toDreamer, toHome) > 0) {
+            playerCounts[playerId[j]]++;
+            if (pos[j].x < minX) {
+                minX = pos[j].x;
+                minUnitIdx = j;
+            } else if (pos[j].x > maxX) {
+                maxX = pos[j].x;
+                maxUnitIdx = j;
+            }
+        }
+    });
+    let attackingPlayer = NO_PLAYER_INDEX;
+    dreamer.targetPos = vecClone(middlePos); // by default go back to the middle
+    if (playerCounts[playerIds[0]] > playerCounts[playerIds[1]]) {
+        attackingPlayer = playerIds[0];
+        const rightX = bridgePoints[bridgePoints.length - 1].x;
+        dreamer.targetPos.x = Math.min(maxX - params.dreamerTetherDist, rightX);
+        dreamer.targetPos.y = pos[maxUnitIdx].y;
+    } else if (playerCounts[playerIds[0]] < playerCounts[playerIds[1]]) {
+        attackingPlayer = playerIds[1];
+        const leftX = bridgePoints[0].x;
+        dreamer.targetPos.x = Math.max(minX + params.dreamerTetherDist, leftX);
+        dreamer.targetPos.y = pos[minUnitIdx].y;
+    }
+    const oldAttackingPlayer = playerId[i];
+    playerId[i] = attackingPlayer;
+    if (attackingPlayer != NO_PLAYER_INDEX) {
+        const player = gameState.players[attackingPlayer];
+        color[i] = player.color;
+        if (oldAttackingPlayer != attackingPlayer) {
+            dreamer.goldEarned = 0;
+            dreamer.timer = 1000;
+        }
+        // snap targetPos to lane center
+        const { point } = Utils.pointNearLineSegs(dreamer.targetPos, bridgePoints);
+        dreamer.targetPos = point;
+    } else {
+        color[i] = params.neutralColor;
+    }
+    // MOVEMENT
     const targetPos = dreamer.targetPos;
     const toTarget = vecSub(targetPos, pos[i]);
     if (vecAlmostZero(toTarget)) {
@@ -522,7 +586,7 @@ function updateUnitAiDreamer(i)
             }
         }
     } else {
-        const goDir = getDirAlongBridge(pos[i], gameState.bridges[laneIdx[i]].bridgePoints, targetPos);
+        const goDir = getDirAlongBridge(pos[i], bridgePoints, targetPos);
         accel[i] = vecMul(goDir, maxAccel[i]);
     }
     // should keep it pretty centered in lane due to large radius
@@ -1042,79 +1106,21 @@ function updateSoulState(timeDeltaMs)
 
 function updateDreamerState(timeDeltaMs)
 {
-    const { playerId, unit, homeIsland, pos, lane, color } = gameState.entities;
-    const timeDeltaSec = 0.001 * timeDeltaMs;
+    const { playerId, unit, pos } = gameState.entities;
     for (const bridge of gameState.bridges) {
-        const { dreamer, middlePos } = bridge;
-        const bridgePoints = bridge.bridgePoints;
+        const { dreamer } = bridge;
         const dIdx = dreamer.idx;
-        const playerIds = Object.keys(bridge.playerLanes);
-        console.assert(playerIds.length == 2);
-        const playerCounts = {};
-        for (const pId of playerIds) {
-            playerCounts[pId] = 0;
+        if (playerId[dIdx] == NO_PLAYER_INDEX) {
+            continue;
         }
-        let minX = pos[dIdx].x;
-        let minUnitIdx = dIdx;
-        let maxX = pos[dIdx].x;
-        let maxUnitIdx = dIdx;
-
-        forAllUnits(i => {
-            if (playerId[i] == NO_PLAYER_INDEX || !homeIsland[i] || !unit[i].canDream) {
-                return;
-            }
-            if (lane[i] != bridge.playerLanes[playerId[i]]) {
-                return;
-            }
-            const toDreamer = vecSub(pos[dIdx], pos[i]);
-            const toHome = vecSub(homeIsland[i].pos, pos[i]);
-            if (vecDot(toDreamer, toHome) > 0) {
-                playerCounts[playerId[i]]++;
-                if (pos[i].x < minX) {
-                    minX = pos[i].x;
-                    minUnitIdx = i;
-                } else if (pos[i].x > maxX) {
-                    maxX = pos[i].x;
-                    maxUnitIdx = i;
-                }
-            }
-        });
-        let attackingPlayer = NO_PLAYER_INDEX;
-        dreamer.targetPos = vecClone(middlePos); // by default go back to the middle
-        if (playerCounts[playerIds[0]] > playerCounts[playerIds[1]]) {
-            attackingPlayer = playerIds[0];
-            const rightX = bridgePoints[bridgePoints.length - 1].x;
-            dreamer.targetPos.x = Math.min(maxX - params.dreamerTetherDist, rightX);
-            dreamer.targetPos.y = pos[maxUnitIdx].y;
-        } else if (playerCounts[playerIds[0]] < playerCounts[playerIds[1]]) {
-            attackingPlayer = playerIds[1];
-            const leftX = bridgePoints[0].x;
-            dreamer.targetPos.x = Math.max(minX + params.dreamerTetherDist, leftX);
-            dreamer.targetPos.y = pos[minUnitIdx].y;
-        }
-        const oldAttackingPlayer = playerId[dIdx];
-        playerId[dIdx] = attackingPlayer;
-        if (attackingPlayer != NO_PLAYER_INDEX) {
-            const player = gameState.players[attackingPlayer];
-            color[dIdx] = player.color;
-            if (oldAttackingPlayer != attackingPlayer) {
-                dreamer.goldEarned = 0;
-                dreamer.timer = 1000;
-            } else {
-                dreamer.timer -= timeDeltaMs;
-                if (dreamer.timer <= 0) {
-                    dreamer.goldEarned += params.dreamerGoldPerSec;
-                    dreamer.timer = 1000;
-                    // TODO compute dreamer head pos properly for spawning screams
-                    const randX = -4 + (Math.random() - 0.5) * 16;
-                    spawnVFXScream(vecAdd(pos[dIdx], vec(randX, -params.dreamerLaneDist-24)));
-                }
-            }
-            // snap targetPos to lane center
-            const { point } = Utils.pointNearLineSegs(dreamer.targetPos, bridgePoints);
-            dreamer.targetPos = point;
-        } else {
-            color[dIdx] = params.neutralColor;
+        dreamer.timer -= timeDeltaMs;
+        if (dreamer.timer <= 0) {
+            // TODO update player gold here, atm it's in player update
+            dreamer.goldEarned += params.dreamerGoldPerSec;
+            dreamer.timer = 1000;
+            // TODO compute dreamer head pos properly for spawning screams
+            const randX = -4 + (Math.random() - 0.5) * 16;
+            spawnVFXScream(vecAdd(pos[dIdx], vec(randX, -params.dreamerLaneDist-24)));
         }
     }
 }
