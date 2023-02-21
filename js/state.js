@@ -743,3 +743,20 @@ export function entityExists(i, eType)
     console.assert(i >= 0 && i < exists.length);
     return exists[i] && type[i] == eType;
 }
+
+export function facingRight(angle)
+{
+    return vecFromAngle(angle).x >= 0;
+}
+
+export function getDreamerHeadOffset(i)
+{
+    const { angle, animState } = gameState.entities;
+    const sprite = animState[i].sprite;
+    const off = vecClone(sprite.headOffset);
+    const flip = !facingRight(angle[i]);
+    if (flip) {
+        off.x = -off.x;
+    }
+    return off;
+}

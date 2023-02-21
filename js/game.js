@@ -1111,9 +1111,9 @@ function updateDreamerState(dreamer, goldTimeMs, timeDeltaMs)
 
     dreamer.timer -= timeDeltaMs;
     if (dreamer.timer <= 0) {
-        const sprite = animState[dIdx].sprite;
+        const headOffset = getDreamerHeadOffset(dIdx);
         const randOffset = vec(-4 + (Math.random() - 0.5) * 16, 0);
-        const screamOffset = vecAdd(randOffset, sprite.headOffset);
+        const screamOffset = vecAdd(randOffset, headOffset);
         spawnVFXScream(vecAdd(pos[dIdx], screamOffset));
 
         const player = gameState.players[ playerId[dIdx] ];

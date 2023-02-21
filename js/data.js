@@ -323,14 +323,14 @@ const unitSpriteData = [
         height: 48,
         centerOffset: vec(0,params.dreamerLaneDist),
         // where is his head
-        headOffset: vec(0, -params.dreamerLaneDist-24),
+        headOffset: vec(7, -params.dreamerLaneDist-16),
     }
 ].concat(
     [
-        vec(),
-        vec(),
-        vec(),
-        vec()
+        vec(-28, 24),
+        vec( 48,-68),
+        vec(-7, -50),
+        vec(-42,-76)
     ]
     .map((headOffset, i) => ({
         id: SPRITE[`LH_DREAMER_${i}`],

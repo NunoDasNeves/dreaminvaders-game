@@ -38,10 +38,7 @@ function drawUnitAnim(i, alpha, colorOverlay)
 {
     const { team, playerId, unit, pos, angle, color, animState } = gameState.entities;
     const { anim, frame, timer, loop } = animState[i];
-    let flip = false;
-    if (vecFromAngle(angle[i]).x < 0) {
-        flip = true;
-    }
+    const flip = !facingRight(angle[i]);
     const sprite = animState[i].sprite;
     const animObj = sprite.anims[anim];
     const col = animObj.col + frame;
