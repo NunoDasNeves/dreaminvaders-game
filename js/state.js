@@ -341,7 +341,7 @@ export function spawnUnitInLane(laneIdx, playerId, unit)
     return spawnUnitForPlayer(randPos, playerId, unit, laneIdx);
 }
 
-export function spawnNextLhDreamer(playerId)
+export function addNextLhDreamer(playerId)
 {
     const { pos, animState } = gameState.entities;
     const player = gameState.players[playerId];
@@ -355,7 +355,8 @@ export function spawnNextLhDreamer(playerId)
     const idx = spawnUnitForPlayer(spawnPos, playerId, unit);
     if (idx != INVALID_ENTITY_INDEX) {
         animState[idx].sprite = unitSprites[SPRITE[`LH_DREAMER_${num}`]];
-        player.island.dreamers.push(idx);
+        const dreamer = makeDreamerState(idx, params.lhDreamerGoldTimeMs);
+        player.island.dreamers.push(dreamer);
     }
     return idx;
 }
@@ -394,8 +395,7 @@ function addPlayer({name, controller}, pos, team, colorIdx)
         soulsFromLighthouse: 0,
         soulsEarned: 0,
         gold: params.startingGold,
-        goldPerSec: params.startingGoldPerSec,
-        /* track how much gold from different sources */
+        goldPerSec: 0,
         goldBaseEarned: 0,
         goldFromDreamers: 0,
         goldFromEcoUpgrades: 0,
@@ -461,6 +461,11 @@ export function makeGameConfig(p0name, p0controller, p1name, p1controller)
             }
         ]
     }
+}
+
+function makeDreamerState(dreamerIdx, goldTimeMs)
+{
+    return { idx: dreamerIdx, timer: goldTimeMs, goldEarned: 0, targetPos: vec() };
 }
 
 export function initGameState(gameConfig)
@@ -574,9 +579,10 @@ export function initGameState(gameConfig)
         gameState.players[0].island.lanes.push(p0Lane);
         gameState.players[1].island.lanes.push(p1Lane);
         const dreamerIdx = spawnUnit(middlePos, NO_TEAM_INDEX, NO_PLAYER_INDEX, params.neutralColor, units[Data.UNIT.DREAMER], null, i);
+        const dreamer = makeDreamerState(dreamerIdx, params.dreamerGoldTimeMs);
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
-            dreamer: { idx: dreamerIdx, playerId: NO_PLAYER_INDEX, timer: 0, goldEarned: 0, targetPos: vecClone(middlePos) },
+            dreamer,
             bridgePoints,
             pathPoints,
             bezierPoints,
@@ -593,7 +599,7 @@ export function initGameState(gameConfig)
         player.island.idx = spawnUnitForPlayer(lighthousePos[i], i, units[UNIT.BASE]);
         // select middle lane by default
         player.laneSelected = Math.floor(player.island.lanes.length/2);
-        spawnNextLhDreamer(i);
+        addNextLhDreamer(i);
     }
 }
 

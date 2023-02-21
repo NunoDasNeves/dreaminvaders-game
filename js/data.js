@@ -78,8 +78,10 @@ export const params = Object.freeze(
             deathTimeMs: 1000,
             fallTimeMs: 500,
             startingGold: 10,
-            startingGoldPerSec: 1,
-            dreamerGoldPerSec: 0.5,
+            dreamerGoldPerSec: 0.6666,
+            dreamerGoldTimeMs: 1000/0.6666,
+            lhDreamerGoldPerSec: 0.5,
+            lhDreamerGoldTimeMs: 1000/0.5,
             goldTextColor: '#ffd766',
             soulsTextColor: "#86f",
             soulMaxVel: 5,
@@ -522,7 +524,7 @@ export const upgrades = Object.freeze({
     [UPGRADE.ECO]: {
         id: UPGRADE.ECO,
         soulsCost: [10, 10, 10],
-        goldPerSecBonus: [0.25,0.75,1.5],
+        // gold bonus is params.lhDreamerGoldPerSec
         sfxName: 'upgradeEco',
         imgName: 'incomeUpgrade',
     },

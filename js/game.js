@@ -1104,24 +1104,39 @@ function updateSoulState(timeDeltaMs)
     }
 }
 
-function updateDreamerState(timeDeltaMs)
+function updateDreamerState(dreamer, goldTimeMs, timeDeltaMs)
 {
     const { playerId, unit, pos } = gameState.entities;
-    for (const bridge of gameState.bridges) {
-        const { dreamer } = bridge;
+    const dIdx = dreamer.idx;
+    const player = gameState.players[ playerId[dIdx] ];
+
+    dreamer.timer -= timeDeltaMs;
+    if (dreamer.timer <= 0) {
+        player.gold++;
+        player.goldEarned++;
+        dreamer.goldEarned++;
+        dreamer.timer = goldTimeMs;
+        // TODO compute dreamer head pos properly for spawning screams
+        const randX = -4 + (Math.random() - 0.5) * 16;
+        spawnVFXScream(vecAdd(pos[dIdx], vec(randX, -params.dreamerLaneDist-24)));
+    }
+}
+
+function updateAllDreamerState(timeDeltaMs)
+{
+    const { playerId, unit, pos } = gameState.entities;
+    for (const { dreamer } of gameState.bridges) {
         const dIdx = dreamer.idx;
         if (playerId[dIdx] == NO_PLAYER_INDEX) {
             continue;
         }
-        dreamer.timer -= timeDeltaMs;
-        if (dreamer.timer <= 0) {
-            // TODO update player gold here, atm it's in player update
-            dreamer.goldEarned += params.dreamerGoldPerSec;
-            dreamer.timer = 1000;
-            // TODO compute dreamer head pos properly for spawning screams
-            const randX = -4 + (Math.random() - 0.5) * 16;
-            spawnVFXScream(vecAdd(pos[dIdx], vec(randX, -params.dreamerLaneDist-24)));
-        }
+        updateDreamerState(dreamer, params.dreamerGoldTimeMs, timeDeltaMs);
+    }
+    const lhDreamers = gameState.players.flatMap(
+        ({ island: { dreamers } }) => dreamers
+    );
+    for (const dreamer of lhDreamers) {
+        updateDreamerState(dreamer, params.lhDreamerGoldTimeMs, timeDeltaMs);
     }
 }
 
@@ -1187,8 +1202,8 @@ function updateGame(timeDeltaMs)
     updateHitState(timeDeltaMs);
     reapFreeableEntities();
 
-    updateDreamerState(timeDeltaMs); // should come before player state, since dreamer affects income
-    updatePlayerState(timeDeltaMs);
+    updateAllDreamerState(timeDeltaMs); // should come before player state, since dreamer affects income
+    //updatePlayerState(timeDeltaMs);
 }
 
 function playSfx(name)
@@ -1317,7 +1332,7 @@ export function tryUpgrade(playerId, upgradeId)
         const lightPos = vecAdd(pos[player.island.idx], vec(0,-148));
         spawnUnitForPlayer(lightPos, playerId, unit);
     } else if (upgradeId == UPGRADE.ECO) {
-        spawnNextLhDreamer(playerId);
+        addNextLhDreamer(playerId);
     }
     return true;
 }
