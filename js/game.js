@@ -1106,19 +1106,21 @@ function updateSoulState(timeDeltaMs)
 
 function updateDreamerState(dreamer, goldTimeMs, timeDeltaMs)
 {
-    const { playerId, unit, pos } = gameState.entities;
+    const { playerId, animState, pos } = gameState.entities;
     const dIdx = dreamer.idx;
-    const player = gameState.players[ playerId[dIdx] ];
 
     dreamer.timer -= timeDeltaMs;
     if (dreamer.timer <= 0) {
+        const sprite = animState[dIdx].sprite;
+        const randOffset = vec(-4 + (Math.random() - 0.5) * 16, 0);
+        const screamOffset = vecAdd(randOffset, sprite.headOffset);
+        spawnVFXScream(vecAdd(pos[dIdx], screamOffset));
+
+        const player = gameState.players[ playerId[dIdx] ];
         player.gold++;
         player.goldEarned++;
         dreamer.goldEarned++;
         dreamer.timer = goldTimeMs;
-        // TODO compute dreamer head pos properly for spawning screams
-        const randX = -4 + (Math.random() - 0.5) * 16;
-        spawnVFXScream(vecAdd(pos[dIdx], vec(randX, -params.dreamerLaneDist-24)));
     }
 }
 

@@ -322,14 +322,23 @@ const unitSpriteData = [
         width: 48,
         height: 48,
         centerOffset: vec(0,params.dreamerLaneDist),
+        // where is his head
+        headOffset: vec(0, -params.dreamerLaneDist-24),
     }
 ].concat(
-    [0,1,2,3].map(i => ({
+    [
+        vec(),
+        vec(),
+        vec(),
+        vec()
+    ]
+    .map((headOffset, i) => ({
         id: SPRITE[`LH_DREAMER_${i}`],
         assetName: `lhDreamer${i}`,
         width: 160,
         height: 256,
         centerOffset: vec(0,65),
+        headOffset,
     }))
 );
 
