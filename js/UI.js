@@ -246,7 +246,7 @@ export function doPlayerUI(player)
 
     // gold + souls income
     if (debug.drawUI) {
-        const strPos = vec(xOff + 240, yOff);
+        const strPos = vec(xOff + 240 * (player.id == 0 ? 1 : -1), yOff);
         const lineOffset = vec(0, 30);
         let str = ''
         str += `totalEarned: $${player.goldEarned.toFixed(2)}\n`;
