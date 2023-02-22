@@ -1,9 +1,5 @@
 ## TODO
-- dreamer color shoud be a glow or something, around the head
-- tower defense new anim - lightning
-    - need animations - idle (crackle), attack (charge, fire, dormant)
-- Spawn animation - beam of light
-- pixel art spawn platforms + bridge start
+- AI is too dumb again - should choose from cheapest upgrades
 - start game timer/anim/delay
 - end game - lighthouse death anim + VFX
     - base dreamers (on losing team) need to fade away when game ends?
@@ -14,6 +10,10 @@
     - move - non looping whooshy
         - maybe accel vs decel
     - active vs inactive?
+- tower defense new anim - lightning
+    - need animations - idle (crackle), attack (charge, fire, dormant)
+- Spawn animation - beam of light
+- pixel art spawn platforms + bridge start
 - crystals need a bit of update
     - they need to fade out, pop nicely
 - Bit of UI rearrange? where to put souls + screams
@@ -34,6 +34,7 @@
 - unit specials - slime, nightling boosts
 
 ## Done
+- dreamer color shoud be a glow or something, around the head
 - fix up economy tracking
 - dreamer gold should arrive when crystal pops
 - dreamers
