@@ -532,7 +532,7 @@ export const upgrades = Object.freeze({
     },
     [UPGRADE.ECO]: {
         id: UPGRADE.ECO,
-        soulsCost: [10, 10, 10],
+        soulsCost: [5, 10, 20],
         // gold bonus is params.lhDreamerGoldPerSec
         sfxName: 'upgradeEco',
         imgName: 'incomeUpgrade',
