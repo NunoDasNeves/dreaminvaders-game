@@ -323,7 +323,7 @@ const unitSpriteData = [
         height: 48,
         centerOffset: vec(0,params.dreamerLaneDist),
         // where is his head
-        headOffset: vec(7, -params.dreamerLaneDist-16),
+        headOffset: vec(5, -params.dreamerLaneDist-14),
     }
 ].concat(
     [
