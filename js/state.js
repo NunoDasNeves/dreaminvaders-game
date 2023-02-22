@@ -396,9 +396,6 @@ function addPlayer({name, controller}, pos, team, colorIdx)
         soulsEarned: 0,
         gold: params.startingGold,
         goldPerSec: 0,
-        goldBaseEarned: 0,
-        goldFromDreamers: 0,
-        goldFromEcoUpgrades: 0,
         goldEarned: 0,
         /* */
         island: {
@@ -465,7 +462,7 @@ export function makeGameConfig(p0name, p0controller, p1name, p1controller)
 
 function makeDreamerState(dreamerIdx, goldTimeMs)
 {
-    return { idx: dreamerIdx, timer: goldTimeMs, goldEarned: 0, targetPos: vec() };
+    return { idx: dreamerIdx, timer: goldTimeMs, goldEarnedByPlayerId: [0,0], targetPos: vec() };
 }
 
 export function initGameState(gameConfig)

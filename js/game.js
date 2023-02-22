@@ -553,7 +553,6 @@ function updateUnitAiDreamer(i)
         const player = gameState.players[attackingPlayer];
         color[i] = player.color;
         if (oldAttackingPlayer != attackingPlayer) {
-            dreamer.goldEarned = 0;
             dreamer.timer = 1000;
         }
         // snap targetPos to lane center
@@ -1119,7 +1118,7 @@ function updateDreamerState(dreamer, goldTimeMs, timeDeltaMs)
         const player = gameState.players[ playerId[dIdx] ];
         player.gold++;
         player.goldEarned++;
-        dreamer.goldEarned++;
+        dreamer.goldEarnedByPlayerId[player.id]++;
         dreamer.timer = goldTimeMs;
     }
 }
@@ -1144,39 +1143,20 @@ function updateAllDreamerState(timeDeltaMs)
 
 function updatePlayerState(timeDeltaMs)
 {
-    const timeDeltaSec = 0.001 * timeDeltaMs;
-    const ecoUpgrade = upgrades[UPGRADE.ECO];
-
-    // set base gold rate
     for (const player of gameState.players) {
-        player.goldPerSec = params.startingGoldPerSec;
-        // track base gold
-        player.goldBaseEarned += params.startingGoldPerSec * timeDeltaSec;
-    }
-    // add dreamer gold
-    for (const { dreamer } of gameState.bridges) {
-        const { playerId } = gameState.entities;
-        const dIdx = dreamer.idx;
-        if (playerId[dIdx] == NO_PLAYER_INDEX) {
-            continue;
+        // gps
+        player.goldPerSec = 0;
+        for (const dreamer of player.island.dreamers) {
+            player.goldPerSec += params.lhDreamerGoldPerSec;
         }
-        const player = gameState.players[playerId[dIdx]];
-        player.goldPerSec += params.dreamerGoldPerSec;
-        // track dreamer gold
-        player.goldFromDreamers += params.dreamerGoldPerSec * timeDeltaSec;
-    }
-    for (const player of gameState.players) {
-        // add eco gold
-        const upgradeLevel = player.upgradeLevels[UPGRADE.ECO];
-        const ecoGoldPerSec = upgradeLevel < 0 ? 0 : ecoUpgrade.goldPerSecBonus[upgradeLevel];
-        player.goldPerSec += ecoGoldPerSec;
-        // update gold and tracking
-        const goldTotalThisFrame = player.goldPerSec * timeDeltaSec;
-        player.gold += goldTotalThisFrame;
-        player.goldEarned += goldTotalThisFrame;
-        // just eco
-        player.goldFromEcoUpgrades += ecoGoldPerSec * timeDeltaSec;
-
+        for (const { dreamer } of gameState.bridges) {
+            const { playerId } = gameState.entities;
+            const dIdx = dreamer.idx;
+            if (playerId[dIdx] != player.id) {
+                continue;
+            }
+            player.goldPerSec += params.dreamerGoldPerSec;
+        }
         // cooldowns
         for (const unitId of Object.values(UNIT)) {
             const newVal = player.unitCds[unitId] - timeDeltaMs;
@@ -1205,7 +1185,7 @@ function updateGame(timeDeltaMs)
     reapFreeableEntities();
 
     updateAllDreamerState(timeDeltaMs); // should come before player state, since dreamer affects income
-    //updatePlayerState(timeDeltaMs);
+    updatePlayerState(timeDeltaMs);
 }
 
 function playSfx(name)

@@ -249,8 +249,6 @@ export function doPlayerUI(player)
         const strPos = vec(xOff + 240, yOff);
         const lineOffset = vec(0, 30);
         let str = ''
-        str += `base:        $${player.goldBaseEarned.toFixed(2)}\n`;
-        str += `dreamers:    $${player.goldFromDreamers.toFixed(2)}\n`;
         str += `totalEarned: $${player.goldEarned.toFixed(2)}\n`;
         for (const s of str.split('\n')) {
             drawTextScreen(s, strPos, goldFontSmol, goldColor, true, 'left', 'top');
@@ -302,16 +300,20 @@ export function doPlayerUI(player)
 
     // dreamer debug earned gold
     if (debug.drawUI) {
-        for (let i = 0; i < gameState.bridges.length; ++i) {
-            const { color } = gameState.entities;
-            const bridge = gameState.bridges[i];
-            const dreamer = bridge.dreamer;
-            const dIdx = dreamer.idx;
-            if (dreamer.goldEarned == 0) {
-                continue;
-            }
-            const pos = vecAdd(bridge.middlePos, vec(0, -params.laneWidth*2));
-            drawText(`+$${dreamer.goldEarned.toFixed(2)}`, pos, 20 * gameState.camera.scale, color[dIdx], true, 'center');
+        const { pos, color, playerId, animState } = gameState.entities;
+        const textOffset = vec(player.id == 0 ? -40 : 40, 0);
+        const dreamers = player.island.dreamers.concat(
+            gameState.bridges
+                //.filter(({ dreamer }) => playerId[dreamer.idx] == player.id)
+                .map(( { dreamer } ) => dreamer)
+        );
+
+        for (const { idx, goldEarnedByPlayerId } of dreamers) {
+            const goldEarned = goldEarnedByPlayerId[player.id];
+            const headOffset = getDreamerHeadOffset(idx);
+            const textPos = vecAdd(pos[idx], headOffset);
+            vecAddTo(textPos, textOffset);
+            drawText(`$${goldEarned.toFixed(2)}`, textPos, 16 * gameState.camera.scale, player.color, true, 'center');
         }
     }
 }
