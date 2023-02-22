@@ -51,8 +51,21 @@ function drawUnitAnim(i, alpha, colorOverlay)
     const drawUnitPos = getDrawUnitPos(pos[i], sprite.width, sprite.height, sprite.centerOffset);
 
     if (unit[i].id == UNIT.DREAMER) {
-        const circlePos = vecSub(pos[i], sprite.centerOffset);
-        fillCircleWorld(context, circlePos, 24, color[i]);
+        const circlePos = vecAdd(pos[i], getDreamerHeadOffset(i));
+        const coords = worldVecToCamera(circlePos);
+        const scaledRadius = 24 / gameState.camera.scale;
+        const innerRadius = 12 / gameState.camera.scale;
+        const innerColor = color[i];
+        const outerColorObj = colorStrToObj(color[i]);
+        outerColorObj.a = 0;
+        const outerColor = objToColorStr(outerColorObj);
+        const gradient = context.createRadialGradient(coords.x, coords.y, innerRadius, coords.x, coords.y, scaledRadius);
+        gradient.addColorStop(0, innerColor);
+        gradient.addColorStop(1, outerColor);
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(coords.x, coords.y, scaledRadius, 0, 2 * Math.PI);
+        context.fill();
     }
     context.globalAlpha = alpha;
     drawSprite(context, sprite, row, col, drawUnitPos, colorOverlay);

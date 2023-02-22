@@ -559,7 +559,7 @@ function updateUnitAiDreamer(i)
         const { point } = Utils.pointNearLineSegs(dreamer.targetPos, bridgePoints);
         dreamer.targetPos = point;
     } else {
-        color[i] = params.neutralColor;
+        color[i] = "#00000000";
     }
     // MOVEMENT
     const targetPos = dreamer.targetPos;

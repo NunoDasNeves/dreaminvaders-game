@@ -575,7 +575,7 @@ export function initGameState(gameConfig)
         };
         gameState.players[0].island.lanes.push(p0Lane);
         gameState.players[1].island.lanes.push(p1Lane);
-        const dreamerIdx = spawnUnit(middlePos, NO_TEAM_INDEX, NO_PLAYER_INDEX, params.neutralColor, units[Data.UNIT.DREAMER], null, i);
+        const dreamerIdx = spawnUnit(middlePos, NO_TEAM_INDEX, NO_PLAYER_INDEX, "#00000000", units[Data.UNIT.DREAMER], null, i);
         const dreamer = makeDreamerState(dreamerIdx, params.dreamerGoldTimeMs);
         gameState.bridges.push({
             playerLanes: { 0: p0Lane, 1: p1Lane },
