@@ -1,10 +1,4 @@
 ## TODO
-- fix up economy tracking
-    - dreamer gold should arrive when crystal pops
-    - dreamer gps should work based on that?
-- base dreamers
-    - separate update goes through and gives gold, spawns crystals
-    - sprite will have head offset for crystal spawning
 - dreamer color shoud be a glow or something, around the head
 - tower defense new anim - lightning
     - need animations - idle (crackle), attack (charge, fire, dormant)
@@ -40,6 +34,11 @@
 - unit specials - slime, nightling boosts
 
 ## Done
+- fix up economy tracking
+- dreamer gold should arrive when crystal pops
+- dreamers
+    - separate update goes through and gives gold, spawns crystals
+    - sprite head offset for crystal spawning
 - draw base dreamers and get em into the game when you buy the eco upgrades
 - AI update - AI can do all actions, and actually does them (randomly tho)
 - make dreamers move around a bit - toward lane controller unit, float back to center otherwise
