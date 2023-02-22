@@ -1,3 +1,61 @@
+/*
+ * only supports:
+ *   rgb(x,y,z)
+ *   rgba(x,y,z,w)
+ *   #fff
+ *   #AAA0
+ *   #FFFFFF
+ *   #ffffff00
+ * returns { r, g, b, a }, all from 0-1
+ */
+const rgbRe = /^rgba?\((\d+),(\d+),(\d+)(?:,([\d.]+))?\)$/;
+const hex4Re = /^#([\dabcdef])([\dabcdef])([\dabcdef])([\dabcdef])?$/i;
+const hex8Re = /^#([\dabcdef][\dabcdef])([\dabcdef][\dabcdef])([\dabcdef][\dabcdef])(?:([\dabcdef][\dabcdef]))?$/i;
+export function colorStrToObj(cssColor)
+{
+    const str = cssColor.trim();
+    const rgbMatches = str.match(rgbRe);
+    if (rgbMatches !== null) {
+        const obj = {
+            r: parseInt(rgbMatches[1])/255,
+            g: parseInt(rgbMatches[2])/255,
+            b: parseInt(rgbMatches[3])/255,
+            a: 0,
+        }
+        if (rgbMatches.length == 5) {
+            obj.a = parseFloat(rgbMatches[4]);
+        }
+        return obj;
+    }
+    let hexMatches = null;
+    if (str.length < 7) {
+        hexMatches = str.match(hex4Re);
+    } else {
+        hexMatches = str.match(hex8Re);
+    }
+    if (hexMatches !== null) {
+        const obj = {
+            r: parseInt(hexMatches[1], 16)/255,
+            g: parseInt(hexMatches[2], 16)/255,
+            b: parseInt(hexMatches[3], 16)/255,
+            a: 0,
+        }
+        if (hexMatches.length == 5) {
+            obj.a = parseInt(hexMatches[4], 16)/255;
+        }
+        return obj;
+    }
+    return null;
+}
+
+/*
+ * return color as rgba(x,x,x,x)
+ */
+export function objToColorStr({ r, g, b, a })
+{
+    return `rgba(${r},${g},${b},${a})`;
+}
+
 export function lerp(a, b, t, do_clamp=false)
 {
     if (do_clamp) {
