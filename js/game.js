@@ -1327,14 +1327,17 @@ function selectRandomLane(player)
 function botGetRandomSoulAction(player, timeDeltaMs)
 {
     const botActions = [];
+    let minCost = Infinity;
     Object.values(Data.hotKeys[player.id].units)
         .forEach(unitId => {
             const unit = units[unitId];
             const unlocked = player.unitUnlocked[unit.id];
+            const cost = unit.unlockCost;
             if (!unlocked) {
                 const canDo = () => canUnlockUnit(player.id, unit);
                 const action = () => tryUnlockUnit(player.id, unit);
-                botActions.push({ canDo, action });
+                botActions.push({ canDo, action, cost });
+                minCost = Math.min(minCost, cost);
             }
         });
     Object.values(Data.hotKeys[player.id].upgrades)
@@ -1342,15 +1345,19 @@ function botGetRandomSoulAction(player, timeDeltaMs)
             const upgrade = upgrades[upgradeId];
             const currLevel = player.upgradeLevels[upgradeId];
             const maxLevel = upgrade.soulsCost.length - 1;
+            const cost = upgrade.soulsCost[currLevel + 1];
             if (currLevel < maxLevel) {
                 const canDo = () => canUpgrade(player.id, upgradeId);
                 const action = () => tryUpgrade(player.id, upgradeId);
-                botActions.push({ canDo, action });
+                botActions.push({ canDo, action, cost });
+                minCost = Math.min(minCost, cost);
             }
         });
 
     if (botActions.length > 0) {
-        return randFromArray(botActions);
+        return randFromArray(
+            botActions.filter(({ cost }) => cost == minCost)
+        );
     }
 
     console.log("can't do any soul action");
