@@ -472,11 +472,16 @@ function drawUnderBridge(laneIdx)
     const underColor = "rgb(50,50,50)";
     const bridge = gameState.bridges[laneIdx];
     const bridgePointsR2L = bridge.bridgePoints.map(vecClone).reverse();
-    const bridgeUnderPoints = bridgePointsR2L.map(vecClone);
     const bridgeThickness = 55 + laneIdx*14;
     const bridgeArchHeight = 300;
-    bridgeUnderPoints.unshift(vecAdd(bridgeUnderPoints[0], vec(0, bridgeThickness + bridgeArchHeight)));
-    bridgeUnderPoints.push(vecAdd(bridgeUnderPoints[bridgeUnderPoints.length - 1], vec(0, bridgeThickness + bridgeArchHeight)));
+    const bridgeUnderPointsScreen = [
+        vecAdd(bridgePointsR2L[0], vec(0, bridgeThickness + bridgeArchHeight)),
+        vecAdd(bridgePointsR2L[bridgePointsR2L.length - 1], vec(0, bridgeThickness + bridgeArchHeight))
+    ].map(worldVecToCamera);
+    const botCurveR2LScreen = bridge.bezierPoints
+                        .map(v => vecAdd(v, vec(0, params.laneWidth/2)))
+                        .map(worldVecToCamera)
+                        .reverse();
     const archPointsOnBez = [
         vecClone(bridgePointsR2L[bridgePointsR2L.length - 2]),
         cubicBezierPoint(bridge.bezierPoints, 0.48),
@@ -514,12 +519,15 @@ function drawUnderBridge(laneIdx)
     ];
 
     context.beginPath();
-    const startPoint = worldVecToCamera(vec(bridgeUnderPoints[0].x, bridgeUnderPoints[0].y));
+    const startPoint = bridgeUnderPointsScreen[0];
+    const endPoint = bridgeUnderPointsScreen[1];
     context.moveTo(startPoint.x, startPoint.y);
-    for (const point of bridgeUnderPoints) {
-        const coord = worldVecToCamera(point);
-        context.lineTo(coord.x, coord.y);
-    }
+    context.lineTo(botCurveR2LScreen[0].x, botCurveR2LScreen[0].y);
+    context.bezierCurveTo(botCurveR2LScreen[1].x, botCurveR2LScreen[1].y,
+                          botCurveR2LScreen[2].x, botCurveR2LScreen[2].y,
+                          botCurveR2LScreen[3].x, botCurveR2LScreen[3].y);
+    context.lineTo(endPoint.x, endPoint.y);
+
     for (const archBezArr of archBez) {
         const bezArr = archBezArr.map(worldVecToCamera);
         context.lineTo(bezArr[0].x, bezArr[0].y);
@@ -542,14 +550,20 @@ function drawBridge(laneIdx)
 {
     const bridge = gameState.bridges[laneIdx];
     const bezPoints = bridge.bezierPoints.map(worldVecToCamera);
-
-    context.setLineDash([]);
-    context.lineWidth = params.laneWidth / gameState.camera.scale;
-    context.strokeStyle = params.laneColor;
+    const topCurve = bridge.bezierPoints
+                        .map(v => vecAdd(v, vec(0, -params.laneWidth/2)))
+                        .map(worldVecToCamera);
+    const botCurve = bridge.bezierPoints
+                        .map(v => vecAdd(v, vec(0, params.laneWidth/2)))
+                        .map(worldVecToCamera)
+                        .reverse();
+    context.fillStyle = params.laneColor;
     context.beginPath();
-    context.moveTo(bezPoints[0].x, bezPoints[0].y);
-    context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
-    context.stroke();
+    context.moveTo(topCurve[0].x, topCurve[0].y);
+    context.bezierCurveTo(topCurve[1].x, topCurve[1].y, topCurve[2].x, topCurve[2].y, topCurve[3].x, topCurve[3].y);
+    context.lineTo(botCurve[0].x, botCurve[0].y);
+    context.bezierCurveTo(botCurve[1].x, botCurve[1].y, botCurve[2].x, botCurve[2].y, botCurve[3].x, botCurve[3].y);
+    context.fill();
 
     if (debug.drawBezierPoints) {
         strokePoints(bridge.bezierPoints, 3, "#00ff00");
