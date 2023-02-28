@@ -538,7 +538,7 @@ function drawUnderBridge(laneIdx)
     //dotPoints(archMidPoints, 3, 'cyan');
 }
 
-function drawBridge(laneIdx, hovered)
+function drawBridge(laneIdx)
 {
     const bridge = gameState.bridges[laneIdx];
     const bezPoints = bridge.bezierPoints.map(worldVecToCamera);
@@ -550,10 +550,6 @@ function drawBridge(laneIdx, hovered)
     context.moveTo(bezPoints[0].x, bezPoints[0].y);
     context.bezierCurveTo(bezPoints[1].x, bezPoints[1].y, bezPoints[2].x, bezPoints[2].y, bezPoints[3].x, bezPoints[3].y);
     context.stroke();
-
-    // spawn platforms
-    fillCircleWorld(context, bridge.playerLanes[0].spawnPos, params.spawnPlatRadius, hovered ? params.laneHoveredColor : params.laneColor);
-    fillCircleWorld(context, bridge.playerLanes[1].spawnPos, params.spawnPlatRadius, params.laneColor);
 
     if (debug.drawBezierPoints) {
         strokePoints(bridge.bezierPoints, 3, "#00ff00");
@@ -567,6 +563,29 @@ function drawBridge(laneIdx, hovered)
         fillCircleWorld(context, bridge.playerLanes[0].spawnPos, 8, "#00ff00");
         fillCircleWorld(context, bridge.playerLanes[1].spawnPos, 8, "#00ff00");
     }
+}
+
+function drawHighlightedSpawnPlatform(laneIdx)
+{
+    const bridge = gameState.bridges[laneIdx];
+    const coords = worldVecToCamera(bridge.playerLanes[0].spawnPos);
+    const scaledRadius = (params.spawnPlatRadius + 5) / gameState.camera.scale;
+    const innerRadius = (params.spawnPlatRadius - 5) / gameState.camera.scale;
+    const innerColor = "#ffffccbb";
+    const outerColor = "#ffffcc00";
+    const gradient = context.createRadialGradient(coords.x, coords.y, innerRadius, coords.x, coords.y, scaledRadius);
+    gradient.addColorStop(0, innerColor);
+    gradient.addColorStop(1, outerColor);
+    context.fillStyle = gradient;
+    context.beginPath();
+    context.arc(coords.x, coords.y, scaledRadius, 0, 2 * Math.PI);
+    const defaultOp = context.globalCompositeOperation;
+    context.globalCompositeOperation = "soft-light";
+    //context.fill();
+    context.globalCompositeOperation = defaultOp;
+    //fillCircleWorld(context, coords, scaledRadius, "#ffffff33");
+    //fillCircleWorld(context, bridge.playerLanes[1].spawnPos, params.spawnPlatRadius, params.laneColor);
+    Draw.strokeCircleWorld(context, bridge.playerLanes[0].spawnPos, params.spawnPlatRadius, 2, "#ffffaa");
 }
 
 export function getBoundingClientRect()
@@ -593,12 +612,18 @@ export function draw(realTimeMs, timeDeltaMs)
         drawUnderBridge(i);
     }
 
+    for (let i = 0; i < gameState.bridges.length; ++i) {
+        drawBridge(i, localPlayer.laneSpawnHovered == i);
+    }
+
     for (const [team, base] of Object.entries(gameState.islands)) {
         drawIsland(team, base);
     }
 
-    for (let i = 0; i < gameState.bridges.length; ++i) {
-        drawBridge(i, localPlayer.laneSpawnHovered == i);
+    if (localPlayer.unitSelected >= 0) {
+        for (let i = 0; i < gameState.bridges.length; ++i) {
+                drawHighlightedSpawnPlatform(i);
+        }
     }
 
     const { exists, team, unit, pos, angle, physState, hitState } = gameState.entities;
