@@ -10,8 +10,25 @@ Object.entries(Data).forEach(([name, exported]) => window[name] = exported);
 Object.entries(State).forEach(([name, exported]) => window[name] = exported);
 Object.entries(Draw).forEach(([name, exported]) => window[name] = exported);
 
+// HTML
+let gameCanvas = null;
+let gameContext = null;
+
+// current
 let canvas = null;
 let context = null;
+
+// parts
+let bgCanvas = new OffscreenCanvas(1,1);
+let bgContext = bgCanvas.getContext("2d");
+
+let islandCanvas = new OffscreenCanvas(1,1);
+let islandContext = islandCanvas.getContext("2d");
+
+let dynCanvas = new OffscreenCanvas(1,1);
+let dynContext = dynCanvas.getContext("2d");
+
+let storedCanvasDims = vec(1,1);
 
 /* Add to position to draw sprite centered */
 function getDrawUnitPos(pos, width, height, centerOffset)
@@ -602,36 +619,32 @@ function drawHighlightedSpawnPlatform(laneIdx)
     Draw.strokeCircleWorld(context, bridge.playerLanes[0].spawnPos, params.spawnPlatRadius, 2, "#ffffaa");
 }
 
-export function getBoundingClientRect()
+function drawIslands()
 {
-    return canvas.getBoundingClientRect();
-}
+    canvas = islandCanvas;
+    context = islandContext;
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-export function draw(realTimeMs, timeDeltaMs)
-{
-    const localPlayer = getLocalPlayer();
-    updateCameraSize(canvas.width, canvas.height);
-
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const bgGradient = context.createLinearGradient(0, canvas.height, 0, 0);
-    bgGradient.addColorStop(0, params.backgroundGradientBottom);
-    bgGradient.addColorStop(1, params.backgroundGradientTop);
-    context.fillStyle = bgGradient;
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    for (const [team, base] of Object.entries(gameState.islands)) {
+        drawIsland(team, base);
+    }
 
     for (let i = 0; i < gameState.bridges.length; ++i) {
         drawUnderBridge(i);
     }
 
     for (let i = 0; i < gameState.bridges.length; ++i) {
-        drawBridge(i, localPlayer.laneSpawnHovered == i);
+        drawBridge(i);
     }
+}
 
-    for (const [team, base] of Object.entries(gameState.islands)) {
-        drawIsland(team, base);
-    }
+function drawDyn()
+{
+    canvas = dynCanvas;
+    context = dynContext;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    const localPlayer = getLocalPlayer();
 
     if (localPlayer.unitSelected >= 0) {
         for (let i = 0; i < gameState.bridges.length; ++i) {
@@ -692,15 +705,64 @@ export function draw(realTimeMs, timeDeltaMs)
         }
         drawHpBar(i);
     }
-    const UIcanvas = UI.getCanvas();
-    context.drawImage(UIcanvas, 0, 0);
-    if (UIcanvas.width != canvas.width || UIcanvas.height != canvas.height) {
-        UI.updateDims(canvas.width, canvas.height);
+}
+
+function fillBg()
+{
+    canvas = bgCanvas;
+    context = bgContext;
+    const bgGradient = bgContext.createLinearGradient(0, bgCanvas.height, 0, 0);
+    bgGradient.addColorStop(0, params.backgroundGradientBottom);
+    bgGradient.addColorStop(1, params.backgroundGradientTop);
+    bgContext.fillStyle = bgGradient;
+    bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+}
+
+function updateCanvasSize(dims)
+{
+    if (storedCanvasDims.x == dims.x && storedCanvasDims.y == dims.y) {
+        return false;
     }
+
+    for (const c of [bgCanvas, islandCanvas, dynCanvas, gameCanvas]) {
+
+        c.width  = dims.x;
+        c.height = dims.y;
+    }
+
+    UI.updateDims(dims.x, dims.y);
+
+    storedCanvasDims = dims;
+    return true;
+}
+
+export function draw(realTimeMs, timeDeltaMs)
+{
+    const UIcanvas = UI.getCanvas();
+    const newDims = vec(window.innerWidth, window.innerHeight);
+
+    if (updateCanvasSize(newDims)) {
+        fillBg();
+    }
+    // TODO camera is part of gameState so init game clears width/height
+    updateCameraSize(newDims);
+
+    gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+    gameContext.drawImage(bgCanvas, 0, 0); 
+    drawIslands();
+    gameContext.drawImage(islandCanvas, 0, 0); 
+    drawDyn();
+    gameContext.drawImage(dynCanvas, 0, 0);
+    gameContext.drawImage(UIcanvas, 0, 0);
+}
+
+export function getBoundingClientRect()
+{
+    return gameCanvas.getBoundingClientRect();
 }
 
 export function init()
 {
-    canvas = document.getElementById("gamecanvas");
-    context = canvas.getContext("2d");
+    gameCanvas = document.getElementById("gamecanvas");
+    gameContext = gameCanvas.getContext("2d");
 }

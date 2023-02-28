@@ -659,10 +659,10 @@ export function worldVecToCamera(v) {
     return worldToCamera(v.x, v.y);
 }
 
-export function updateCameraSize(width, height)
+export function updateCameraSize({ x, y })
 {
-    gameState.camera.width = width;
-    gameState.camera.height = height;
+    gameState.camera.width = x;
+    gameState.camera.height = y;
 }
 
 export function updateKey(key, pressed)
