@@ -600,7 +600,6 @@ export function draw(realTimeMs, timeDeltaMs)
 
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    context.clearRect(0, 0, canvas.width, canvas.height);
 
     const bgGradient = context.createLinearGradient(0, canvas.height, 0, 0);
     bgGradient.addColorStop(0, params.backgroundGradientBottom);
