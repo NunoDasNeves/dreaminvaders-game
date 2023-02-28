@@ -39,6 +39,7 @@ export const debug = {
     drawBezierPoints: false,
     drawClickBridgeDebugArrow: false,
     drawSoul: false,
+    drawIncome: false,
     clickedPoint: vec(),
     drawFPS: true,
     fps: 0,

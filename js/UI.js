@@ -223,7 +223,7 @@ export function doPlayerUI(player)
         goldStart.x += asset.width + 5;
         const goldText = `${Math.floor(player.gold)}`;
         drawTextScreen(goldText, goldStart, goldFont, goldColor, true, 'left', 'top');
-        if (debug.drawUI) {
+        if (debug.drawUI && debug.drawIncome) {
             const gpsText = `(+$${player.goldPerSec.toFixed(2)}/sec)`;
             const gpsStart = vecAdd(goldStart, vec(goldFontMetrics.width + 40, 0));
             drawTextScreen(gpsText, gpsStart, goldFontSmol, goldColor, true, 'left', 'top');
@@ -245,7 +245,7 @@ export function doPlayerUI(player)
     }
 
     // gold + souls income
-    if (debug.drawUI) {
+    if (debug.drawUI && debug.drawIncome) {
         const strPos = vec(xOff + 240 * (player.id == 0 ? 1 : -1), yOff);
         const lineOffset = vec(0, 30);
         let str = ''
@@ -299,7 +299,7 @@ export function doPlayerUI(player)
     }
 
     // dreamer debug earned gold
-    if (debug.drawUI) {
+    if (debug.drawUI && debug.drawIncome) {
         const { pos, color, playerId, animState } = gameState.entities;
         const textOffset = vec(player.id == 0 ? -40 : 40, 0);
         const dreamers = player.island.dreamers.concat(
