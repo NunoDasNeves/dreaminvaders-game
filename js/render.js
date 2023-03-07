@@ -25,8 +25,15 @@ let bgContext = bgCanvas.getContext("2d");
 let islandCanvas = new OffscreenCanvas(1,1);
 let islandContext = islandCanvas.getContext("2d");
 
+let bridgeCanvas = new OffscreenCanvas(1,1);
+let bridgeContext = bridgeCanvas.getContext("2d");
+let bridgeMaskCanvas = new OffscreenCanvas(1,1);
+let bridgeMaskContext = bridgeMaskCanvas.getContext("2d");
+
 let dynCanvas = new OffscreenCanvas(1,1);
 let dynContext = dynCanvas.getContext("2d");
+
+const screenSizeCanvases = [bgCanvas, islandCanvas, bridgeCanvas, bridgeMaskCanvas, dynCanvas];
 
 let storedCanvasDims = vec(1,1);
 
@@ -486,7 +493,7 @@ function dotPoints(arr, radius, fillStyle)
 
 function drawUnderBridge(laneIdx)
 {
-    const underColor = "rgb(50,50,50)";
+    const underColor = params.bridgeUnderColor;
     const bridge = gameState.bridges[laneIdx];
     const bridgePointsR2L = bridge.bridgePoints.map(vecClone).reverse();
     const bridgeThickness = 55 + laneIdx*14;
@@ -566,7 +573,6 @@ function drawUnderBridge(laneIdx)
 function drawBridge(laneIdx)
 {
     const bridge = gameState.bridges[laneIdx];
-    const bezPoints = bridge.bezierPoints.map(worldVecToCamera);
     const topCurve = bridge.bezierPoints
                         .map(v => vecAdd(v, vec(0, -params.laneWidth/2)))
                         .map(worldVecToCamera);
@@ -574,7 +580,7 @@ function drawBridge(laneIdx)
                         .map(v => vecAdd(v, vec(0, params.laneWidth/2)))
                         .map(worldVecToCamera)
                         .reverse();
-    context.fillStyle = params.laneColor;
+    context.fillStyle = params.bridgeColor;
     context.beginPath();
     context.moveTo(topCurve[0].x, topCurve[0].y);
     context.bezierCurveTo(topCurve[1].x, topCurve[1].y, topCurve[2].x, topCurve[2].y, topCurve[3].x, topCurve[3].y);
@@ -621,6 +627,51 @@ function drawHighlightedSpawnPlatform(laneIdx)
 
 function drawIslands()
 {
+    // create bridge fade mask
+    canvas = bridgeMaskCanvas;
+    context = bridgeMaskContext;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    const bridgePointsOuter = gameState.bridges[0].bridgePoints;
+    const bridgePointsInner = gameState.bridges[1].bridgePoints;
+    const xPoints = [
+        vecAdd(bridgePointsOuter[0], vec(75, 0)),
+        vecAdd(bridgePointsInner[0], vec(100, 0)),
+        vecAdd(bridgePointsInner[bridgePointsInner.length - 1], vec(-100, 0)),
+        vecAdd(bridgePointsOuter[bridgePointsOuter.length - 1], vec(-75)),
+    ].map(v => worldVecToCamera(v).x);
+    const length = xPoints[3] - xPoints[0];
+    const offsets = xPoints.map(x => (x - xPoints[0]) / length);
+    const transparent = "#0000";
+    const opaque = "#000F";
+    const colors = [transparent, opaque, opaque, transparent];
+    const cs = offsets.map((x, i) => [x, colors[i]]);
+    const maskGradient = bgContext.createLinearGradient(xPoints[0], 0, xPoints[0] + length, 0);
+    for (const [offset, color] of cs) {
+        maskGradient.addColorStop(offset, color);
+    }
+    context.fillStyle = maskGradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // draw the actual bridge stuff
+    canvas = bridgeCanvas;
+    context = bridgeContext;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < gameState.bridges.length; ++i) {
+        drawUnderBridge(i);
+    }
+    for (let i = 0; i < gameState.bridges.length; ++i) {
+        drawBridge(i);
+    }
+
+    // apply mask
+    const defaultOp = context.globalCompositeOperation;
+    context.globalCompositeOperation = "destination-in";
+    context.drawImage(bridgeMaskCanvas, 0, 0);
+    context.globalCompositeOperation = defaultOp;
+
+    // islands
     canvas = islandCanvas;
     context = islandContext;
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -629,13 +680,8 @@ function drawIslands()
         drawIsland(team, base);
     }
 
-    for (let i = 0; i < gameState.bridges.length; ++i) {
-        drawUnderBridge(i);
-    }
-
-    for (let i = 0; i < gameState.bridges.length; ++i) {
-        drawBridge(i);
-    }
+    // and bridge on top
+    context.drawImage(bridgeCanvas, 0, 0);
 }
 
 function drawDyn()
@@ -724,7 +770,7 @@ function updateCanvasSize(dims)
         return false;
     }
 
-    for (const c of [bgCanvas, islandCanvas, dynCanvas, gameCanvas]) {
+    for (const c of screenSizeCanvases) {
 
         c.width  = dims.x;
         c.height = dims.y;
@@ -765,4 +811,5 @@ export function init()
 {
     gameCanvas = document.getElementById("gamecanvas");
     gameContext = gameCanvas.getContext("2d");
+    screenSizeCanvases.push(gameCanvas);
 }
