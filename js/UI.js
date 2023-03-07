@@ -332,6 +332,8 @@ export function processMouseInput()
         const delta = vecMul(vecSub(gameState.input.mouseScreenPos, gameState.lastInput.mouseScreenPos), gameState.camera.scale);
         if (vecLen(delta)) {
             vecSubFrom(gameState.camera.pos, delta);
+            // don't run away!
+            vecClampMag(gameState.camera.pos, 0, 1000);
         }
     }
     // hover on spawn pos, show unit icon
